@@ -1,0 +1,11 @@
+# Ejemplo de configuración local - COPIAR COMO application-local.properties
+# NO SUBIR EL ARCHIVO FINAL A GITHUB
+
+spring.datasource.url=jdbc:mysql://localhost:3306/TU_BASE_DE_DATOS?createDatabaseIfNotExist=true&serverTimezone=UTC
+spring.datasource.username=TU_USUARIO
+spring.datasource.password=TU_CONTRASEÑA
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# JPA / Hibernate
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
