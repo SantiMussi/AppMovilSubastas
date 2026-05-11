@@ -3,29 +3,44 @@ package com.subastas.backend.service.impl;
 import com.subastas.backend.entity.Persona;
 import com.subastas.backend.repository.PersonaRepository;
 import com.subastas.backend.service.PersonaService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import com.subastas.backend.util.ImageUtils;
 
-import java.util.Optional;
+import java.io.IOException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
-@RequiredArgsConstructor
 public class PersonaServiceImpl implements PersonaService {
 
-    private final PersonaRepository personaRepository;
+    @Autowired
+    private PersonaRepository personaRepository;
 
     @Override
-    public Persona save(Persona persona) {
-        return personaRepository.save(persona);
+    public Persona obtenerPerfil(String email) {
+        return personaRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 
     @Override
-    public Optional<Persona> getById(Integer id) {
-        return personaRepository.findById(id);
+    public Persona actualizarPerfil(String email, Persona datos) {
+        Persona existente = obtenerPerfil(email);
+        existente.setNombre(datos.getNombre());
+        existente.setApellido(datos.getApellido());
+        existente.setDireccion(datos.getDireccion());
+        // No actualizamos el password aca, se haria en otro endpoint
+        return personaRepository.save(existente);
     }
 
     @Override
-    public Optional<Persona> getByEmail(String email) {
-        return personaRepository.findByEmail(email);
+    public void actualizarFotoPerfil(String email, MultipartFile archivo) throws IOException {
+        Persona persona = obtenerPerfil(email);
+
+        // Usamos el utilitario. Si hay un error (archivo vacío, no es imagen), tira la
+        // excepción automáticamente
+        persona.setFoto(ImageUtils.procesarImagen(archivo));
+
+        personaRepository.save(persona);
     }
 }

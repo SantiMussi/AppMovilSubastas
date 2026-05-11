@@ -1,10 +1,9 @@
 package com.subastas.backend.service;
 
 import com.subastas.backend.entity.Persona;
-import java.util.Optional;
 
 public interface PersonaService {
-    Persona save(Persona persona);
-    Optional<Persona> getById(Integer id);
-    Optional<Persona> getByEmail(String email);
+    Persona obtenerPerfil(String email);
+    Persona actualizarPerfil(String email, Persona datosActualizados);
+    void actualizarFotoPerfil(String email, org.springframework.web.multipart.MultipartFile archivo) throws java.io.IOException;
 }
