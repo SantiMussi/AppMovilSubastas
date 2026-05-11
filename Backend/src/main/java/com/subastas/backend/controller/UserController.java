@@ -24,15 +24,17 @@ public class UserController {
 
     // PUT /api/user/profile?email=example@example.com
     @PutMapping("/profile")
-    public ResponseEntity<Persona> updateProfile(@RequestParam String email, @RequestBody Persona persona) {
+    public ResponseEntity<Persona> updateProfile(java.security.Principal principal, @RequestBody Persona persona) {
+        String email = principal.getName();
         return ResponseEntity.ok(personaService.actualizarPerfil(email, persona));
     }
 
     @PostMapping(value = "/profile/foto", consumes = "multipart/form-data")
     public ResponseEntity<String> subirFotoPerfil(
-            @RequestParam String email,
+            java.security.Principal principal,
             @RequestParam("imagen") MultipartFile imagen) {
         try {
+            String email = principal.getName();
             personaService.actualizarFotoPerfil(email, imagen);
             return ResponseEntity.ok("Imagen procesada y guardada con éxito");
         } catch (IllegalArgumentException e) {

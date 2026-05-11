@@ -35,4 +35,7 @@ public class Producto {
     @ManyToOne
     @JoinColumn(name = "seguro")
     private Seguro seguro; 
+
+    @OneToMany(mappedBy = "producto", fetch = FetchType.LAZY)
+    private java.util.List<Foto> fotos;
 }

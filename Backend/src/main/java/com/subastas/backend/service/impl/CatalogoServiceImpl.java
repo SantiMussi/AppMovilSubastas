@@ -50,6 +50,13 @@ public class CatalogoServiceImpl implements CatalogoService {
                 productoResp.setIdentificador(item.getProducto().getIdentificador());
                 productoResp.setDescripcionCatalogo(item.getProducto().getDescripcionCatalogo());
                 productoResp.setDescripcionCompleta(item.getProducto().getDescripcionCompleta());
+                
+                // Mapeo adicional para nombre y foto
+                productoResp.setNombre(item.getProducto().getDescripcionCatalogo()); // Usamos descripcionCatalogo como nombre
+                if (item.getProducto().getFotos() != null && !item.getProducto().getFotos().isEmpty()) {
+                    productoResp.setFoto(item.getProducto().getFotos().get(0).getFoto());
+                }
+
                 response.setProducto(productoResp);
             }
 
