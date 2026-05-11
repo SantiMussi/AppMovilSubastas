@@ -10,5 +10,4 @@ public class PerfilResponse {
     private String apellido;
     private String email;
     private String direccion;
-    // Fija que acá NO ESTÁ el password. ¡Seguridad ante todo!
 }
