@@ -18,7 +18,7 @@ Para ejecutar el proyecto en un entorno local sin interferir con otros desarroll
 
 3. **Ejecución**:
    - Puede ejecutar el proyecto desde su IDE o mediante el comando:
-     ```bash
+     ```bash 
      ./mvnw spring-boot:run
      ```
 
