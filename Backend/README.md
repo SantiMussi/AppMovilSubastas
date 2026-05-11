@@ -1,46 +1,46 @@
-# 🔨 Sistema de Subastas - Backend
+# Sistema de Subastas - Backend
 
-Proyecto de backend para el TPO de Aplicaciones Móviles.
+Este proyecto corresponde al backend para el Trabajo Práctico Obligatorio de Aplicaciones Móviles.
 
-## 🚀 Instalación y Configuración Local
+## Instalación y Configuración Local
 
-Para que el proyecto funcione en tu entorno local sin afectar a los demás, seguí estos pasos:
+Para ejecutar el proyecto en un entorno local sin interferir con otros desarrolladores, siga estos pasos:
 
-1.  **Configuración de Propiedades**:
-    *   Andá a `src/main/resources/`.
-    *   Copiá el archivo `application-local.properties.example` y renombralo como `application-local.properties`.
-    *   Editá `application-local.properties` con tus credenciales de MySQL (usuario, contraseña y puerto).
-    *   **Importante**: Este archivo está en el `.gitignore`, así que tus datos personales no se subirán al repositorio.
+1. **Configuración de Propiedades**:
+   - Diríjase a la carpeta `src/main/resources/`.
+   - Copie el archivo `application-local.properties.example` y renómbrelo como `application-local.properties`.
+   - Edite el archivo `application-local.properties` con sus credenciales de MySQL (usuario, contraseña y puerto).
+   - Nota importante: Este archivo se encuentra en el `.gitignore`, por lo que sus datos personales no serán subidos al repositorio.
 
-2.  **Base de Datos**:
-    *   Asegurate de tener MySQL corriendo.
-    *   El sistema está configurado para crear la base de datos `db_subastas` automáticamente si no existe.
+2. **Base de Datos**:
+   - Asegúrese de que MySQL esté ejecutándose.
+   - El sistema está configurado para crear automáticamente la base de datos `db_subastas` si no existe.
 
-3.  **Ejecución**:
-    *   Podés correr el proyecto desde tu IDE o usando el comando:
-        ```bash
-        ./mvnw spring-boot:run
-        ```
+3. **Ejecución**:
+   - Puede ejecutar el proyecto desde su IDE o mediante el comando:
+     ```bash
+     ./mvnw spring-boot:run
+     ```
 
-## 📚 Documentación API (Swagger)
+## Documentación API (Swagger)
 
-Una vez que el servidor esté corriendo, podés acceder a la documentación interactiva en:
+Una vez que el servidor esté en funcionamiento, acceda a la documentación interactiva en:
 [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
-## 📂 Estructura del Proyecto
+## Estructura del Proyecto
 
-El backend está organizado siguiendo una arquitectura en capas para facilitar el mantenimiento y la escalabilidad:
+El backend se organiza siguiendo una arquitectura en capas para facilitar el mantenimiento y la escalabilidad:
 
-```text
+```
 com.subastas.backend
-├── config             # Seguridad (JWT/CORS), Swagger, Configuración de BD
-├── controller         # Endpoints REST (Reciben peticiones HTTP)
+├── config             # Configuraciones de seguridad (JWT/CORS), Swagger y base de datos
+├── controller         # Endpoints REST para recibir peticiones HTTP
 ├── dto                # Objetos de transferencia de datos (Request/Response)
-├── entity             # Clases JPA (Mapeo de tablas de SQL Server)
+├── entity             # Clases JPA para el mapeo de tablas de la base de datos
 ├── exception          # Manejo global de errores y excepciones personalizadas
 ├── mapper             # Lógica de conversión entre Entity y DTO
 ├── repository         # Interfaces de acceso a datos (Spring Data JPA)
-└── service            # Lógica de negocio (Interfaces e Implementaciones)
+└── service            # Lógica de negocio (interfaces e implementaciones)
 ```
 
 ### Dominios Principales:
