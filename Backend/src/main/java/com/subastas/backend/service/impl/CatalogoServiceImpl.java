@@ -2,12 +2,16 @@ package com.subastas.backend.service.impl;
 
 import com.subastas.backend.entity.Catalogo;
 import com.subastas.backend.entity.ItemCatalogo;
+import com.subastas.backend.dto.response.ItemCatalogoResponse;
+import com.subastas.backend.dto.response.ProductoResponse;
+import com.subastas.backend.exception.ResourceNotFoundException;
 import com.subastas.backend.repository.CatalogoRepository;
 import com.subastas.backend.repository.ItemCatalogoRepository;
 import com.subastas.backend.service.CatalogoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CatalogoServiceImpl implements CatalogoService {
@@ -24,7 +28,32 @@ public class CatalogoServiceImpl implements CatalogoService {
     }
 
     @Override
-    public List<ItemCatalogo> obtenerItemsPorCatalogo(Integer idCatalogo) {
-        return itemCatalogoRepository.findByCatalogoIdentificador(idCatalogo);
+    public List<ItemCatalogoResponse> obtenerItemsPorCatalogo(Integer idCatalogo) {
+        if (!catalogoRepository.existsById(idCatalogo)) {
+            throw new ResourceNotFoundException("Catálogo no encontrado con id: " + idCatalogo);
+        }
+
+        List<ItemCatalogo> items = itemCatalogoRepository.findByCatalogoIdentificador(idCatalogo);
+        if (items.isEmpty()) {
+            throw new ResourceNotFoundException("No se encontraron ítems para el catálogo con id: " + idCatalogo);
+        }
+
+        return items.stream().map(item -> {
+            ItemCatalogoResponse response = new ItemCatalogoResponse();
+            response.setIdentificador(item.getIdentificador());
+            response.setPrecioBase(item.getPrecioBase());
+            response.setComision(item.getComision());
+            response.setSubastado(item.getSubastado());
+
+            if (item.getProducto() != null) {
+                ProductoResponse productoResp = new ProductoResponse();
+                productoResp.setIdentificador(item.getProducto().getIdentificador());
+                productoResp.setDescripcionCatalogo(item.getProducto().getDescripcionCatalogo());
+                productoResp.setDescripcionCompleta(item.getProducto().getDescripcionCompleta());
+                response.setProducto(productoResp);
+            }
+
+            return response;
+        }).collect(Collectors.toList());
     }
 }

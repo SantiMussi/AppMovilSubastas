@@ -1,6 +1,8 @@
 package com.subastas.backend.service.impl;
 
 import com.subastas.backend.entity.Persona;
+import com.subastas.backend.dto.response.PerfilResponse;
+import com.subastas.backend.exception.ResourceNotFoundException;
 import com.subastas.backend.repository.PersonaRepository;
 import com.subastas.backend.service.PersonaService;
 import com.subastas.backend.util.ImageUtils;
@@ -17,15 +19,28 @@ public class PersonaServiceImpl implements PersonaService {
     @Autowired
     private PersonaRepository personaRepository;
 
-    @Override
-    public Persona obtenerPerfil(String email) {
+    private Persona obtenerPersonaEntidad(String email) {
         return personaRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + email));
+    }
+
+    @Override
+    public PerfilResponse obtenerPerfil(String email) {
+        Persona persona = obtenerPersonaEntidad(email);
+
+        PerfilResponse response = new PerfilResponse();
+        response.setIdentificador(persona.getIdentificador());
+        response.setNombre(persona.getNombre());
+        response.setApellido(persona.getApellido());
+        response.setEmail(persona.getEmail());
+        response.setDireccion(persona.getDireccion());
+        response.setDocumento(persona.getDocumento());
+        return response;
     }
 
     @Override
     public Persona actualizarPerfil(String email, Persona datos) {
-        Persona existente = obtenerPerfil(email);
+        Persona existente = obtenerPersonaEntidad(email);
         existente.setNombre(datos.getNombre());
         existente.setApellido(datos.getApellido());
         existente.setDireccion(datos.getDireccion());
@@ -35,7 +50,7 @@ public class PersonaServiceImpl implements PersonaService {
 
     @Override
     public void actualizarFotoPerfil(String email, MultipartFile archivo) throws IOException {
-        Persona persona = obtenerPerfil(email);
+        Persona persona = obtenerPersonaEntidad(email);
 
         // Usamos el utilitario. Si hay un error (archivo vacío, no es imagen), tira la
         // excepción automáticamente

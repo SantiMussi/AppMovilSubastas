@@ -1,5 +1,6 @@
 package com.subastas.backend.controller;
 
+import com.subastas.backend.dto.response.PerfilResponse;
 import com.subastas.backend.entity.Persona;
 import com.subastas.backend.service.PersonaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,8 @@ public class UserController {
 
     // GET /api/user/profile?email=example@example.com
     @GetMapping("/profile")
-    public ResponseEntity<Persona> getProfile(@RequestParam String email) {
+    public ResponseEntity<PerfilResponse> getProfile(java.security.Principal principal) {
+        String email = principal.getName(); // Esto viene del JWT
         return ResponseEntity.ok(personaService.obtenerPerfil(email));
     }
 
@@ -34,7 +36,7 @@ public class UserController {
             personaService.actualizarFotoPerfil(email, imagen);
             return ResponseEntity.ok("Imagen procesada y guardada con éxito");
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage()); 
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error inesperado al subir la imagen");
         }

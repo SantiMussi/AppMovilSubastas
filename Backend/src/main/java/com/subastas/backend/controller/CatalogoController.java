@@ -1,7 +1,7 @@
 package com.subastas.backend.controller;
 
 import com.subastas.backend.entity.Catalogo;
-import com.subastas.backend.entity.ItemCatalogo;
+import com.subastas.backend.dto.response.ItemCatalogoResponse;
 import com.subastas.backend.service.CatalogoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +27,8 @@ public class CatalogoController {
 
     // Obtener los productos (ítems) dentro de un catálogo
     @GetMapping("/{idCatalogo}/items")
-    public ResponseEntity<List<ItemCatalogo>> obtenerItemsDeCatalogo(@PathVariable Integer idCatalogo) {
-        List<ItemCatalogo> items = catalogoService.obtenerItemsPorCatalogo(idCatalogo);
+    public ResponseEntity<List<ItemCatalogoResponse>> obtenerItemsDeCatalogo(@PathVariable Integer idCatalogo) {
+        List<ItemCatalogoResponse> items = catalogoService.obtenerItemsPorCatalogo(idCatalogo);
         if (items.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
