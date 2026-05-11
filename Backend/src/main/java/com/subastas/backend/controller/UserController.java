@@ -34,7 +34,7 @@ public class UserController {
             personaService.actualizarFotoPerfil(email, imagen);
             return ResponseEntity.ok("Imagen procesada y guardada con éxito");
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage()); // Devuelve los errores del ImageUtils
+            return ResponseEntity.badRequest().body(e.getMessage()); 
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error inesperado al subir la imagen");
         }
