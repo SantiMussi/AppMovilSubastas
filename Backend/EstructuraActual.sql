@@ -204,4 +204,22 @@ create table mediosPago(
 )
 go
 
-
+create table multas(
+    identificador int not null identity,
+    idCliente int not null,
+    idSubasta int not null,
+    idPuja int not null,
+    estado varchar(50) not null constraint chkEM check (estado in ('pendiente', 'paga', 'vencida')),
+    moneda varchar(10) not null,
+    montoOferta decimal(18,2) not null constraint chkMO check (montoOferta > 0.01),
+    montoMulta decimal(18,2) not null constraint chkMM check (montoMulta > 0.01),
+    porcentajeMulta decimal(5,2) not null default 10.00,
+    fechaEmision datetime not null default getdate(),
+    fechaLimite datetime not null,
+    fechaPago datetime null,
+    constraint pk_multas primary key (identificador),
+    constraint fk_multas_clientes foreign key (idCliente) references clientes(identificador),
+    constraint fk_multas_subastas foreign key (idSubasta) references subastas(identificador),
+    constraint fk_multas_pujos foreign key (idPuja) references pujos(identificador)
+)
+go
