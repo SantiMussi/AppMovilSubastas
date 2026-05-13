@@ -1,4 +1,4 @@
-package com.subastas.backend.controller.auth;
+package com.subastas.backend.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
