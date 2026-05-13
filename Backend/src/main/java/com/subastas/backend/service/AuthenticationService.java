@@ -3,7 +3,9 @@ package com.subastas.backend.service;
 import com.subastas.backend.dto.request.AuthenticationRequest;
 import com.subastas.backend.dto.request.RegisterRequest;
 import com.subastas.backend.dto.response.AuthenticationResponse;
+import com.subastas.backend.entity.Cliente;
 import com.subastas.backend.entity.Persona;
+import com.subastas.backend.repository.ClienteRepository;
 import com.subastas.backend.repository.PersonaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService {
 
     private final PersonaRepository personaRepository;
+    private final ClienteRepository clienteRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -43,6 +46,14 @@ public class AuthenticationService {
                 .build();
 
         Persona savedPersona = personaRepository.save(persona);
+
+        Cliente cliente = new Cliente();
+        cliente.setIdentificador(savedPersona.getIdentificador());
+        cliente.setPersona(savedPersona);
+        cliente.setAdmitido("si");
+        cliente.setCategoria("comun");
+        clienteRepository.save(cliente);
+
         String jwtToken = jwtService.generateToken(savedPersona);
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)

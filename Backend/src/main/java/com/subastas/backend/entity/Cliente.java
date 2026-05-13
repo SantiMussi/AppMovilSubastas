@@ -27,6 +27,6 @@ public class Cliente {
     private String categoria; // 'comun', 'especial', 'plata', etc.
 
     @ManyToOne
-    @JoinColumn(name = "verificador", nullable = false)
+    @JoinColumn(name = "verificador")
     private Empleado verificador;
 }
