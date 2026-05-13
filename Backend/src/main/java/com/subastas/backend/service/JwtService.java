@@ -1,6 +1,6 @@
 package com.subastas.backend.service;
 
-import com.subastas.backend.entity.Persona;
+import com.subastas.backend.entity.Usuario;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -37,18 +37,18 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(Persona persona) {
+    public String generateToken(Usuario usuario) {
         Map<String, Object> claims = new HashMap<>();
-        if (persona.getIdentificador() != null) {
-            claims.put("identificador", persona.getIdentificador());
+        if (usuario.getPersona() != null && usuario.getPersona().getIdentificador() != null) {
+            claims.put("identificador", usuario.getPersona().getIdentificador());
         }
-        if (persona.getNombre() != null) {
-            claims.put("nombre", persona.getNombre());
+        if (usuario.getPersona() != null && usuario.getPersona().getNombre() != null) {
+            claims.put("nombre", usuario.getPersona().getNombre());
         }
-        if (persona.getApellido() != null) {
-            claims.put("apellido", persona.getApellido());
+        if (usuario.getApellido() != null) {
+            claims.put("apellido", usuario.getApellido());
         }
-        return buildToken(claims, persona.getEmail());
+        return buildToken(claims, usuario.getEmail());
     }
 
     public String generateToken(UserDetails userDetails) {
@@ -60,9 +60,9 @@ public class JwtService {
         return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 
-    public boolean isTokenValid(String token, Persona persona) {
+    public boolean isTokenValid(String token, Usuario usuario) {
         final String username = extractUsername(token);
-        return username.equals(persona.getEmail()) && !isTokenExpired(token);
+        return username.equals(usuario.getEmail()) && !isTokenExpired(token);
     }
 
     private String buildToken(Map<String, Object> extraClaims, String subject) {
@@ -92,7 +92,7 @@ public class JwtService {
     }
 
     private SecretKey getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = secretKey.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

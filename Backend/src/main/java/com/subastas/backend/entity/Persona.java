@@ -25,15 +25,7 @@ public class Persona {
     @Column(name = "nombre", nullable = false, length = 150)
     private String nombre;
 
-    // Campos agregados para cumplir con el CSV (Endpoints 2.0)
-    @Column(name = "apellido", length = 150)
-    private String apellido;
 
-    @Column(name = "email", unique = true, length = 150)
-    private String email;
-
-    @Column(name = "password", length = 255)
-    private String password;
 
     @Column(name = "direccion", length = 250)
     private String direccion;
@@ -42,14 +34,7 @@ public class Persona {
     private String estado; // 'activo', 'incativo' (según SQL original)
 
     @Lob
-    @Column(name = "foto")
+    @Column(name = "foto", columnDefinition = "LONGBLOB")
     private byte[] foto;
 
-    @Lob
-    @Column(name = "fotoDniFrente")
-    private byte[] fotoDniFrente;
-
-    @Lob
-    @Column(name = "fotoDniDorso")
-    private byte[] fotoDniDorso;
 }

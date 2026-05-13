@@ -1,7 +1,7 @@
 package com.subastas.backend.config;
 
-import com.subastas.backend.entity.Persona;
-import com.subastas.backend.repository.PersonaRepository;
+import com.subastas.backend.entity.Usuario;
+import com.subastas.backend.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,12 +20,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @RequiredArgsConstructor
 public class ApplicationConfig {
 
-    private final PersonaRepository personaRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> personaRepository.findByEmail(username)
-                .filter(persona -> persona.getPassword() != null && !persona.getPassword().isBlank())
+        return username -> usuarioRepository.findByEmail(username)
+                .filter(usuario -> usuario.getPassword() != null && !usuario.getPassword().isBlank())
                 .map(this::toUserDetails)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
     }
@@ -53,12 +53,12 @@ public class ApplicationConfig {
         return new BCryptPasswordEncoder();
     }
 
-    private UserDetails toUserDetails(Persona persona) {
+    private UserDetails toUserDetails(Usuario usuario) {
         return User.builder()
-                .username(persona.getEmail())
-                .password(persona.getPassword())
-                .authorities("PERSONA")
-                .disabled(persona.getEstado() != null && !"activo".equalsIgnoreCase(persona.getEstado()))
+                .username(usuario.getEmail())
+                .password(usuario.getPassword())
+                .authorities("USUARIO")
+                .disabled(usuario.getPersona() != null && usuario.getPersona().getEstado() != null && !"activo".equalsIgnoreCase(usuario.getPersona().getEstado()))
                 .build();
     }
 }

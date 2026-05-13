@@ -22,11 +22,11 @@ public class UserController {
         return ResponseEntity.ok(personaService.obtenerPerfil(email));
     }
 
-    // PUT /api/user/profile?email=example@example.com
+    // PUT /api/user/profile
     @PutMapping("/profile")
-    public ResponseEntity<Persona> updateProfile(java.security.Principal principal, @RequestBody Persona persona) {
+    public ResponseEntity<PerfilResponse> updateProfile(java.security.Principal principal, @RequestBody com.subastas.backend.dto.request.PerfilRequest request) {
         String email = principal.getName();
-        return ResponseEntity.ok(personaService.actualizarPerfil(email, persona));
+        return ResponseEntity.ok(personaService.actualizarPerfil(email, request));
     }
 
     @PostMapping(value = "/profile/foto", consumes = "multipart/form-data")
@@ -38,10 +38,10 @@ public class UserController {
             personaService.actualizarFotoPerfil(email, imagen);
             return ResponseEntity.ok("Imagen procesada y guardada con éxito");
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("Error de validación: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error inesperado al subir la imagen");
+            e.printStackTrace(); // Imprimir en la consola para debugging
+            return ResponseEntity.internalServerError().body("Error al subir la imagen: " + e.getClass().getName() + " - " + e.getMessage());
         }
     }
-
 }

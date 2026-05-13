@@ -1,9 +1,12 @@
 package com.subastas.backend.service.impl;
 
 import com.subastas.backend.entity.Persona;
+import com.subastas.backend.entity.Usuario;
+import com.subastas.backend.dto.request.PerfilRequest;
 import com.subastas.backend.dto.response.PerfilResponse;
 import com.subastas.backend.exception.ResourceNotFoundException;
 import com.subastas.backend.repository.PersonaRepository;
+import com.subastas.backend.repository.UsuarioRepository;
 import com.subastas.backend.service.PersonaService;
 import com.subastas.backend.util.ImageUtils;
 
@@ -12,6 +15,7 @@ import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PersonaServiceImpl implements PersonaService {
@@ -19,38 +23,56 @@ public class PersonaServiceImpl implements PersonaService {
     @Autowired
     private PersonaRepository personaRepository;
 
-    private Persona obtenerPersonaEntidad(String email) {
-        return personaRepository.findByEmail(email)
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    private Usuario obtenerUsuarioPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + email));
     }
 
     @Override
     public PerfilResponse obtenerPerfil(String email) {
-        Persona persona = obtenerPersonaEntidad(email);
+        Usuario usuario = obtenerUsuarioPorEmail(email);
+        Persona persona = usuario.getPersona();
 
         PerfilResponse response = new PerfilResponse();
         response.setIdentificador(persona.getIdentificador());
         response.setNombre(persona.getNombre());
-        response.setApellido(persona.getApellido());
-        response.setEmail(persona.getEmail());
+        response.setApellido(usuario.getApellido());
+        response.setEmail(usuario.getEmail());
         response.setDireccion(persona.getDireccion());
         response.setDocumento(persona.getDocumento());
+        
+        if (persona.getFoto() != null) {
+            String base64 = java.util.Base64.getEncoder().encodeToString(persona.getFoto());
+            response.setFoto("data:image/jpeg;base64," + base64);
+        }
+        
         return response;
     }
 
     @Override
-    public Persona actualizarPerfil(String email, Persona datos) {
-        Persona existente = obtenerPersonaEntidad(email);
+    @Transactional
+    public PerfilResponse actualizarPerfil(String email, PerfilRequest datos) {
+        Usuario usuario = obtenerUsuarioPorEmail(email);
+        Persona existente = usuario.getPersona();
+        
         existente.setNombre(datos.getNombre());
-        existente.setApellido(datos.getApellido());
         existente.setDireccion(datos.getDireccion());
-        // No actualizamos el password aca, se haria en otro endpoint
-        return personaRepository.save(existente);
+        personaRepository.save(existente);
+
+        usuario.setApellido(datos.getApellido());
+        usuarioRepository.save(usuario);
+
+        return obtenerPerfil(email);
     }
 
     @Override
+    @Transactional
     public void actualizarFotoPerfil(String email, MultipartFile archivo) throws IOException {
-        Persona persona = obtenerPersonaEntidad(email);
+        Usuario usuario = obtenerUsuarioPorEmail(email);
+        Persona persona = usuario.getPersona();
 
         // Usamos el utilitario. Si hay un error (archivo vacío, no es imagen), tira la
         // excepción automáticamente

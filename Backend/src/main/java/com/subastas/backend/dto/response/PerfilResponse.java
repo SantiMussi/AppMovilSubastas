@@ -10,4 +10,5 @@ public class PerfilResponse {
     private String apellido;
     private String email;
     private String direccion;
+    private String foto;
 }
