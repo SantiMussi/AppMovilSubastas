@@ -61,8 +61,8 @@ go
 create table duenios(
 	identificador int not null,
 	numeroPais int,
-	verificaciónFinanciera varchar(2) constraint chkVF check(verificaciónFinanciera in ('si','no')),
-	verificaciónJudicial varchar(2) constraint chkVJ check(verificaciónJudicial in ('si','no')),
+	verificaciï¿½nFinanciera varchar(2) constraint chkVF check(verificaciï¿½nFinanciera in ('si','no')),
+	verificaciï¿½nJudicial varchar(2) constraint chkVJ check(verificaciï¿½nJudicial in ('si','no')),
 	calificacionRiesgo int constraint chkCR check(calificacionRiesgo in (1,2,3,4,5,6)),
 	verificador int not null
 	constraint pk_duenios primary key (identificador),
@@ -82,7 +82,7 @@ go
 
 create table subastas(
 	identificador int not null identity,
-	--las subastas tiene al menos 10 dias de anticipación al momento de crearlas.
+	--las subastas tiene al menos 10 dias de anticipaciï¿½n al momento de crearlas.
 	fecha date constraint chkFecha check (fecha > dateAdd(dd, 10, getdate())),
 	hora time not null,
 	estado varchar(10) constraint chkES check (estado in ('abierta','carrada')),
@@ -105,7 +105,7 @@ create table productos(
 	disponible varchar(2) constraint chkD check (disponible in ('si','no')),
 	--se obtiene despues que un empleado realiza la revision.
 	descripcionCatalogo varchar(500) null default 'No Posee',
-	--url que apunta a un documento PDF firmado que contiene la descripción del producto.
+	--url que apunta a un documento PDF firmado que contiene la descripciï¿½n del producto.
 	descripcionCompleta varchar(300) not null,
 	revisor int not null,
 	duenio int not null,
@@ -186,4 +186,22 @@ create table registroDeSubasta(
 	constraint fk_registroDeSubasta_cliente foreign key (cliente) references clientes
 )
 go
+
+create table mediosPago(
+	identificador int not null identity,
+	idPersona int not null,
+	tipo varchar(50) not null,
+	entidad varchar(150) not null,
+	numeroIdentificacion varchar(80) not null,
+	moneda varchar(10) not null,
+	montoGarantia decimal(18,2) null constraint chkMontoGarantia check (montoGarantia is null or montoGarantia > 0.01),
+	comprobante varchar(1000) null,
+	verificado bit not null default 0,
+	activo bit not null default 1,
+	usadoEnOperacion bit not null default 0,
+	constraint pk_mediosPago primary key (identificador),
+	constraint fk_mediosPago_personas foreign key (persona) references personas(identificador)
+)
+go
+
 
