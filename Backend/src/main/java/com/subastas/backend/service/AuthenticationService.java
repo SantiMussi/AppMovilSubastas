@@ -1,8 +1,8 @@
 package com.subastas.backend.service;
 
-import com.subastas.backend.controller.auth.AuthenticationRequest;
-import com.subastas.backend.controller.auth.AuthenticationResponse;
-import com.subastas.backend.controller.auth.RegisterRequest;
+import com.subastas.backend.dto.request.AuthenticationRequest;
+import com.subastas.backend.dto.request.RegisterRequest;
+import com.subastas.backend.dto.response.AuthenticationResponse;
 import com.subastas.backend.entity.Persona;
 import com.subastas.backend.repository.PersonaRepository;
 import lombok.RequiredArgsConstructor;

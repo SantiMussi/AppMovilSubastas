@@ -1,6 +1,8 @@
 package com.subastas.backend.controller.auth;
 
 import com.subastas.backend.service.AuthenticationService;
+import com.subastas.backend.dto.request.AuthenticationRequest;
+import com.subastas.backend.dto.request.RegisterRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
