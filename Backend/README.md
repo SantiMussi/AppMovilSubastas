@@ -22,10 +22,6 @@ Para ejecutar el proyecto en un entorno local sin interferir con otros desarroll
      ./mvnw spring-boot:run
      ```
 
-## Documentación API (Swagger)
-
-Una vez que el servidor esté en funcionamiento, acceda a la documentación interactiva en:
-[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
 ## Estructura del Proyecto
 
