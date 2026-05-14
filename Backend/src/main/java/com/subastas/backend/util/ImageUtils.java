@@ -22,7 +22,7 @@ public class ImageUtils {
         if (archivo == null || archivo.isEmpty()) {
             throw new IllegalArgumentException("El archivo de imagen no puede estar vacío");
         }
-        
+
         String contentType = archivo.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             throw new IllegalArgumentException("El archivo debe ser una imagen válida (JPG, PNG, etc.)");
@@ -44,15 +44,14 @@ public class ImageUtils {
 
     private static byte[] compressImage(BufferedImage image, int maxSize) throws IOException {
         int targetWidth = 400;
-        byte[] finalBytes = null;
-        
+
         // Intentar achicar las dimensiones de a poco si la calidad no alcanza
         while (targetWidth >= 100) {
             int targetHeight = (int) (image.getHeight() * ((double) targetWidth / image.getWidth()));
-            
+
             Image resultingImage = image.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
             BufferedImage outputImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
-            
+
             Graphics2D g2d = outputImage.createGraphics();
             g2d.setColor(java.awt.Color.WHITE);
             g2d.fillRect(0, 0, targetWidth, targetHeight);
@@ -61,28 +60,31 @@ public class ImageUtils {
 
             float quality = 0.9f;
             byte[] imageBytes;
-            
+
             do {
                 imageBytes = writeJpegWithQuality(outputImage, quality);
                 quality -= 0.2f;
             } while (imageBytes.length > maxSize && quality > 0.1f);
-            
+
             if (imageBytes.length <= maxSize) {
                 return imageBytes;
             }
-            
-            // Si incluso en baja calidad supera los 65KB (raro, pero posible), achicamos la resolución a la mitad
+
+            // Si incluso en baja calidad supera los 65KB (raro, pero posible), achicamos la
+            // resolución a la mitad
             targetWidth /= 2;
         }
-        
-        throw new IllegalArgumentException("La imagen es demasiado compleja para ser comprimida al tamaño requerido por la base de datos.");
+
+        throw new IllegalArgumentException(
+                "La imagen es demasiado compleja para ser comprimida al tamaño requerido por la base de datos.");
     }
 
     private static byte[] writeJpegWithQuality(BufferedImage image, float quality) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
-        if (!writers.hasNext()) throw new IllegalStateException("No writers found");
-        
+        if (!writers.hasNext())
+            throw new IllegalStateException("No writers found");
+
         ImageWriter writer = writers.next();
         try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
             writer.setOutput(ios);

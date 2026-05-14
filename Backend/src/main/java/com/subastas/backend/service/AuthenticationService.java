@@ -7,7 +7,6 @@ import com.subastas.backend.entity.Cliente;
 import com.subastas.backend.entity.Empleado;
 import com.subastas.backend.entity.Persona;
 import com.subastas.backend.entity.Usuario;
-import com.subastas.backend.repository.ClienteRepository;
 import com.subastas.backend.repository.EmpleadoRepository;
 import com.subastas.backend.repository.PersonaRepository;
 import com.subastas.backend.repository.UsuarioRepository;
@@ -25,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthenticationService {
 
     private final PersonaRepository personaRepository;
-    private final ClienteRepository clienteRepository;
     private final EmpleadoRepository empleadoRepository;
     private final UsuarioRepository usuarioRepository;
     private final EntityManager entityManager;
@@ -60,11 +58,12 @@ public class AuthenticationService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .apellido(trimToNull(request.getApellido()))
                 .build();
-                
+
         Usuario savedUsuario = usuarioRepository.save(usuario);
 
         Empleado verificador = empleadoRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new IllegalStateException("No hay empleados registrados en el sistema para asignar como verificador."));
+                .orElseThrow(() -> new IllegalStateException(
+                        "No hay empleados registrados en el sistema para asignar como verificador."));
 
         Cliente cliente = new Cliente();
         cliente.setIdentificador(savedPersona.getIdentificador());

@@ -1,7 +1,6 @@
 package com.subastas.backend.controller;
 
 import com.subastas.backend.dto.response.PerfilResponse;
-import com.subastas.backend.entity.Persona;
 import com.subastas.backend.service.PersonaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,8 @@ public class UserController {
 
     // PUT /api/user/profile
     @PutMapping("/profile")
-    public ResponseEntity<PerfilResponse> updateProfile(java.security.Principal principal, @RequestBody com.subastas.backend.dto.request.PerfilRequest request) {
+    public ResponseEntity<PerfilResponse> updateProfile(java.security.Principal principal,
+            @RequestBody com.subastas.backend.dto.request.PerfilRequest request) {
         String email = principal.getName();
         return ResponseEntity.ok(personaService.actualizarPerfil(email, request));
     }
@@ -41,7 +41,8 @@ public class UserController {
             return ResponseEntity.badRequest().body("Error de validación: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace(); // Imprimir en la consola para debugging
-            return ResponseEntity.internalServerError().body("Error al subir la imagen: " + e.getClass().getName() + " - " + e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body("Error al subir la imagen: " + e.getClass().getName() + " - " + e.getMessage());
         }
     }
 }
