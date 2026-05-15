@@ -31,10 +31,34 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
+                        // Permitir pre-flight requests de CORS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Rutas Públicas
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auctions/active").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/paises").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**").permitAll()
+
+                        // Documentación (Swagger)
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**")
+                        .permitAll()
+
+                        // Rutas Protegidas: Requieren JWT
+                        // Usuarios, Perfil, Medios de Pago y Bienes Consignados
+                        .requestMatchers("/api/v1/users/me/**").authenticated()
+
+                        // Subastas, Catálogos e Ítems
+                        .requestMatchers("/api/v1/auctions/**").authenticated()
+                        .requestMatchers("/api/v1/catalogs/**").authenticated()
+                        .requestMatchers("/api/v1/auction-items/**").authenticated()
+
+                        // Propuestas de Bienes
+                        .requestMatchers("/api/v1/proposals/**").authenticated()
+
+                        // Manejo de errores
                         .requestMatchers("/error/**").permitAll()
+
+                        // Cualquier otra petición debe estar autenticada
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
@@ -43,6 +67,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // Tu configuración de CORS actual es correcta para desarrollo
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

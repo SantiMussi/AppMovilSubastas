@@ -8,28 +8,28 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/v1/users/me")
 public class UserController {
 
     @Autowired
     private PersonaService personaService;
 
-    // GET /api/user/profile?email=example@example.com
-    @GetMapping("/profile")
+    // GET /api/v1/users/me
+    @GetMapping
     public ResponseEntity<PerfilResponse> getProfile(java.security.Principal principal) {
         String email = principal.getName(); // Esto viene del JWT
         return ResponseEntity.ok(personaService.obtenerPerfil(email));
     }
 
-    // PUT /api/user/profile
-    @PutMapping("/profile")
+    // PATCH /api/v1/users/me
+    @PatchMapping
     public ResponseEntity<PerfilResponse> updateProfile(java.security.Principal principal,
             @RequestBody com.subastas.backend.dto.request.PerfilRequest request) {
         String email = principal.getName();
         return ResponseEntity.ok(personaService.actualizarPerfil(email, request));
     }
 
-    @PostMapping(value = "/profile/foto", consumes = "multipart/form-data")
+    @PostMapping(value = "/foto", consumes = "multipart/form-data")
     public ResponseEntity<String> subirFotoPerfil(
             java.security.Principal principal,
             @RequestParam("imagen") MultipartFile imagen) {

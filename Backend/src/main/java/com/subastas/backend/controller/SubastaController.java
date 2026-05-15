@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/subastas")
+@RequestMapping("/api/v1/auctions")
 public class SubastaController {
 
     @Autowired
@@ -21,7 +21,7 @@ public class SubastaController {
     }
 
     // Endpoint para la App Móvil: ver solo las disponibles para pujar
-    @GetMapping("/activas")
+    @GetMapping("/active")
     public ResponseEntity<List<Subasta>> listarActivas() {
         return ResponseEntity.ok(subastaService.obtenerActivas());
     }

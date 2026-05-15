@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/catalogos")
+@RequestMapping("/api/v1")
 public class CatalogoController {
 
     @Autowired
     private CatalogoService catalogoService;
 
     // Obtener los catálogos de una subasta específica
-    @GetMapping("/subasta/{idSubasta}")
+    @GetMapping("/auctions/{idSubasta}/catalog")
     public ResponseEntity<List<Catalogo>> obtenerCatalogosDeSubasta(@PathVariable Integer idSubasta) {
         List<Catalogo> catalogos = catalogoService.obtenerPorSubasta(idSubasta);
         if (catalogos.isEmpty()) {
@@ -26,7 +26,7 @@ public class CatalogoController {
     }
 
     // Obtener los productos (ítems) dentro de un catálogo
-    @GetMapping("/{idCatalogo}/items")
+    @GetMapping("/catalogs/{idCatalogo}/items")
     public ResponseEntity<List<ItemCatalogoResponse>> obtenerItemsDeCatalogo(@PathVariable Integer idCatalogo) {
         List<ItemCatalogoResponse> items = catalogoService.obtenerItemsPorCatalogo(idCatalogo);
         if (items.isEmpty()) {
