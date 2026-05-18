@@ -20,7 +20,7 @@ public class Usuario {
     private Integer identificador;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "persona_id", nullable = false)
+    @JoinColumn(name = "idUsuario", nullable = false)
     private Persona persona;
 
     @Column(name = "email", unique = true, nullable = false, length = 150)

@@ -206,7 +206,7 @@ go
 
 create table multas(
     identificador int not null identity,
-    idCliente int not null,
+    idUsuario int not null,
     idSubasta int not null,
     idPuja int not null,
     estado varchar(50) not null constraint chkEM check (estado in ('pendiente', 'paga', 'vencida')),
@@ -218,7 +218,7 @@ create table multas(
     fechaLimite datetime not null,
     fechaPago datetime null,
     constraint pk_multas primary key (identificador),
-    constraint fk_multas_clientes foreign key (idCliente) references clientes(identificador),
+    constraint fk_multas_clientes foreign key (idUsuario) references usuarios(identificador),
     constraint fk_multas_subastas foreign key (idSubasta) references subastas(identificador),
     constraint fk_multas_pujos foreign key (idPuja) references pujos(identificador)
 )

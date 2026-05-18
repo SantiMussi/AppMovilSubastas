@@ -1,11 +1,15 @@
 package com.subastas.backend.controller;
 
+import com.subastas.backend.dto.response.MultaListResponse;
 import com.subastas.backend.dto.response.PerfilResponse;
+import com.subastas.backend.service.MultaService;
 import com.subastas.backend.service.PersonaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/v1/users/me")
@@ -13,10 +17,12 @@ public class UserController {
 
     @Autowired
     private PersonaService personaService;
+    @Autowired
+    private MultaService multaService;
 
     // GET /api/v1/users/me
     @GetMapping
-    public ResponseEntity<PerfilResponse> getProfile(java.security.Principal principal) {
+    public ResponseEntity<PerfilResponse> getProfile(Principal principal) {
         String email = principal.getName(); // Esto viene del JWT
         return ResponseEntity.ok(personaService.obtenerPerfil(email));
     }
@@ -44,5 +50,10 @@ public class UserController {
             return ResponseEntity.internalServerError()
                     .body("Error al subir la imagen: " + e.getClass().getName() + " - " + e.getMessage());
         }
+    }
+
+    @GetMapping("/fines")
+    public ResponseEntity<MultaListResponse> getMultas(Principal principal){
+        return ResponseEntity.ok(new MultaListResponse(multaService.obtenerMultasPorUsuario(principal.getName())));
     }
 }
