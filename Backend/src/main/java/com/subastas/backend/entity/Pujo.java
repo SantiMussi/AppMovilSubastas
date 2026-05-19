@@ -2,6 +2,8 @@ package com.subastas.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import java.math.BigDecimal;
 
 @Data
@@ -26,4 +28,9 @@ public class Pujo {
 
     @Column(length = 2)
     private String ganador;
+    
+    @OneToOne(mappedBy = "pujo", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private PujoMetadata metadata;
 }
