@@ -61,8 +61,8 @@ go
 create table duenios(
 	identificador int not null,
 	numeroPais int,
-	verificaci�nFinanciera varchar(2) constraint chkVF check(verificaci�nFinanciera in ('si','no')),
-	verificaci�nJudicial varchar(2) constraint chkVJ check(verificaci�nJudicial in ('si','no')),
+	verificacionFinanciera varchar(2) constraint chkVF check(verificaci�nFinanciera in ('si','no')),
+	verificacionJudicial varchar(2) constraint chkVJ check(verificaci�nJudicial in ('si','no')),
 	calificacionRiesgo int constraint chkCR check(calificacionRiesgo in (1,2,3,4,5,6)),
 	verificador int not null
 	constraint pk_duenios primary key (identificador),
@@ -214,7 +214,7 @@ create table multas(
     montoOferta decimal(18,2) not null constraint chkMO check (montoOferta > 0.01),
     montoMulta decimal(18,2) not null constraint chkMM check (montoMulta > 0.01),
     porcentajeMulta decimal(5,2) not null default 10.00,
-    fechaEmision datetime not null default getdate(),
+    fechaEmision datetime not null,
     fechaLimite datetime not null,
     fechaPago datetime null,
     constraint pk_multas primary key (identificador),

@@ -1,7 +1,11 @@
 package com.subastas.backend.controller;
 
+import com.subastas.backend.dto.request.PagoMultaRequest;
 import com.subastas.backend.dto.response.MultaListResponse;
+import com.subastas.backend.dto.response.MultaResponse;
+import com.subastas.backend.dto.response.PagoMultaResponse;
 import com.subastas.backend.dto.response.PerfilResponse;
+import com.subastas.backend.exception.MultaVencidaException;
 import com.subastas.backend.service.MultaService;
 import com.subastas.backend.service.PersonaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +57,20 @@ public class UserController {
     }
 
     @GetMapping("/fines")
-    public ResponseEntity<MultaListResponse> getMultas(Principal principal){
+    public ResponseEntity<MultaListResponse> getUserFines(Principal principal){
         return ResponseEntity.ok(new MultaListResponse(multaService.obtenerMultasPorUsuario(principal.getName())));
     }
+
+    @GetMapping("/fines/{fineId}")
+    public ResponseEntity<MultaResponse> getUserFineDetail(@PathVariable Integer fineId){
+        return ResponseEntity.ok(multaService.obtenerMultaPorId(fineId));
+    }
+
+    @PostMapping("/fines/{fineId}/pay")
+    public ResponseEntity<PagoMultaResponse> payFine(
+            Principal principal,
+            @RequestBody PagoMultaRequest request,
+            @PathVariable Integer fineId) throws MultaVencidaException{
+            return ResponseEntity.ok(multaService.pagarMulta(request, fineId, principal.getName()));
+        }
 }
