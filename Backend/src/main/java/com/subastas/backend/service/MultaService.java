@@ -4,7 +4,7 @@ import com.subastas.backend.dto.request.PagoMultaRequest;
 import com.subastas.backend.dto.response.MultaResponse;
 import com.subastas.backend.dto.response.PagoMultaResponse;
 import com.subastas.backend.exception.MultaVencidaException;
-import org.springframework.http.ResponseEntity;
+
 
 import java.util.List;
 

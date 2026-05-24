@@ -1,5 +1,6 @@
 package com.subastas.backend.config;
 
+import com.subastas.backend.repository.EmpleadoRepository;
 import com.subastas.backend.entity.Usuario;
 import com.subastas.backend.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class ApplicationConfig {
 
     private final UsuarioRepository usuarioRepository;
+    private final EmpleadoRepository empleadoRepository;
 
     @Bean
     public UserDetailsService userDetailsService() {

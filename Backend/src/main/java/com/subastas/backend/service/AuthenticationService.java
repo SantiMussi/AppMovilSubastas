@@ -1,5 +1,6 @@
 package com.subastas.backend.service;
 
+import com.subastas.backend.entity.Categoria;
 import com.subastas.backend.dto.request.AuthenticationRequest;
 import com.subastas.backend.dto.request.RegisterRequest;
 import com.subastas.backend.dto.response.AuthenticationResponse;
