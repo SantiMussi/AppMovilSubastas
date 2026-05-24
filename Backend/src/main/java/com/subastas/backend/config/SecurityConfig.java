@@ -58,6 +58,9 @@ public class SecurityConfig {
                         // Manejo de errores
                         .requestMatchers("/error/**").permitAll()
 
+                        //ADMIN
+                        .requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN")
+
                         // Cualquier otra petición debe estar autenticada
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

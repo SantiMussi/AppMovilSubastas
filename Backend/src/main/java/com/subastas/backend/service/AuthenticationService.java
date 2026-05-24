@@ -69,7 +69,7 @@ public class AuthenticationService {
         cliente.setIdentificador(savedPersona.getIdentificador());
         cliente.setPersona(savedPersona);
         cliente.setAdmitido("si");
-        cliente.setCategoria("comun");
+        cliente.setCategoria(Categoria.comun);
         cliente.setVerificador(verificador);
         entityManager.persist(cliente);
 

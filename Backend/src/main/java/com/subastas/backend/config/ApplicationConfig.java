@@ -54,11 +54,24 @@ public class ApplicationConfig {
     }
 
     private UserDetails toUserDetails(Usuario usuario) {
-        return User.builder()
+        boolean esEmpleado = usuario.getPersona() != null
+                && empleadoRepository.existsById(usuario.getPersona().getIdentificador());
+
+        boolean deshabilitado = usuario.getPersona() != null
+                && usuario.getPersona().getEstado() != null
+                && !"activo".equalsIgnoreCase(usuario.getPersona().getEstado());
+
+        var builder = User.builder()
                 .username(usuario.getEmail())
                 .password(usuario.getPassword())
-                .authorities("USUARIO")
-                .disabled(usuario.getPersona() != null && usuario.getPersona().getEstado() != null && !"activo".equalsIgnoreCase(usuario.getPersona().getEstado()))
-                .build();
+                .disabled(deshabilitado);
+
+        if (esEmpleado) {
+            builder.authorities("USUARIO", "ADMIN");
+        } else {
+            builder.authorities("USUARIO");
+        }
+
+        return builder.build();
     }
 }

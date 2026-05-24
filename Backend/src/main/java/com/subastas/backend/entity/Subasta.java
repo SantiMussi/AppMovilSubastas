@@ -38,6 +38,7 @@ public class Subasta {
     @Column(length = 2)
     private String seguridadPropia;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 10)
-    private String categoria;
+    private Categoria categoria;
 }

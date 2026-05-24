@@ -23,8 +23,9 @@ public class Cliente {
     @Column(length = 2)
     private String admitido; // Podría ser un Boolean en el futuro
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 10)
-    private String categoria; // 'comun', 'especial', 'plata', etc.
+    private Categoria categoria;
 
     @ManyToOne
     @JoinColumn(name = "verificador", nullable = false)

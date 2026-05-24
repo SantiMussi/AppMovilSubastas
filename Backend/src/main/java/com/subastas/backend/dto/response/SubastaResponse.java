@@ -11,6 +11,6 @@ public class SubastaResponse {
     private LocalTime hora;
     private String estado;
     private String ubicacion;
-    private String categoria;
+    private Categoria categoria;
     private Integer productoId;
 }
