@@ -2,7 +2,7 @@ package com.subastas.backend.service.impl;
 
 import com.subastas.backend.dto.request.MedioPagoCreateRequest;
 import com.subastas.backend.dto.request.MedioPagoUpdateRequest;
-import com.subastas.backend.dto.response.MedioPagoResponse;
+import com.subastas.backend.dto.response.mediopago.MedioPagoResponse;
 import com.subastas.backend.entity.MedioPago;
 import com.subastas.backend.entity.Persona;
 import com.subastas.backend.entity.Usuario;

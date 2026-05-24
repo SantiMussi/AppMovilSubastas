@@ -2,7 +2,7 @@ package com.subastas.backend.service;
 
 import com.subastas.backend.dto.request.MedioPagoCreateRequest;
 import com.subastas.backend.dto.request.MedioPagoUpdateRequest;
-import com.subastas.backend.dto.response.MedioPagoResponse;
+import com.subastas.backend.dto.response.mediopago.MedioPagoResponse;
 
 import java.util.List;
 

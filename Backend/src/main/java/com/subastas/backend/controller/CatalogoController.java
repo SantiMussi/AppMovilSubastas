@@ -1,7 +1,7 @@
 package com.subastas.backend.controller;
 
+import com.subastas.backend.dto.response.catalogo.ItemCatalogoResponse;
 import com.subastas.backend.entity.Catalogo;
-import com.subastas.backend.dto.response.ItemCatalogoResponse;
 import com.subastas.backend.service.CatalogoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

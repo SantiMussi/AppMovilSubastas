@@ -1,8 +1,8 @@
 package com.subastas.backend.service;
 
 import com.subastas.backend.dto.request.PagoMultaRequest;
-import com.subastas.backend.dto.response.MultaResponse;
-import com.subastas.backend.dto.response.PagoMultaResponse;
+import com.subastas.backend.dto.response.multa.MultaResponse;
+import com.subastas.backend.dto.response.multa.PagoMultaResponse;
 import com.subastas.backend.exception.MultaVencidaException;
 
 

@@ -2,8 +2,8 @@ package com.subastas.backend.service.impl;
 
 import com.subastas.backend.entity.Catalogo;
 import com.subastas.backend.entity.ItemCatalogo;
-import com.subastas.backend.dto.response.ItemCatalogoResponse;
-import com.subastas.backend.dto.response.ProductoResponse;
+import com.subastas.backend.dto.response.catalogo.ItemCatalogoResponse;
+import com.subastas.backend.dto.response.producto.ProductoResponse;
 import com.subastas.backend.exception.ResourceNotFoundException;
 import com.subastas.backend.repository.CatalogoRepository;
 import com.subastas.backend.repository.ItemCatalogoRepository;

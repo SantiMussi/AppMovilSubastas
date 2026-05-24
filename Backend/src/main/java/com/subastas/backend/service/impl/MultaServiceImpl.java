@@ -1,9 +1,9 @@
 package com.subastas.backend.service.impl;
 
 import com.subastas.backend.dto.request.PagoMultaRequest;
-import com.subastas.backend.dto.response.MultaResponse;
-import com.subastas.backend.dto.response.PagoMultaResponse;
-import com.subastas.backend.dto.response.SubastaResponse;
+import com.subastas.backend.dto.response.multa.MultaResponse;
+import com.subastas.backend.dto.response.multa.PagoMultaResponse;
+import com.subastas.backend.dto.response.subasta.SubastaResponse;
 import com.subastas.backend.entity.*;
 import com.subastas.backend.exception.MultaVencidaException;
 import com.subastas.backend.exception.ResourceNotFoundException;
@@ -12,7 +12,6 @@ import com.subastas.backend.repository.MultaRepository;
 import com.subastas.backend.repository.UsuarioRepository;
 import com.subastas.backend.service.MultaService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

@@ -2,10 +2,10 @@ package com.subastas.backend.controller;
 
 import com.subastas.backend.dto.request.MedioPagoCreateRequest;
 import com.subastas.backend.dto.request.MedioPagoUpdateRequest;
-import com.subastas.backend.dto.response.MedioPagoCreatedResponse;
-import com.subastas.backend.dto.response.MedioPagoListResponse;
-import com.subastas.backend.dto.response.MedioPagoResponse;
 import com.subastas.backend.dto.response.MessageResponse;
+import com.subastas.backend.dto.response.mediopago.MedioPagoCreatedResponse;
+import com.subastas.backend.dto.response.mediopago.MedioPagoListResponse;
+import com.subastas.backend.dto.response.mediopago.MedioPagoResponse;
 import com.subastas.backend.service.MedioPagoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

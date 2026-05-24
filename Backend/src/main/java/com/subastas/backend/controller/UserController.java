@@ -1,10 +1,10 @@
 package com.subastas.backend.controller;
 
 import com.subastas.backend.dto.request.PagoMultaRequest;
-import com.subastas.backend.dto.response.MultaListResponse;
-import com.subastas.backend.dto.response.MultaResponse;
-import com.subastas.backend.dto.response.PagoMultaResponse;
 import com.subastas.backend.dto.response.PerfilResponse;
+import com.subastas.backend.dto.response.multa.MultaListResponse;
+import com.subastas.backend.dto.response.multa.MultaResponse;
+import com.subastas.backend.dto.response.multa.PagoMultaResponse;
 import com.subastas.backend.exception.MultaVencidaException;
 import com.subastas.backend.service.MultaService;
 import com.subastas.backend.service.PersonaService;
