@@ -21,6 +21,9 @@ public class Propuesta {
     @JoinColumn(name = "cliente", nullable = false)
     private Cliente cliente;
 
+    @Column(nullable = false, length = 250)
+    private String titulo;
+
     @Column(nullable = false, length = 500)
     private String descripcion;
 
