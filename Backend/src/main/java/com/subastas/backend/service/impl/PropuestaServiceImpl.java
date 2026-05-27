@@ -46,7 +46,7 @@ public class PropuestaServiceImpl implements PropuestaService {
         request.getFotos().forEach(f -> {
             FotoPropuesta foto = new FotoPropuesta();
             foto.setPropuesta(p);
-            foto.setFoto(f.getBytes());
+            foto.setFoto(java.util.Base64.getDecoder().decode(f));
             p.getFotos().add(foto);
         });
 
