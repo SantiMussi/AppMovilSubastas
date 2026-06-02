@@ -1,9 +1,10 @@
- import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View } from 'react-native';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
  
 import SplashScreen from './src/screens/SplashScreen';
+import RegisterScreen from './src/screens/RegisterScreen';
  
 // Mantener la splash NATIVA hasta que estemos listos para mostrar la custom.
 // Esto evita el flash blanco entre "splash de sistema" y "splash de React".
@@ -53,6 +54,10 @@ export default function App() {
   }
  
   return <RootNavigator />;
+}
+
+function RootNavigator() {
+  return <RegisterScreen />;
 }
  
 async function pingBackend() {
