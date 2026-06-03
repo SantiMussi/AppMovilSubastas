@@ -1,25 +1,29 @@
 import React from 'react';
-import { Text, View, Pressable } from 'react-native';
+import { Text, View, Pressable, Image } from 'react-native';
 
 import { styles } from '../styles/registerStyles';
 
 /**
-* Mosaico de solicitud de carga para documentos de registro.
-* Se utiliza para solicitar a los usuarios que seleccionen un archivo de imagen y para mostrar si el documento ya está adjunto.
-* Propiedades:
-* - title: etiqueta del documento que se muestra en el mosaico.
-* - onPress: función de devolución de llamada que se ejecuta al pulsar el mosaico para abrir/seleccionar el archivo.
-* - selected: valor booleano que cambia el icono, el estilo del borde y la sugerencia del estado de solicitud de carga al estado listo.
-
-* WORK IN PROGRESS
-*/
-
-export function DocumentBox({ title, onPress, selected }) {
+ * Mosaico de captura para documentos de registro.
+ * Obliga a abrir la cámara del dispositivo desde la pantalla de registro y muestra una miniatura cuando la foto está lista.
+ * Propiedades:
+ * - title: etiqueta del documento que se muestra en el mosaico.
+ * - onPress: función que abre la cámara para tomar la foto del documento.
+ * - selected: valor booleano que cambia el icono, el estilo del borde y el estado visual.
+ * - imageUri: URI local de la foto tomada para mostrar una vista previa.
+ */
+export function DocumentBox({ title, onPress, selected, imageUri }) {
   return (
     <Pressable onPress={onPress} style={[styles.docBox, selected && styles.docBoxSelected]}>
-      <Text style={styles.docIcon}>{selected ? '☑' : '▧'}</Text>
+      {imageUri ? (
+        <Image source={{ uri: imageUri }} style={styles.docPreview} />
+      ) : (
+        <View style={styles.docCameraIconWrap}>
+          <Text style={styles.docIcon}>📷</Text>
+        </View>
+      )}
       <Text style={styles.docTitle}>{title}</Text>
-      <Text style={styles.docHint}>{selected ? 'ARCHIVO LISTO' : 'SUBIR ARCHIVO JPG O PNG'}</Text>
+      <Text style={styles.docHint}>{selected ? 'FOTO TOMADA · TOCAR PARA REPETIR' : 'TOMAR FOTO CON CÁMARA'}</Text>
     </Pressable>
   );
 }

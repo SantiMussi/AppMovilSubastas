@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, ScrollView, Switch, Text, View, Modal } from 'react-native';
 import { ActionButton, Card, CenteredScreen, DocumentBox, Header, KeyWatermark, LabeledInput, ProfileRow } from '../components';
 import { palette } from '../constants/palette';
 import { styles } from '../styles/registerStyles';
 import { safeJson } from '../utils/safeJson';
 
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8080';
+const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
 const initialForm = {
   nombre: '',
@@ -13,9 +13,24 @@ const initialForm = {
   documento: '',
   email: '',
   direccion: '',
-  pais: 'Argentina',
+  pais: null,
   dorsoDni: null,
   frenteDni: null,
+};
+
+const normalizeCountry = (country) => {
+  if (!country) {
+    return null;
+  }
+
+  const id = country.numero ?? country.id ?? country.codigo ?? country.nombreCorto ?? country.nombre;
+  const nombre = country.nombre ?? country.name ?? country.nombreCorto ?? String(id);
+
+  return {
+    ...country,
+    id,
+    nombre,
+  };
 };
 
 export default function RegisterScreen() {
@@ -27,13 +42,97 @@ export default function RegisterScreen() {
   const [acceptedTruth, setAcceptedTruth] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [countries, setCountries] = useState([]);
+  const [countriesLoading, setCountriesLoading] = useState(false);
+  const [countriesError, setCountriesError] = useState('');
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
 
   const fullName = useMemo(
     () => [form.nombre, form.apellido].filter(Boolean).join(' ').trim() || 'Alejandro Valentín',
     [form.nombre, form.apellido]
   );
 
+  const selectedCountryName = form.pais?.nombre || '';
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchCountries = async () => {
+      setCountriesLoading(true);
+      setCountriesError('');
+
+      try {
+        const response = await fetch(`${API_BASE}/api/paises`);
+        const payload = await safeJson(response);
+
+        if (!response.ok) {
+          throw new Error(payload?.message || `No se pudieron cargar los países (${response.status})`);
+        }
+
+        const apiCountries = Array.isArray(payload) ? payload.map(normalizeCountry).filter(Boolean) : [];
+
+        if (!isMounted) {
+          return;
+        }
+
+        setCountries(apiCountries);
+        setForm((current) => {
+          if (current.pais || apiCountries.length === 0) {
+            return current;
+          }
+
+          const argentina = apiCountries.find((country) => country.nombre?.toLowerCase() === 'argentina');
+          return { ...current, pais: argentina || apiCountries[0] };
+        });
+      } catch (error) {
+        if (isMounted) {
+          setCountriesError(error.message || 'No se pudieron cargar los países.');
+        }
+      } finally {
+        if (isMounted) {
+          setCountriesLoading(false);
+        }
+      }
+    };
+
+    fetchCountries();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+
+  const resetForm = () => setForm({ ...initialForm, pais: countries[0] || null });
+
+  const takeDocumentPhoto = async (key) => {
+    const ImagePicker = await import('expo-image-picker');
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert('Permiso de cámara requerido', 'Necesitamos acceder a la cámara para fotografiar tu DNI.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: false,
+      cameraType: ImagePicker.CameraType?.back,
+      quality: 0.85,
+    });
+
+    if (result.canceled || result.cancelled) {
+      return;
+    }
+
+    const asset = result.assets?.[0] || result;
+    update(key, {
+      uri: asset.uri,
+      fileName: asset.fileName || `${key}.jpg`,
+      mimeType: asset.mimeType || asset.type || 'image/jpeg',
+      capturedAt: new Date().toISOString(),
+    });
+  };
 
   const validateDetails = () => {
     const required = ['nombre', 'apellido', 'documento', 'email', 'direccion'];
@@ -41,6 +140,16 @@ export default function RegisterScreen() {
 
     if (missing) {
       Alert.alert('Información incompleta', 'Completá tus datos personales para continuar.');
+      return false;
+    }
+
+    if (!form.pais) {
+      Alert.alert('País requerido', 'Seleccioná tu país desde el listado cargado por el sistema.');
+      return false;
+    }
+
+    if (!form.dorsoDni || !form.frenteDni) {
+      Alert.alert('Documentación incompleta', 'Tomá una foto del dorso y otra del frente de tu DNI con la cámara.');
       return false;
     }
 
@@ -193,29 +302,38 @@ export default function RegisterScreen() {
 
               <Text style={styles.label}>PAÍS</Text>
               <Pressable
-                style={styles.select}
-                onPress={() => update('pais', form.pais === 'Argentina' ? 'México' : 'Argentina')}
+                style={[styles.select, countriesError && styles.selectError]}
+                onPress={() => {
+                  if (!countriesLoading && countries.length > 0) {
+                    setCountryDropdownOpen(true);
+                  }
+                }}
               >
-                <Text style={styles.selectText}>{form.pais}</Text>
+                <Text style={[styles.selectText, !selectedCountryName && styles.selectPlaceholder]}>
+                  {countriesLoading ? 'Cargando países...' : selectedCountryName || 'Seleccioná un país'}
+                </Text>
                 <Text style={styles.chevron}>⌄</Text>
               </Pressable>
+              {countriesError ? <Text style={styles.fieldError}>{countriesError}</Text> : null}
 
               <Text style={styles.sectionLabel}>DOCUMENTACIÓN</Text>
               <View style={styles.documentRow}>
                 <DocumentBox
                   title="Dorso de DNI"
-                  onPress={() => update('dorsoDni', 'selected')}
+                  onPress={() => takeDocumentPhoto('dorsoDni')}
                   selected={!!form.dorsoDni}
+                  imageUri={form.dorsoDni?.uri}
                 />
                 <DocumentBox
                   title="Frente de DNI"
-                  onPress={() => update('frenteDni', 'selected')}
+                  onPress={() => takeDocumentPhoto('frenteDni')}
                   selected={!!form.frenteDni}
+                  imageUri={form.frenteDni?.uri}
                 />
               </View>
 
               <View style={styles.buttonRow}>
-                <ActionButton label="CANCELAR" variant="danger" onPress={() => setForm(initialForm)} />
+                <ActionButton label="CANCELAR" variant="danger" onPress={resetForm} />
                 <ActionButton label="SIGUIENTE" onPress={goToPending} />
               </View>
             </Card>
@@ -290,7 +408,7 @@ export default function RegisterScreen() {
                   label="DOMICILIO DE RESIDENCIA"
                   value={form.direccion || 'Avenida de los Insurgentes 1450, Piso 4, Colonia del Valle'}
                 />
-                <ProfileRow label="PAÍS / REGIÓN" value={`◉ ${form.pais || 'México'}`} />
+                <ProfileRow label="PAÍS / REGIÓN" value={`◉ ${selectedCountryName || 'Sin seleccionar'}`} />
               </View>
 
               <View style={styles.legalBlock}>
@@ -339,6 +457,36 @@ export default function RegisterScreen() {
             </View>
           </View>
         )}
+
+        <Modal
+          animationType="fade"
+          transparent
+          visible={countryDropdownOpen}
+          onRequestClose={() => setCountryDropdownOpen(false)}
+        >
+          <Pressable style={styles.dropdownBackdrop} onPress={() => setCountryDropdownOpen(false)}>
+            <View style={styles.dropdownCard}>
+              <Text style={styles.dropdownTitle}>Seleccioná tu país</Text>
+              <FlatList
+                data={countries}
+                keyExtractor={(item) => String(item.id)}
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={[styles.countryOption, form.pais?.id === item.id && styles.countryOptionSelected]}
+                    onPress={() => {
+                      update('pais', item);
+                      setCountryDropdownOpen(false);
+                    }}
+                  >
+                    <Text style={styles.countryOptionText}>{item.nombre}</Text>
+                    {item.nombreCorto ? <Text style={styles.countryOptionMeta}>{item.nombreCorto}</Text> : null}
+                  </Pressable>
+                )}
+              />
+            </View>
+          </Pressable>
+        </Modal>
+
 
         {loading && step !== 'pending' ? (
           <View style={styles.loadingOverlay}>
