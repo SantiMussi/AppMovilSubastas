@@ -105,7 +105,7 @@ export default function RegisterScreen() {
 
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
 
-const resetForm = () => {
+  const resetForm = () => {
     setForm({ ...initialForm, pais: countries[0] || null });
     setPassword('');
     setPasswordConfirm('');
@@ -250,7 +250,7 @@ const resetForm = () => {
       const payload = await safeJson(response);
 
       if (!response.ok) {
-        console.log(payload)
+        console.log(payload);
         throw new Error(buildApiErrorMessage(payload, response.status, 'Registro inicial rechazado'));
       }
 
@@ -326,7 +326,7 @@ const resetForm = () => {
       const payload = await safeJson(response);
 
       if (!response.ok) {
-        console.log(payload)
+        console.log(payload);
         throw new Error(payload?.message || `Registro rechazado (${response.status})`);
       }
 
@@ -436,7 +436,7 @@ const resetForm = () => {
         )}
 
         {step === 'pending' && (
-          <CenteredScreen caption="Registro 2 - Esperando aprobación">
+          <CenteredScreen>
             <View style={styles.pendingContent}>
               <Text style={styles.heroTitle}>Aprobación{`\n`}pendiente</Text>
               <Text style={styles.heroText}>La empresa todavía está revisando tus datos. Una vez que tengas el OK podrás seguir con el proceso de registro.</Text>
@@ -447,7 +447,6 @@ const resetForm = () => {
             {message ? <Text style={styles.feedback}>{message}</Text> : null}
 
             <ActionButton
-              label={loading ? 'CONSULTANDO...' : '←   VOLVER'}
               label={loading ? 'CONSULTANDO...' : 'CONSULTAR ESTADO'}
               wide
               disabled={loading}
@@ -457,7 +456,7 @@ const resetForm = () => {
         )}
 
         {step === 'security' && (
-          <CenteredScreen caption="Registro 2 - Establecer Clave">
+          <CenteredScreen>
             <Header title="Seguridad de la Cuenta" activeStep={1} />
             <Text style={styles.heroText}>
               Establezca una clave de acceso robusta para proteger su colección y transacciones privadas.
