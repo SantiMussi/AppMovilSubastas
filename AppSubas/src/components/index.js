@@ -1,3 +1,5 @@
+// poner componentes acá para no tener que importar individualmente cada uno a una pantalla
+
 export { ActionButton } from './ActionButton';
 export { Card } from './Card';
 export { CenteredScreen } from './CenteredScreen';
