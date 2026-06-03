@@ -4,7 +4,9 @@ import * as ExpoSplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
  
 import SplashScreen from './src/screens/SplashScreen';
+import AuthChoiceScreen from './src/screens/AuthChoiceScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
+import LoginScreen from './src/screens/LoginScreen';
  
 ExpoSplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -52,7 +54,29 @@ export default function App() {
 }
 
 function RootNavigator() {
-  return <RegisterScreen />;
+  const [screen, setScreen] = useState('authChoice');
+
+  if (screen === 'login') {
+    return (
+      <LoginScreen
+        onBack={() => setScreen('authChoice')}
+        onRegister={() => setScreen('register')}
+        onLoginSuccess={() => {}}
+      />
+    );
+  }
+
+  if (screen === 'register') {
+    return <RegisterScreen onBack={() => setScreen('authChoice')} />;
+  }
+
+  return (
+    <AuthChoiceScreen
+      onBack={() => {}}
+      onLogin={() => setScreen('login')}
+      onRegister={() => setScreen('register')}
+    />
+  );
 }
  
 async function pingBackend() {

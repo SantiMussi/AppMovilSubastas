@@ -8,6 +8,7 @@ import { headerStyles } from './headerStyles';
 import { keyStyles } from './keyStyles';
 import { layoutStyles } from './layoutStyles';
 import { modalStyles } from './modalStyles';
+import { navigationStyles } from './navigationStyles';
 import { profileStyles } from './profileStyles';
 import { statusStyles } from './statusStyles';
 
@@ -21,5 +22,6 @@ export const styles = StyleSheet.create({
   ...keyStyles,
   ...profileStyles,
   ...modalStyles,
+  ...navigationStyles,
   ...dropdownStyles,
 });

@@ -33,7 +33,7 @@ const normalizeCountry = (country) => {
   };
 };
 
-export default function RegisterScreen() {
+export default function RegisterScreen({ onBack }) {
   const [step, setStep] = useState('details');
   const [form, setForm] = useState(initialForm);
   const [password, setPassword] = useState('');
@@ -358,6 +358,11 @@ export default function RegisterScreen() {
         {step === 'details' && (
           <ScrollView contentContainerStyle={styles.scrollShell}>
             <Card>
+              {onBack ? (
+                <Pressable accessibilityLabel="Volver" onPress={onBack} style={styles.registerBackButton}>
+                  <Text style={styles.registerBackIcon}>←</Text>
+                </Pressable>
+              ) : null}
               <Header title="Registro" eyebrow="PASO 1 DE 2" activeStep={0} compact />
               <Text style={styles.sectionLabel}>INFORMACIÓN PERSONAL</Text>
 
