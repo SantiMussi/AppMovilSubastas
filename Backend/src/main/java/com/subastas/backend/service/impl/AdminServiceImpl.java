@@ -202,6 +202,27 @@ public class AdminServiceImpl implements AdminService {
         return new MessageResponse("Categoría actualizada a: " + req.getNuevaCategoria());
     }
 
+	@Transactional
+    public MessageResponse admitirUsuario(Integer empleadoId, Integer usuarioId) {
+        Cliente cliente = findClienteByUsuarioOrClienteId(usuarioId);
+        Empleado verificador = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado verificador no encontrado"));
+
+        cliente.setAdmitido("si");
+        cliente.setVerificador(verificador);
+        clienteRepository.save(cliente);
+
+        return new MessageResponse("Usuario admitido correctamente");
+    }
+
+    private Cliente findClienteByUsuarioOrClienteId(Integer usuarioId) {
+        return clienteRepository.findById(usuarioId)
+                .or(() -> usuarioRepository.findById(usuarioId)
+                        .map(Usuario::getPersona)
+                        .flatMap(persona -> clienteRepository.findById(persona.getIdentificador())))
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+    }
+	
 
     //  MEDIOS DE PAGO
 

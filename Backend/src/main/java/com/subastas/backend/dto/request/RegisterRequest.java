@@ -1,5 +1,6 @@
 package com.subastas.backend.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -32,6 +33,7 @@ public class RegisterRequest {
 
     private String password;
 
+    @JsonAlias("domicilio")
     @Size(max = 250, message = "La dirección no puede superar los 250 caracteres")
     private String direccion;
 }

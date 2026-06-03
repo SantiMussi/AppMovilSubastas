@@ -52,7 +52,12 @@ public class AdminController {
         return adminService.cambiarCategoria(currentUser.obtenerEmpleadoId(), usuarioId, req);
     }
 
+    @PostMapping("/users/{usuarioId}/admit")
+    public MessageResponse admitirUsuario(@PathVariable Integer usuarioId) {
+        return adminService.admitirUsuario(currentUser.obtenerEmpleadoId(), usuarioId);
+    }
 
+    
     //  MEDIOS DE PAGO
 
     @PostMapping("/payments/{pagoId}/verify")

@@ -12,7 +12,6 @@ import com.subastas.backend.entity.Cliente;
 import com.subastas.backend.entity.Empleado;
 import com.subastas.backend.entity.Persona;
 import com.subastas.backend.entity.Usuario;
-import com.subastas.backend.exception.ConflictException;
 import com.subastas.backend.repository.ClienteRepository;
 import com.subastas.backend.repository.EmpleadoRepository;
 import com.subastas.backend.repository.PersonaRepository;
@@ -48,13 +47,17 @@ public class AuthenticationService {
         String email = normalizeEmail(request.getEmail());
         String documento = request.getDocumento().trim();
 
-        usuarioRepository.findByEmail(email).ifPresent(usuario -> {
-            throw new IllegalArgumentException("Ya existe un usuario registrado con ese email");
-        });
-        personaRepository.findByDocumento(documento).ifPresent(persona -> {
-            throw new IllegalArgumentException("Ya existe una persona registrada con ese documento");
-        });
+        Usuario existingUsuario = usuarioRepository.findByEmail(email).orElse(null);
+        Persona existingPersona = personaRepository.findByDocumento(documento).orElse(null);
 
+        if (existingUsuario != null) {
+            return updateExistingInitialRegistration(existingUsuario, existingPersona, documento, request);
+        }
+
+        if (existingPersona != null) {
+            throw new IllegalArgumentException("Ya existe una persona registrada con ese documento");
+        }
+    
         Persona persona = Persona.builder()
                 .documento(documento)
                 .nombre(request.getNombre().trim())
@@ -88,6 +91,45 @@ public class AuthenticationService {
         return RegistroInicialResponse.builder()
                 .message("Registro inicial creado correctamente")
                 .clientId(savedPersona.getIdentificador())
+                .status("pendiente_verificacion")
+                .build();
+    }
+
+    private RegistroInicialResponse updateExistingInitialRegistration(Usuario usuario, Persona personaByDocumento,
+                                                                      String documento, RegisterRequest request) {
+        Persona persona = usuario.getPersona();
+        if (persona == null) {
+            throw new IllegalArgumentException("Ya existe un usuario registrado con ese email, pero no tiene persona asociada");
+        }
+
+        if (!documento.equals(persona.getDocumento())) {
+            throw new IllegalArgumentException("Ya existe un usuario registrado con ese email");
+        }
+
+        if (personaByDocumento != null && !personaByDocumento.getIdentificador().equals(persona.getIdentificador())) {
+            throw new IllegalArgumentException("Ya existe una persona registrada con ese documento");
+        }
+
+        if (usuario.getPassword() != null && !usuario.getPassword().isBlank()) {
+            throw new IllegalArgumentException("El registro ya fue completado");
+        }
+
+        persona.setNombre(request.getNombre().trim());
+        persona.setDireccion(trimToNull(request.getDireccion()));
+        personaRepository.save(persona);
+
+        usuario.setApellido(trimToNull(request.getApellido()));
+        usuarioRepository.save(usuario);
+
+        Cliente cliente = getCliente(usuario);
+        if (cliente != null) {
+            cliente.setAdmitido("no");
+            clienteRepository.save(cliente);
+        }
+
+        return RegistroInicialResponse.builder()
+                .message("Registro inicial actualizado correctamente")
+                .clientId(persona.getIdentificador())
                 .status("pendiente_verificacion")
                 .build();
     }
