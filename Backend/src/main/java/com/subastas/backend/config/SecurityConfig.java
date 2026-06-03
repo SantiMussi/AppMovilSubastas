@@ -48,6 +48,8 @@ public class SecurityConfig {
 
                         // Autenticación
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/register/status").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/complete").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
 
                         // Subastas (solo lectura pública)

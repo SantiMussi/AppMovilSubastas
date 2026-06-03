@@ -38,6 +38,7 @@ export default function RegisterScreen() {
   const [form, setForm] = useState(initialForm);
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [securePassword, setSecurePassword] = useState(true);
   const [acceptedTruth, setAcceptedTruth] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -104,7 +105,43 @@ export default function RegisterScreen() {
 
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
 
-  const resetForm = () => setForm({ ...initialForm, pais: countries[0] || null });
+const resetForm = () => {
+    setForm({ ...initialForm, pais: countries[0] || null });
+    setPassword('');
+    setPasswordConfirm('');
+    setVerificationCode('');
+    setAcceptedTruth(false);
+    setMessage('');
+  };
+
+  const formatDocumentPhoto = (photo) => {
+    if (!photo) {
+      return null;
+    }
+
+    return photo.base64 || photo.uri;
+  };
+
+  const buildApiErrorMessage = (payload, statusCode, fallback) => {
+    if (!payload) {
+      return `${fallback} (${statusCode})`;
+    }
+
+    if (payload.message || payload.error) {
+      return payload.message || payload.error;
+    }
+
+    const validationMessages = Object.entries(payload)
+      .filter(([key]) => !['status', 'timestamp'].includes(key))
+      .map(([key, value]) => `${key}: ${value}`);
+
+    if (validationMessages.length > 0) {
+      return validationMessages.join('\n');
+    }
+
+    return `${fallback} (${statusCode})`;
+  };
+
 
   const takeDocumentPhoto = async (key) => {
     const ImagePicker = await import('expo-image-picker');
@@ -119,6 +156,7 @@ export default function RegisterScreen() {
       allowsEditing: false,
       cameraType: ImagePicker.CameraType?.back,
       quality: 0.85,
+      base64: true,
     });
 
     if (result.canceled || result.cancelled) {
@@ -130,6 +168,7 @@ export default function RegisterScreen() {
       uri: asset.uri,
       fileName: asset.fileName || `${key}.jpg`,
       mimeType: asset.mimeType || asset.type || 'image/jpeg',
+      base64: asset.base64,
       capturedAt: new Date().toISOString(),
     });
   };
@@ -175,6 +214,61 @@ export default function RegisterScreen() {
     return true;
   };
 
+  const buildInitialRegisterPayload = () => ({
+    documento: form.documento.trim(),
+    nombre: form.nombre.trim(),
+    apellido: form.apellido.trim(),
+    email: form.email.trim().toLowerCase(),
+    domicilio: form.direccion.trim(),
+    paisId: form.pais?.id,
+    fotoDniFrente: formatDocumentPhoto(form.frenteDni),
+    fotoDniDorso: formatDocumentPhoto(form.dorsoDni),
+  });
+
+  const canProceedToPasswordSetup = (status) => {
+    const normalizedStatus = String(status?.status || status?.estado || '').trim().toLowerCase();
+    return Boolean(
+      status?.puedeCompletarEtapa2 ||
+        status?.approved ||
+        normalizedStatus === 'approved' ||
+        normalizedStatus === 'aprobado' ||
+        normalizedStatus === 'ok'
+    );
+  };
+
+  const submitInitialRegistration = async () => {
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const response = await fetch(`${API_BASE}/api/v1/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildInitialRegisterPayload()),
+      });
+
+      const payload = await safeJson(response);
+
+      if (!response.ok) {
+        console.log(payload)
+        throw new Error(buildApiErrorMessage(payload, response.status, 'Registro inicial rechazado'));
+      }
+
+      setStep('pending');
+      setMessage(
+        payload?.message ||
+          'Registro inicial enviado correctamente. Revisaremos tu documentación y te avisaremos por email cuando puedas continuar.'
+      );
+    } catch (error) {
+      const errorMessage = error.message || 'No se pudo enviar el registro inicial.';
+      setMessage(errorMessage);
+      Alert.alert('Error de registro', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const checkRegisterStatus = async () => {
     setLoading(true);
     setMessage('');
@@ -184,29 +278,27 @@ export default function RegisterScreen() {
         `${API_BASE}/api/v1/auth/register/status?email=${encodeURIComponent(form.email.trim())}`
       );
 
-      if (response.ok) {
-        const status = await response.json();
+      const payload = await safeJson(response);
 
-        if (status.approved || status.estado === 'approved' || status.estado === 'aprobado') {
+      if (response.ok) {
+        if (canProceedToPasswordSetup(payload)) {
           setStep('security');
           return;
         }
 
-        setMessage('Tu documentación continúa en revisión. Te avisaremos cuando esté aprobada.');
+        setMessage('Tu documentación continúa en revisión. Te avisaremos por email cuando esté aprobada.');
         return;
       }
 
-      setMessage('No se encontró un endpoint de estado activo; podés continuar la demo de registro.');
-      setStep('security');
+      setMessage(payload?.message || 'Tu registro todavía no fue aprobado para continuar.');
     } catch (error) {
-      setMessage('No pudimos consultar el estado, pero podés continuar la demo de registro.');
-      setStep('security');
+      setMessage(error.message || 'No pudimos consultar el estado del registro.');
     } finally {
       setLoading(false);
     }
   };
 
-  const submitRegistration = async () => {
+  const completeRegistration = async () => {
     if (!acceptedTruth) {
       Alert.alert('Confirmación requerida', 'Confirmá que los datos son veraces y corresponden a tu identidad legal.');
       return;
@@ -216,27 +308,30 @@ export default function RegisterScreen() {
     setMessage('');
 
     try {
-      const response = await fetch(`${API_BASE}/api/v1/auth/register`, {
+      const completePayload = {
+        email: form.email.trim().toLowerCase(),
+        password,
+      };
+
+      if (verificationCode.trim()) {
+        completePayload.verificationCode = verificationCode.trim();
+      }
+
+      const response = await fetch(`${API_BASE}/api/v1/auth/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          documento: form.documento.trim(),
-          nombre: form.nombre.trim(),
-          apellido: form.apellido.trim(),
-          email: form.email.trim().toLowerCase(),
-          direccion: form.direccion.trim(),
-          password,
-        }),
+        body: JSON.stringify(completePayload),
       });
 
       const payload = await safeJson(response);
 
       if (!response.ok) {
+        console.log(payload)
         throw new Error(payload?.message || `Registro rechazado (${response.status})`);
       }
 
-      setMessage('Registro completado. Token recibido y cuenta creada correctamente.');
-      Alert.alert('Registro completado', 'Tu cuenta fue creada correctamente.');
+      setMessage(payload?.message || 'Registro completado. Token recibido y cuenta creada correctamente.');
+      Alert.alert('Registro completado', payload?.message || 'Tu cuenta fue creada correctamente.');
     } catch (error) {
       setMessage(error.message || 'No se pudo completar el registro.');
       Alert.alert('Error de registro', error.message || 'No se pudo completar el registro.');
@@ -247,7 +342,7 @@ export default function RegisterScreen() {
 
   const goToPending = () => {
     if (validateDetails()) {
-      setStep('pending');
+      submitInitialRegistration();
     }
   };
 
@@ -334,7 +429,7 @@ export default function RegisterScreen() {
 
               <View style={styles.buttonRow}>
                 <ActionButton label="CANCELAR" variant="danger" onPress={resetForm} />
-                <ActionButton label="SIGUIENTE" onPress={goToPending} />
+                <ActionButton label={loading ? 'ENVIANDO...' : 'SIGUIENTE'} disabled={loading} onPress={goToPending} />
               </View>
             </Card>
           </ScrollView>
@@ -345,6 +440,7 @@ export default function RegisterScreen() {
             <View style={styles.pendingContent}>
               <Text style={styles.heroTitle}>Aprobación{`\n`}pendiente</Text>
               <Text style={styles.heroText}>La empresa todavía está revisando tus datos. Una vez que tengas el OK podrás seguir con el proceso de registro.</Text>
+              <Text style={styles.heroText}>La empresa está revisando tus datos y fotos de DNI. Cuando el administrador apruebe tu registro, recibirás un email y podrás consultar el estado para continuar.</Text>
               <KeyWatermark />
             </View>
 
@@ -352,6 +448,7 @@ export default function RegisterScreen() {
 
             <ActionButton
               label={loading ? 'CONSULTANDO...' : '←   VOLVER'}
+              label={loading ? 'CONSULTANDO...' : 'CONSULTAR ESTADO'}
               wide
               disabled={loading}
               onPress={checkRegisterStatus}
@@ -385,6 +482,13 @@ export default function RegisterScreen() {
                 value={passwordConfirm}
                 onChangeText={setPasswordConfirm}
                 secureTextEntry={securePassword}
+              />
+              <LabeledInput
+                label="CÓDIGO DE VERIFICACIÓN"
+                placeholder="Opcional, si el email lo incluye"
+                value={verificationCode}
+                onChangeText={setVerificationCode}
+                autoCapitalize="none"
               />
             </View>
 
@@ -431,7 +535,7 @@ export default function RegisterScreen() {
                 <ActionButton
                   label={loading ? 'ENVIANDO...' : 'CONFIRMAR'}
                   disabled={loading}
-                  onPress={submitRegistration}
+                  onPress={completeRegistration}
                 />
               </View>
             </Card>

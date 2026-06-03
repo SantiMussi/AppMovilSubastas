@@ -9,3 +9,7 @@ spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 # JPA / Hibernate
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
+
+# Código real esperado para completar registros en ambientes locales/de prueba.
+# Si se deja vacío, el backend solo exige que verificationCode venga informado. PARA REGISTRO
+app.auth.registration-verification-code=1234
