@@ -56,17 +56,30 @@ function RootNavigator() {
 }
  
 async function pingBackend() {
-  // Timeout manual si no hay conexion con API
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 4000);
- 
+
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, 4000);
+
   try {
     const res = await fetch(`${API_BASE}/actuator/health`, {
       signal: controller.signal,
     });
-    if (!res.ok) throw new Error(`Health check ${res.status}`);
+
+    if (!res.ok) {
+      throw new Error(`Health check ${res.status}`);
+    }
+
     const data = await res.json();
-    if (data.status !== 'UP') throw new Error('Backend not UP');
+
+    if (data.status !== "UP") {
+      throw new Error("Backend not UP");
+    }
+
+    console.log("Backend UP");
+  } catch (err) {
+    console.warn("Backend not UP");
   } finally {
     clearTimeout(timeoutId);
   }

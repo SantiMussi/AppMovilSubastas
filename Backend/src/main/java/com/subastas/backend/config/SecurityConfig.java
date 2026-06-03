@@ -41,6 +41,9 @@ public class SecurityConfig {
                         // ── Manejo de errores ──
                         .requestMatchers("/error/**").permitAll()
 
+                        // ── Monitoreo de salud (Actuator) ──
+                        .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
+
                         // PERMITALL
 
                         // Autenticación
