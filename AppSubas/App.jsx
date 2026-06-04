@@ -7,6 +7,7 @@ import SplashScreen from './src/screens/SplashScreen';
 import AuthChoiceScreen from './src/screens/AuthChoiceScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import LoginScreen from './src/screens/LoginScreen';
+import UserDataScreen from './src/screens/UserDataScreen';
  
 ExpoSplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -55,19 +56,67 @@ export default function App() {
 
 function RootNavigator() {
   const [screen, setScreen] = useState('authChoice');
+  const [session, setSession] = useState(null);
+
+  const extractAccessToken = (payload) => payload?.accessToken || payload?.access_token || payload?.token || '';
+
+  const openUserDataScreen = async (authPayload) => {
+    const accessToken = extractAccessToken(authPayload);
+    let profile = authPayload?.user || null;
+    let profileError = '';
+
+    if (accessToken) {
+      try {
+        const response = await fetch(`${API_BASE}/api/v1/users/me`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const profilePayload = await response.json().catch(() => null);
+
+        if (response.ok) {
+          profile = profilePayload;
+        } else {
+          profileError = profilePayload?.message || profilePayload?.error || `No se pudo cargar el perfil (${response.status}).`;
+        }
+      } catch (error) {
+        profileError = error.message || 'No se pudo cargar el perfil del usuario.';
+      }
+    } else {
+      profileError = 'La respuesta no incluyó un access token.';
+    }
+
+    setSession({
+      authPayload: authPayload || {},
+      accessToken,
+      profile,
+      profileError,
+    });
+    setScreen('userData');
+  };
+
+  if (screen === 'userData') {
+    return (
+      <UserDataScreen
+        session={session}
+        onLogout={() => {
+          setSession(null);
+          setScreen('authChoice');
+        }}
+      />
+    );
+  }
 
   if (screen === 'login') {
     return (
       <LoginScreen
         onBack={() => setScreen('authChoice')}
         onRegister={() => setScreen('register')}
-        onLoginSuccess={() => {}}
+        onLoginSuccess={openUserDataScreen}
       />
     );
   }
 
   if (screen === 'register') {
-    return <RegisterScreen onBack={() => setScreen('authChoice')} />;
+    return <RegisterScreen onBack={() => setScreen('authChoice')} onRegisterSuccess={openUserDataScreen} />;
   }
 
   return (

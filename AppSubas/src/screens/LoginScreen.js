@@ -51,7 +51,7 @@ export default function LoginScreen({ onBack, onRegister, onLoginSuccess }) {
 
       setMessage('Sesión iniciada correctamente.');
       onLoginSuccess?.(payload);
-      Alert.alert('Bienvenido', 'Sesión iniciada correctamente.');
+      return <RegisterScreen onBack={() => setScreen('authChoice')} onRegisterSuccess={openUserDataScreen} />;
     } catch (error) {
       const errorMessage = error.message || 'No pudimos iniciar sesión.';
       setMessage(errorMessage);

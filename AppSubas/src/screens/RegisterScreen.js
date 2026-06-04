@@ -33,7 +33,7 @@ const normalizeCountry = (country) => {
   };
 };
 
-export default function RegisterScreen({ onBack }) {
+export default function RegisterScreen({ onBack, onRegisterSuccess }) {
   const [step, setStep] = useState('details');
   const [form, setForm] = useState(initialForm);
   const [password, setPassword] = useState('');
@@ -331,7 +331,7 @@ export default function RegisterScreen({ onBack }) {
       }
 
       setMessage(payload?.message || 'Registro completado. Token recibido y cuenta creada correctamente.');
-      Alert.alert('Registro completado', payload?.message || 'Tu cuenta fue creada correctamente.');
+      onRegisterSuccess?.(payload);
     } catch (error) {
       setMessage(error.message || 'No se pudo completar el registro.');
       Alert.alert('Error de registro', error.message || 'No se pudo completar el registro.');
