@@ -8,7 +8,8 @@ import AuthChoiceScreen from './src/screens/AuthChoiceScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import UserDataScreen from './src/screens/UserDataScreen';
- 
+import OfferItemScreen from './src/screens/OfferItemScreen';
+
 ExpoSplashScreen.preventAutoHideAsync().catch(() => {});
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
@@ -117,6 +118,16 @@ function RootNavigator() {
 
   if (screen === 'register') {
     return <RegisterScreen onBack={() => setScreen('authChoice')} onRegisterSuccess={openUserDataScreen} />;
+  }
+
+  if (screen === 'offerItem') {
+  return (
+    <OfferItemScreen
+      onBack={() => setScreen('authChoice')} // ajustar cuando esté el side menu
+      onGoToMyItems={() => setScreen('myItems')} // ajustar cuando exista esa pantalla
+      accessToken={session?.accessToken}
+    />
+    );
   }
 
   return (

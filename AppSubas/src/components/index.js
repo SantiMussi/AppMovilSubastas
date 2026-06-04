@@ -8,3 +8,4 @@ export { Header } from './Header';
 export { KeyWatermark } from './KeyWatermark';
 export { LabeledInput } from './LabeledInput';
 export { ProfileRow } from './ProfileRow';
+export { TopBar } from './TopBar';
