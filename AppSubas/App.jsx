@@ -9,6 +9,10 @@ import RegisterScreen from './src/screens/RegisterScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import UserDataScreen from './src/screens/UserDataScreen';
 import OfferItemScreen from './src/screens/OfferItemScreen';
+import PlaceholderScreen from './src/screens/PlaceholderScreen';
+
+import { Sidebar } from './src/components/Sidebar';
+import { DrawerLayout } from './src/components/DrawerLayout';
 
 ExpoSplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -58,6 +62,8 @@ export default function App() {
 function RootNavigator() {
   const [screen, setScreen] = useState('authChoice');
   const [session, setSession] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [screenHistory, setScreenHistory] = useState([]);
 
   const extractAccessToken = (payload) => payload?.accessToken || payload?.access_token || payload?.token || '';
 
@@ -94,48 +100,168 @@ function RootNavigator() {
     setScreen('userData');
   };
 
-  if (screen === 'userData') {
-    return (
-      <UserDataScreen
-        session={session}
-        onLogout={() => {
-          setSession(null);
-          setScreen('authChoice');
-        }}
-      />
-    );
-  }
+  const handleLogout = () => {
+    setDrawerOpen(false);
+    setSession(null);
+    setScreen('authChoice');
+  };
 
-  if (screen === 'login') {
+  const handleNavigate = (screenKey) => {
+    setDrawerOpen(false);
+    setScreenHistory((prev) => [...prev, screen]);
+    setScreen(screenKey);
+  };
+
+  const goBack = () => {
+    setScreenHistory((prev) => {
+      const copy = [...prev];
+      const previous = copy.pop() || 'userData';
+      setScreen(previous);
+      return copy;
+    });
+  };
+
+  const openDrawer = () => setDrawerOpen(true);
+  const closeDrawer = () => setDrawerOpen(false);
+
+  /* ── Pre-auth screens (no drawer) ── */
+
+  if (!session) {
+    if (screen === 'login') {
+      return (
+        <LoginScreen
+          onBack={() => setScreen('authChoice')}
+          onRegister={() => setScreen('register')}
+          onLoginSuccess={openUserDataScreen}
+        />
+      );
+    }
+
+    if (screen === 'register') {
+      return <RegisterScreen onBack={() => setScreen('authChoice')} onRegisterSuccess={openUserDataScreen} />;
+    }
+
     return (
-      <LoginScreen
-        onBack={() => setScreen('authChoice')}
+      <AuthChoiceScreen
+        onBack={() => {}}
+        onLogin={() => setScreen('login')}
         onRegister={() => setScreen('register')}
-        onLoginSuccess={openUserDataScreen}
       />
     );
   }
 
-  if (screen === 'register') {
-    return <RegisterScreen onBack={() => setScreen('authChoice')} onRegisterSuccess={openUserDataScreen} />;
-  }
+  /* ── Post-auth screens (with drawer) ── */
 
-  if (screen === 'offerItem') {
-  return (
-    <OfferItemScreen
-      onBack={() => setScreen('authChoice')} // ajustar cuando esté el side menu
-      onGoToMyItems={() => setScreen('myItems')} // ajustar cuando exista esa pantalla
-      accessToken={session?.accessToken}
+  const renderSidebar = () => (
+    <Sidebar
+      profile={session?.profile}
+      currentScreen={screen}
+      onNavigate={handleNavigate}
+      onClose={closeDrawer}
+      onLogout={handleLogout}
     />
-    );
-  }
+  );
+
+  const renderCurrentScreen = () => {
+    switch (screen) {
+      case 'userData':
+        return (
+          <UserDataScreen
+            session={session}
+            onLogout={handleLogout}
+            onMenuPress={openDrawer}
+          />
+        );
+
+      case 'offerItem':
+        return (
+          <OfferItemScreen
+            onBack={goBack}
+            onMenuPress={openDrawer}
+            onGoToMyItems={() => handleNavigate('coleccion')}
+            accessToken={session?.accessToken}
+          />
+        );
+
+      case 'perfil':
+        return (
+          <PlaceholderScreen
+            title="Perfil"
+            subtitle="Acá vas a poder ver y editar tu información personal, foto de perfil y datos de contacto."
+            iconName="person-outline"
+            onMenuPress={openDrawer}
+          />
+        );
+
+      case 'coleccion':
+        return (
+          <PlaceholderScreen
+            title="Mi Colección"
+            subtitle="Explorá los artículos que tenés en tu colección y seguí el estado de tus piezas."
+            iconName="albums-outline"
+            onMenuPress={openDrawer}
+          />
+        );
+
+      case 'pagos':
+        return (
+          <PlaceholderScreen
+            title="Métodos de Pago"
+            subtitle="Gestioná tus tarjetas y métodos de pago para realizar ofertas en las subastas."
+            iconName="card-outline"
+            onMenuPress={openDrawer}
+          />
+        );
+
+      case 'historial':
+        return (
+          <PlaceholderScreen
+            title="Historial de Pujas"
+            subtitle="Revisá todas tus pujas anteriores, resultados y montos ofrecidos."
+            iconName="time-outline"
+            onMenuPress={openDrawer}
+          />
+        );
+
+      case 'ajustes':
+        return (
+          <PlaceholderScreen
+            title="Ajustes"
+            subtitle="Configurá notificaciones, privacidad, idioma y otras preferencias de la aplicación."
+            iconName="settings-outline"
+            onMenuPress={openDrawer}
+          />
+        );
+
+      case 'notificaciones':
+        return (
+          <PlaceholderScreen
+            title="Notificaciones"
+            subtitle="Acá vas a recibir alertas sobre subastas, pujas y novedades de Vantage."
+            iconName="notifications-outline"
+            onMenuPress={openDrawer}
+          />
+        );
+
+      default:
+        return (
+          <UserDataScreen
+            session={session}
+            onLogout={handleLogout}
+            onMenuPress={openDrawer}
+          />
+        );
+    }
+  };
 
   return (
-    <AuthChoiceScreen
-      onBack={() => {}}
-      onLogin={() => setScreen('login')}
-      onRegister={() => setScreen('register')}
-    />
+    <DrawerLayout
+      isOpen={drawerOpen}
+      onClose={closeDrawer}
+      renderSidebar={renderSidebar}
+    >
+      {renderCurrentScreen()}
+    </DrawerLayout>
   );
 }
  

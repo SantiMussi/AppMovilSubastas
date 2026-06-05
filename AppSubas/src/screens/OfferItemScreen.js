@@ -25,7 +25,7 @@ const MAX_PHOTOS = 10;
 const initialForm = { title: '', description: '', history: '' };
 const initialErrors = { title: '', description: '', history: '', photos: '', declaration: '' };
 
-export default function OfferItemScreen({ onBack, onGoToMyItems, accessToken }) {
+export default function OfferItemScreen({ onBack, onMenuPress, onGoToMyItems, accessToken }) {
   const [step, setStep] = useState('details');
   const [form, setForm] = useState(initialForm);
   const [photos, setPhotos] = useState([]);
@@ -134,7 +134,7 @@ export default function OfferItemScreen({ onBack, onGoToMyItems, accessToken }) 
 
   return (
     <View style={styles.stage}>
-      <TopBar onMenuPress={onBack} />
+      <TopBar onMenuPress={onMenuPress || onBack} />
 
       {step === 'details' && (
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>

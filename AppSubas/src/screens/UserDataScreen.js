@@ -1,6 +1,7 @@
 import React from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 
+import { TopBar } from '../components/TopBar';
 import { palette } from '../constants/palette';
 
 const emptyValue = '—';
@@ -26,13 +27,14 @@ const DataRow = ({ label, value, monospace }) => (
   </View>
 );
 
-export default function UserDataScreen({ session, onLogout }) {
+export default function UserDataScreen({ session, onLogout, onMenuPress }) {
   const authPayload = session?.authPayload || {};
   const profile = session?.profile || authPayload.user || {};
   const token = session?.accessToken || authPayload.accessToken || authPayload.access_token;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={{ flex: 1, backgroundColor: '#f7f7f9' }}>
+      <TopBar onMenuPress={onMenuPress} />
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
           <Text style={styles.brand}>Vantage</Text>
@@ -81,7 +83,7 @@ export default function UserDataScreen({ session, onLogout }) {
           <Text style={styles.buttonText}>CERRAR SESIÓN</Text>
         </Pressable>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
