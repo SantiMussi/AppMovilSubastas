@@ -19,7 +19,7 @@ import { safeJson } from '../utils/safeJson';
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 const LOGIN_PATH = '/api/v1/auth/login';
 
-export default function LoginScreen({ onBack, onRegister, onLoginSuccess }) {
+export default function LoginScreen({ onBack, onRegister, onForgotPassword, onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -96,7 +96,7 @@ export default function LoginScreen({ onBack, onRegister, onLoginSuccess }) {
               <View style={styles.inputGroup}>
                 <View style={styles.passwordLabelRow}>
                   <Text style={styles.label}>CONTRASEÑA</Text>
-                  <Pressable onPress={() => Alert.alert('Recuperar contraseña', 'Contactá al equipo de soporte para restablecer tu acceso.')}>
+                  <Pressable onPress={onForgotPassword}>
                     <Text style={styles.forgot}>OLVIDÉ MI CONTRASEÑA</Text>
                   </Pressable>
                 </View>
