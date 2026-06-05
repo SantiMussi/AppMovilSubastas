@@ -7,6 +7,7 @@ import SplashScreen from './src/screens/SplashScreen';
 import AuthChoiceScreen from './src/screens/AuthChoiceScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import LoginScreen from './src/screens/LoginScreen';
+import PasswordRecoveryScreen from './src/screens/PasswordRecoveryScreen';
 import UserDataScreen from './src/screens/UserDataScreen';
 import OfferItemScreen from './src/screens/OfferItemScreen';
 import PlaceholderScreen from './src/screens/PlaceholderScreen';
@@ -146,6 +147,17 @@ function RootNavigator() {
         onBack={() => {}}
         onLogin={() => setScreen('login')}
         onRegister={() => setScreen('register')}
+        onForgotPassword={() => setScreen('passwordRecovery')}
+        onLoginSuccess={openUserDataScreen}
+      />
+    );
+  }
+ 
+  if (screen === 'passwordRecovery') {
+    return (
+      <PasswordRecoveryScreen
+        onBack={() => setScreen('login')}
+        onFinished={openUserDataScreen}
       />
     );
   }

@@ -18,8 +18,6 @@ public class ResetearContraseñaRequest {
     private String code;
 
     @NotBlank(message = "La nueva contraseña es obligatoria")
-    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
-    @Pattern(regexp = ".*[A-Z].*", message = "La contraseña debe incluir al menos una mayúscula")
-    @Pattern(regexp = ".*\\d.*", message = "La contraseña debe incluir al menos un número")
+    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
     private String newPassword;
 }
