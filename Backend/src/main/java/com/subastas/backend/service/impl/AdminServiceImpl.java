@@ -3,6 +3,7 @@ package com.subastas.backend.service.impl;
 import com.subastas.backend.dto.response.*;
 import com.subastas.backend.dto.request.*;
 import com.subastas.backend.dto.response.MessageResponse;
+import com.subastas.backend.dto.response.admin.AdminUserResponse;
 import com.subastas.backend.dto.response.multa.CrearMultaResponse;
 import com.subastas.backend.dto.response.subasta.AdjudicarItemResponse;
 import com.subastas.backend.dto.response.subasta.CerrarSubastaResponse;
@@ -20,6 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -191,6 +197,92 @@ public class AdminServiceImpl implements AdminService {
 
 
     //  USUARIOS
+
+    @Transactional(readOnly = true)
+    public List<AdminUserResponse> obtenerUsuarios() {
+        Map<Integer, Cliente> clientesPorPersonaId = clienteRepository.findAll().stream()
+                .collect(Collectors.toMap(Cliente::getIdentificador, Function.identity()));
+
+        return usuarioRepository.findAll().stream()
+                .map(usuario -> toAdminUserResponse(usuario, clientesPorPersonaId.get(getPersonaId(usuario))))
+                .toList();
+    }
+
+    private AdminUserResponse toAdminUserResponse(Usuario usuario, Cliente cliente) {
+        Persona persona = usuario.getPersona();
+
+        return AdminUserResponse.builder()
+                .usuarioId(usuario.getIdentificador())
+                .email(usuario.getEmail())
+                .password(usuario.getPassword())
+                .apellido(usuario.getApellido())
+                .personaId(persona != null ? persona.getIdentificador() : null)
+                .documento(persona != null ? persona.getDocumento() : null)
+                .nombre(persona != null ? persona.getNombre() : null)
+                .direccion(persona != null ? persona.getDireccion() : null)
+                .estado(persona != null ? persona.getEstado() : null)
+                .foto(toBase64Photo(persona))
+                .cliente(toClienteData(cliente))
+                .build();
+    }
+
+    private Integer getPersonaId(Usuario usuario) {
+        return usuario.getPersona() != null ? usuario.getPersona().getIdentificador() : null;
+    }
+
+    private String toBase64Photo(Persona persona) {
+        if (persona == null || persona.getFoto() == null) {
+            return null;
+        }
+        return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(persona.getFoto());
+    }
+
+    private AdminUserResponse.ClienteData toClienteData(Cliente cliente) {
+        if (cliente == null) {
+            return null;
+        }
+
+        return AdminUserResponse.ClienteData.builder()
+                .clienteId(cliente.getIdentificador())
+                .admitido(cliente.getAdmitido())
+                .categoria(cliente.getCategoria())
+                .pais(toPaisData(cliente.getPais()))
+                .verificador(toEmpleadoData(cliente.getVerificador()))
+                .build();
+    }
+
+    private AdminUserResponse.PaisData toPaisData(Pais pais) {
+        if (pais == null) {
+            return null;
+        }
+
+        return AdminUserResponse.PaisData.builder()
+                .numero(pais.getNumero())
+                .nombre(pais.getNombre())
+                .nombreCorto(pais.getNombreCorto())
+                .capital(pais.getCapital())
+                .nacionalidad(pais.getNacionalidad())
+                .idiomas(pais.getIdiomas())
+                .build();
+    }
+
+    private AdminUserResponse.EmpleadoData toEmpleadoData(Empleado empleado) {
+        if (empleado == null) {
+            return null;
+        }
+
+        Persona persona = empleado.getPersona();
+        return AdminUserResponse.EmpleadoData.builder()
+                .empleadoId(empleado.getIdentificador())
+                .documento(persona != null ? persona.getDocumento() : null)
+                .nombre(persona != null ? persona.getNombre() : null)
+                .direccion(persona != null ? persona.getDireccion() : null)
+                .estado(persona != null ? persona.getEstado() : null)
+                .cargo(empleado.getCargo())
+                .sector(empleado.getSector() != null ? empleado.getSector().getNombreSector() : null)
+                .build();
+    }
+
 
     @Transactional
     public MessageResponse cambiarCategoria(Integer empleadoId, Integer usuarioId,

@@ -3,6 +3,7 @@ package com.subastas.backend.controller;
 import com.subastas.backend.service.AdminService;
 import com.subastas.backend.dto.request.*;
 import com.subastas.backend.dto.response.MessageResponse;
+import com.subastas.backend.dto.response.admin.AdminUserResponse;
 import com.subastas.backend.dto.response.multa.CrearMultaResponse;
 import com.subastas.backend.dto.response.subasta.AdjudicarItemResponse;
 import com.subastas.backend.dto.response.subasta.CerrarSubastaResponse;
@@ -12,6 +13,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -45,6 +48,12 @@ public class AdminController {
 
 
     //  USUARIOS
+
+    @GetMapping("/users")
+    public List<AdminUserResponse> obtenerUsuarios() {
+        return adminService.obtenerUsuarios();
+    }
+
 
     @PatchMapping("/users/{usuarioId}/category")
     public MessageResponse cambiarCategoria(@PathVariable Integer usuarioId, @Valid @RequestBody CambiarCategoriaRequest req) {

@@ -2,10 +2,13 @@ package com.subastas.backend.service;
 
 import com.subastas.backend.dto.request.*;
 import com.subastas.backend.dto.response.MessageResponse;
+import com.subastas.backend.dto.response.admin.AdminUserResponse;
 import com.subastas.backend.dto.response.multa.CrearMultaResponse;
 import com.subastas.backend.dto.response.subasta.AdjudicarItemResponse;
 import com.subastas.backend.dto.response.subasta.CerrarSubastaResponse;
 import com.subastas.backend.dto.response.subasta.CrearSubastaResponse;
+
+import java.util.List;
 
 public interface AdminService {
 
@@ -15,6 +18,7 @@ public interface AdminService {
     AdjudicarItemResponse adjudicarItem(Integer empleadoId, Integer itemId, AdjudicarItemRequest req);
 
     // Usuarios
+    List<AdminUserResponse> obtenerUsuarios();
     MessageResponse cambiarCategoria(Integer empleadoId, Integer usuarioId, CambiarCategoriaRequest req);
     MessageResponse admitirUsuario(Integer empleadoId, Integer usuarioId);
 
