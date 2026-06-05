@@ -287,8 +287,7 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public MessageResponse cambiarCategoria(Integer empleadoId, Integer usuarioId,
                                             CambiarCategoriaRequest req) {
-        Cliente cliente = clienteRepository.findById(usuarioId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+        Cliente cliente = findClienteByUsuarioOrClienteId(usuarioId);
         cliente.setCategoria(req.getNuevaCategoria());
         clienteRepository.save(cliente);
         return new MessageResponse("Categoría actualizada a: " + req.getNuevaCategoria());

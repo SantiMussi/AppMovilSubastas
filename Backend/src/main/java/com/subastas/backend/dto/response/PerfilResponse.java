@@ -11,4 +11,5 @@ public class PerfilResponse {
     private String email;
     private String direccion;
     private String foto;
+    private com.subastas.backend.entity.Categoria categoria;
 }

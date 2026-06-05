@@ -12,6 +12,9 @@ import UserDataScreen from './src/screens/UserDataScreen';
 import OfferItemScreen from './src/screens/OfferItemScreen';
 import PlaceholderScreen from './src/screens/PlaceholderScreen';
 import MembershipCategoriesScreen from './src/screens/MembershipCategoriesScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import FinesScreen from './src/screens/FinesScreen';
+import FineDetailScreen from './src/screens/FineDetailScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -206,11 +209,19 @@ function RootNavigator() {
 
       case 'perfil':
         return (
-          <PlaceholderScreen
-            title="Perfil"
-            subtitle="Acá vas a poder ver y editar tu información personal, foto de perfil y datos de contacto."
-            iconName="person-outline"
+          <ProfileScreen
+            session={session}
             onMenuPress={openDrawer}
+            onNavigate={handleNavigate}
+          />
+        );
+
+      case 'fines':
+        return (
+          <FinesScreen
+            session={session}
+            onBack={goBack}
+            onNavigate={handleNavigate}
           />
         );
 
@@ -265,6 +276,18 @@ function RootNavigator() {
         );
 
       default:
+        if (screen.startsWith('fineDetail:')) {
+          const fineId = screen.split(':')[1];
+          return (
+            <FineDetailScreen
+              session={session}
+              fineId={fineId}
+              onBack={goBack}
+              onNavigate={handleNavigate}
+            />
+          );
+        }
+
         return (
           <UserDataScreen
             session={session}

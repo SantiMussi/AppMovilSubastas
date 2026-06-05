@@ -26,6 +26,9 @@ public class PersonaServiceImpl implements PersonaService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @Autowired
+    private com.subastas.backend.repository.ClienteRepository clienteRepository;
+
     private Usuario obtenerUsuarioPorEmail(String email) {
         return usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + email));
@@ -43,6 +46,9 @@ public class PersonaServiceImpl implements PersonaService {
         response.setEmail(usuario.getEmail());
         response.setDireccion(persona.getDireccion());
         response.setDocumento(persona.getDocumento());
+        
+        clienteRepository.findById(persona.getIdentificador())
+                .ifPresent(cliente -> response.setCategoria(cliente.getCategoria()));
         
         if (persona.getFoto() != null) {
             String base64 = java.util.Base64.getEncoder().encodeToString(persona.getFoto());
