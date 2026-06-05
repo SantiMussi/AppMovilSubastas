@@ -1,9 +1,8 @@
 import React from 'react';
 import { Image, Platform, Pressable, StatusBar, StyleSheet, View } from 'react-native';
-import { palette } from '../constants/palette';
 
 /**
- * Reusable top bar with centered logo and side-menu hamburger button.
+ * Reusable top bar with left-aligned logo and side-menu hamburger button.
  * Props:
  * - onMenuPress: callback fired when the user taps the menu icon (≡).
  */
@@ -21,57 +20,49 @@ export function TopBar({ onMenuPress }) {
         <View style={styles.bar} />
       </Pressable>
 
-      <View style={styles.logoWrap}>
-        {/*
-          TODO: replace with the full logo image (with name) when available.
-          Currently uses the icon-only logo from assets.
-        */}
+      <View style={styles.logoWrap} pointerEvents="none">
         <Image
-          source={require('../../assets/images/logo_vantage.png')}
+          source={require('../../assets/images/Topbar.png')}
           style={styles.logo}
           resizeMode="contain"
         />
       </View>
-
-      {/* Right spacer to keep logo visually centered */}
-      <View style={styles.rightSpacer} />
     </View>
   );
 }
 
-const HAMBURGER_W = 30;
+const HAMBURGER_W = 26;
 
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: palette.paper,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: palette.line,
+    borderBottomColor: '#F0F0F0',
     paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) + 10 : 52,
     paddingBottom: 14,
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
+    gap: 8,
   },
   menuBtn: {
     width: HAMBURGER_W,
     justifyContent: 'center',
     gap: 5,
+    zIndex: 10,
   },
   bar: {
     width: HAMBURGER_W,
     height: 2,
-    backgroundColor: palette.ink,
+    backgroundColor: '#0A1628',
     borderRadius: 1,
   },
   logoWrap: {
-    flex: 1,
-    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -80,
   },
   logo: {
-    width: 130,
-    height: 38,
-  },
-  rightSpacer: {
-    width: HAMBURGER_W,
+    width: 350,
+    height: 75,
   },
 });

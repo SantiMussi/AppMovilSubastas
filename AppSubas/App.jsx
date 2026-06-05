@@ -134,12 +134,22 @@ function RootNavigator() {
           onBack={() => setScreen('authChoice')}
           onRegister={() => setScreen('register')}
           onLoginSuccess={openUserDataScreen}
+          onForgotPassword={() => setScreen('passwordRecovery')}
         />
       );
     }
 
     if (screen === 'register') {
       return <RegisterScreen onBack={() => setScreen('authChoice')} onRegisterSuccess={openUserDataScreen} />;
+    }
+
+    if (screen === 'passwordRecovery') {
+      return (
+        <PasswordRecoveryScreen
+          onBack={() => setScreen('login')}
+          onFinished={openUserDataScreen}
+        />
+      );
     }
 
     return (
@@ -149,15 +159,6 @@ function RootNavigator() {
         onRegister={() => setScreen('register')}
         onForgotPassword={() => setScreen('passwordRecovery')}
         onLoginSuccess={openUserDataScreen}
-      />
-    );
-  }
- 
-  if (screen === 'passwordRecovery') {
-    return (
-      <PasswordRecoveryScreen
-        onBack={() => setScreen('login')}
-        onFinished={openUserDataScreen}
       />
     );
   }

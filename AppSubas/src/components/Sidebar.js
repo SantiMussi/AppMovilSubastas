@@ -38,11 +38,14 @@ const C = {
 
 /* ─── badge colours per membership category ─────────────────────── */
 const BADGE_STYLES = {
-  PLATINUM: { bg: '#1C2C4A', text: '#8AB4F8', label: 'PLATINUM MEMBER' },
-  GOLD:     { bg: '#3A2E10', text: '#D4AF37', label: 'GOLD MEMBER'     },
-  SILVER:   { bg: '#2A2C30', text: '#C0C0C0', label: 'SILVER MEMBER'   },
-  BRONCE:   { bg: '#2E211A', text: '#CD7F32', label: 'BRONCE MEMBER'   },
-  DEFAULT:  { bg: '#1C2C4A', text: '#8AB4F8', label: 'MIEMBRO'         },
+  PLATINO:  { bg: '#D4DEF2', text: '#0A1628', label: 'PLATINO'  },
+  PLATINUM: { bg: '#D4DEF2', text: '#0A1628', label: 'PLATINO'  },
+  ORO:      { bg: '#F2CA7E', text: '#0A1628', label: 'ORO'      },
+  GOLD:     { bg: '#F2CA7E', text: '#0A1628', label: 'ORO'      },
+  ESPECIAL: { bg: '#F4F5F7', text: '#0A1628', label: 'ESPECIAL' },
+  COMÚN:    { bg: '#F4F5F7', text: '#0A1628', label: 'COMÚN'    },
+  COMUN:    { bg: '#F4F5F7', text: '#0A1628', label: 'COMÚN'    },
+  DEFAULT:  { bg: '#F4F5F7', text: '#0A1628', label: 'COMÚN'    },
 };
 
 const getBadge = (category) => {
