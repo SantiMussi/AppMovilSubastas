@@ -11,6 +11,7 @@ import PasswordRecoveryScreen from './src/screens/PasswordRecoveryScreen';
 import UserDataScreen from './src/screens/UserDataScreen';
 import OfferItemScreen from './src/screens/OfferItemScreen';
 import PlaceholderScreen from './src/screens/PlaceholderScreen';
+import MembershipCategoriesScreen from './src/screens/MembershipCategoriesScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -182,6 +183,13 @@ function RootNavigator() {
           <UserDataScreen
             session={session}
             onLogout={handleLogout}
+            onMenuPress={openDrawer}
+          />
+        );
+
+      case 'membershipCategories':
+        return (
+          <MembershipCategoriesScreen
             onMenuPress={openDrawer}
           />
         );

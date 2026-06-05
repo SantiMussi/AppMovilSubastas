@@ -85,11 +85,7 @@ export function Sidebar({ profile, currentScreen, onNavigate, onClose, onLogout 
     <View style={styles.container}>
       {/* ── header: logo + close ── */}
       <View style={styles.header}>
-        <Image
-          source={require('../../assets/images/logo_vantage.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <Text style={styles.brandText}>Vantage</Text>
         <View style={styles.headerRight}>
           <Pressable
             style={styles.headerIconBtn}
@@ -128,10 +124,13 @@ export function Sidebar({ profile, currentScreen, onNavigate, onClose, onLogout 
 
         <Text style={styles.userName} numberOfLines={1}>{userName}</Text>
 
-        <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+        <Pressable 
+          style={[styles.badge, { backgroundColor: badge.bg }]}
+          onPress={() => onNavigate?.('membershipCategories')}
+        >
           <Text style={[styles.badgeText, { color: badge.text }]}>{badge.label}</Text>
           <View style={[styles.badgeDot, { backgroundColor: badge.text }]} />
-        </View>
+        </Pressable>
       </View>
 
       {/* ── scrollable menu ── */}
@@ -215,10 +214,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     marginBottom: 28,
   },
-  logo: {
-    width: 110,
-    height: 32,
-    tintColor: C.white,
+  brandText: {
+    color: C.gold,
+    fontFamily: 'serif',
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: -0.5,
   },
   headerRight: {
     flexDirection: 'row',
