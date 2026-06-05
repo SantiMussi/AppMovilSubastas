@@ -26,14 +26,14 @@ public class MultaServiceImpl implements MultaService {
     private final MultaRepository multaRepository;
     private final MedioPagoRepository medioPagoRepository;
 
-
     @Override
     public List<MultaResponse> obtenerMultasPorUsuario(String email) {
         if (!usuarioRepository.findByEmail(email).isPresent()) {
             throw new ResourceNotFoundException("Usuario no encontrado");
         }
         Integer idUsuario = obtenerUsuarioPorEmail(email).getIdentificador();
-        return multaRepository.findByUsuarioIdentificador(idUsuario).stream().map(this::toResponse).collect(Collectors.toList());
+        return multaRepository.findByUsuarioIdentificador(idUsuario).stream().map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -48,14 +48,15 @@ public class MultaServiceImpl implements MultaService {
     }
 
     @Override
-    public PagoMultaResponse pagarMulta(PagoMultaRequest r, Integer idMulta, String email) throws MultaVencidaException {
+    public PagoMultaResponse pagarMulta(PagoMultaRequest r, Integer idMulta, String email)
+            throws MultaVencidaException {
         Usuario u = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         MedioPago mp = medioPagoRepository.findById(r.getMedioPago())
                 .orElseThrow(() -> new ResourceNotFoundException("Medio Pago no encontrado"));
         Multa m = multaRepository.findById(idMulta)
                 .orElseThrow(() -> new ResourceNotFoundException("Multa no existente"));
-        if (LocalDateTime.now().isAfter(m.getFechaLimite())){
+        if (LocalDateTime.now().isAfter(m.getFechaLimite())) {
             m.setEstado("vencida");
             multaRepository.save(m);
             throw new MultaVencidaException();
