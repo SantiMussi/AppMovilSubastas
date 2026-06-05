@@ -17,6 +17,6 @@ public class FotoPropuesta {
     private Propuesta propuesta;
 
     @Lob
-    @Column(name = "foto", nullable = false)
+    @Column(name = "foto", nullable = false, columnDefinition = "LONGBLOB")
     private byte[] foto;
 }
