@@ -51,6 +51,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/register/status").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/complete").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/forgot").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/validate-reset-code").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/reset").permitAll()
 
                         // Subastas (solo lectura pública)
                         .requestMatchers(HttpMethod.GET, "/api/v1/auctions/active").permitAll()

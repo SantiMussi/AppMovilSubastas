@@ -2,8 +2,12 @@ package com.subastas.backend.service;
 
 import com.subastas.backend.dto.request.AuthenticationRequest;
 import com.subastas.backend.dto.request.CompletarRegistroRequest;
+import com.subastas.backend.dto.request.OlvidoContraseñaRequest;
 import com.subastas.backend.dto.request.RegisterRequest;
+import com.subastas.backend.dto.request.ResetearContraseñaRequest;
+import com.subastas.backend.dto.request.ValidarCodigoReseteoRequest;
 import com.subastas.backend.dto.response.AuthenticationResponse;
+import com.subastas.backend.dto.response.ReseteoContraseñaResponse;
 import com.subastas.backend.dto.response.registro.CompletarRegistroResponse;
 import com.subastas.backend.dto.response.registro.RegistroInicialResponse;
 import com.subastas.backend.dto.response.registro.EstadoRegistroResponse;
@@ -23,12 +27,27 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationService.class);
+    private static final SecureRandom RESET_CODE_RANDOM = new SecureRandom();
+    private static final Duration RESET_CODE_TTL = Duration.ofMinutes(15);
+
+    private final Map<String, PasswordResetCode> passwordResetCodes = new ConcurrentHashMap<>();
+
 
     private final PersonaRepository personaRepository;
     private final EmpleadoRepository empleadoRepository;
@@ -195,6 +214,75 @@ public class AuthenticationService {
                 .accessToken(jwtToken)
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public ReseteoContraseñaResponse forgotPassword(OlvidoContraseñaRequest request) {
+        String email = normalizeEmail(request.getEmail());
+        usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Email no registrado"));
+
+        String code = generateResetCode();
+        passwordResetCodes.put(email, new PasswordResetCode(code, Instant.now().plus(RESET_CODE_TTL)));
+        sendRecoveryPushNotification(email, code);
+
+        return ReseteoContraseñaResponse.builder()
+                .message("Se envió un código de recuperación al email")
+                .pushNotification(ReseteoContraseñaResponse.DevPushNotification.builder()
+                        .title("Código de recuperación VANTAGE")
+                        .body("Tu código de recuperación es " + code)
+                        .code(code)
+                        .build())
+                .build();
+    }
+
+    public ReseteoContraseñaResponse validateResetCode(ValidarCodigoReseteoRequest request) {
+        String email = normalizeEmail(request.getEmail());
+        usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        validateActiveResetCode(email, request.getCode());
+
+        return ReseteoContraseñaResponse.builder()
+                .success(true)
+                .message("Code is valid")
+                .build();
+    }
+
+    @Transactional
+    public ReseteoContraseñaResponse resetPassword(ResetearContraseñaRequest request) {
+        String email = normalizeEmail(request.getEmail());
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        validateActiveResetCode(email, request.getCode());
+
+        usuario.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        usuarioRepository.save(usuario);
+        passwordResetCodes.remove(email);
+
+        return ReseteoContraseñaResponse.builder()
+                .message("Contraseña actualizada correctamente")
+                .build();
+    }
+
+    private String generateResetCode() {
+        return String.format("%06d", RESET_CODE_RANDOM.nextInt(1_000_000));
+    }
+
+    private void validateActiveResetCode(String email, String code) {
+        PasswordResetCode resetCode = passwordResetCodes.get(email);
+        if (resetCode == null || resetCode.expiresAt().isBefore(Instant.now())) {
+            passwordResetCodes.remove(email);
+            throw new BadCredentialsException("Código inválido o expirado");
+        }
+        if (!resetCode.code().equals(code.trim())) {
+            throw new BadCredentialsException("Código inválido o expirado");
+        }
+    }
+
+    private void sendRecoveryPushNotification(String email, String code) {
+        LOGGER.info("[DEV PUSH] Password recovery code for {} is {}", email, code);
+    }
+
+    private record PasswordResetCode(String code, Instant expiresAt) {}
 
     private void validateRegistrationCode(String verificationCode) {
         String normalizedCode = verificationCode.trim();

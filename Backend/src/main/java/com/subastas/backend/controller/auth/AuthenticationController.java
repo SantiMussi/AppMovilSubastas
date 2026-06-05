@@ -2,6 +2,9 @@ package com.subastas.backend.controller.auth;
 
 import com.subastas.backend.dto.request.AuthenticationRequest;
 import com.subastas.backend.dto.request.CompletarRegistroRequest;
+import com.subastas.backend.dto.request.OlvidoContraseñaRequest;
+import com.subastas.backend.dto.request.ResetearContraseñaRequest;
+import com.subastas.backend.dto.request.ValidarCodigoReseteoRequest;
 import com.subastas.backend.dto.request.RegisterRequest;
 import com.subastas.backend.service.AuthenticationService;
 import jakarta.validation.Valid;
@@ -76,6 +79,47 @@ public class AuthenticationController {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(errorResponse(HttpStatus.UNAUTHORIZED, "Email o contraseña incorrectos"));
+        }
+    }
+
+    @PostMapping("/forgot")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody OlvidoContraseñaRequest request) {
+        try {
+            return ResponseEntity.ok(service.forgotPassword(request));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(errorResponse(HttpStatus.NOT_FOUND, exception.getMessage()));
+        }
+    }
+
+    @PostMapping("/validate-reset-code")
+    public ResponseEntity<?> validateResetCode(@Valid @RequestBody ValidarCodigoReseteoRequest request) {
+        try {
+            return ResponseEntity.ok(service.validateResetCode(request));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(errorResponse(HttpStatus.NOT_FOUND, exception.getMessage()));
+        } catch (AuthenticationException exception) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(errorResponse(HttpStatus.BAD_REQUEST, exception.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetearContraseñaRequest request) {
+        try {
+            return ResponseEntity.ok(service.resetPassword(request));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(errorResponse(HttpStatus.NOT_FOUND, exception.getMessage()));
+        } catch (AuthenticationException exception) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(errorResponse(HttpStatus.BAD_REQUEST, exception.getMessage()));
         }
     }
 
