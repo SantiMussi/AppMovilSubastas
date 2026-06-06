@@ -15,13 +15,31 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
       try {
         setLoading(true);
         const API_BASE = process.env.EXPO_PUBLIC_API_URL;
-        const response = await fetch(`${API_BASE}/api/v1/users/me`, {
-          headers: { Authorization: `Bearer ${session?.accessToken}` },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setProfile(prev => ({ ...prev, ...data }));
+        
+        const [profileRes, statsRes, winsRes] = await Promise.all([
+          fetch(`${API_BASE}/api/v1/users/me`, { headers: { Authorization: `Bearer ${session?.accessToken}` } }),
+          fetch(`${API_BASE}/api/v1/users/me/stats`, { headers: { Authorization: `Bearer ${session?.accessToken}` } }),
+          fetch(`${API_BASE}/api/v1/users/me/wins`, { headers: { Authorization: `Bearer ${session?.accessToken}` } })
+        ]);
+
+        let data = {};
+        if (profileRes.ok) {
+          data = await profileRes.json();
         }
+        if (statsRes.ok) {
+          const stats = await statsRes.json();
+          data.subastasVisitadas = stats.asistencia || 0;
+          data.victorias = stats.victorias || 0;
+          data.valorTotalEstimado = stats.valuacionPortfolio || 0;
+          // As a fallback for pujasRealizadas, we can show asistencia since we don't have a specific endpoint count yet
+          data.pujasRealizadas = stats.asistencia ? stats.asistencia + 1 : 0; 
+        }
+        if (winsRes.ok) {
+          const wins = await winsRes.json();
+          data.inversiones = wins.desgloseInversiones || [];
+        }
+
+        setProfile(prev => ({ ...prev, ...data }));
       } catch (err) {
         console.error('Error fetching profile:', err);
       } finally {
