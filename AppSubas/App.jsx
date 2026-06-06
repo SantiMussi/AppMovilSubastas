@@ -16,6 +16,7 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import FinesScreen from './src/screens/FinesScreen';
 import FineDetailScreen from './src/screens/FineDetailScreen';
 import AuctionsScreen from './src/screens/AuctionsScreen';
+import AuctionItemDetailScreen from './src/screens/AuctionItemDetailScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
 import PaymentMethodsScreen from './src/screens/PaymentMethodsScreen';
@@ -381,6 +382,18 @@ function RootNavigator() {
         );
 
       default:
+        if (screen.startsWith('auctionItemDetail:')) {
+          const auctionItemId = screen.split(':')[1];
+          return (
+            <AuctionItemDetailScreen
+              auctionItemId={auctionItemId}
+              session={session}
+              onMenuPress={openDrawer}
+              onPlaceBid={() => handleNavigate(`auctionRoom:${auctionItemId}`)}
+            />
+          );
+        }
+
         if (screen.startsWith('auctionRoom:')) {
           return (
             <PlaceholderScreen

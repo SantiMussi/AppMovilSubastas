@@ -70,24 +70,16 @@ export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
       const catalogs = normalizeList(catalogsPayload);
       const firstCatalog = catalogs[0];
       const catalogId = firstCatalog?.identificador || firstCatalog?.id;
-
-      if (!catalogId) {
-        return {
-          ...normalized,
-          imageUris: getAuctionImages(normalized, false),
-          title: normalized.title || firstCatalog?.descripcion || `Subasta #${normalized.id}`,
-        };
-      }
-
-      const itemsPayload = await fetchJson(`/api/v1/catalogs/${catalogId}/items`);
-      const items = normalizeList(itemsPayload);
+      const items = getCatalogItems(catalogsPayload).length
+        ? getCatalogItems(catalogsPayload)
+        : await fetchCatalogItems(catalogId, fetchJson);
       const firstItem = items[0];
       const firstProduct = firstItem?.producto || firstItem?.product || {};
       const itemImages = getItemImages(items);
       const productId = firstProduct?.identificador || firstProduct?.id || firstItem?.productId;
       const photoImages = productId ? await fetchProductImages(productId, fetchJson) : [];
       const imageUris = uniqueImages([...itemImages, ...photoImages, ...getAuctionImages(normalized, false)]);
-      const auctionItemId = firstItem?.identificador || firstItem?.auctionItemId;
+      const auctionItemId = getAuctionItemId(firstItem) || normalized.auctionItemId;
       const topBid = auctionItemId ? await fetchTopBid(auctionItemId, fetchJson) : null;
 
       return {
@@ -185,7 +177,7 @@ export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
           <LiveAuctionsShowcase
             auctions={liveAuctions}
             now={now}
-            onOpenAuction={(auction) => onNavigate?.(`auctionRoom:${auction.id}`)}
+            onOpenAuction={(auction) => onNavigate?.(`auctionItemDetail:${auction.auctionItemId}`)}
           />
         ) : null}
 
@@ -195,8 +187,9 @@ export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
             return (
               <Pressable
                 key={tab.key}
-                onPress={() => setActiveTab(tab.key)}
+                onPress={() => setActiveTab(tab.key) }
                 style={[styles.tab, selected && styles.tabActive]}
+                
               >
                 <Text style={[styles.tabText, selected && styles.tabTextActive]}>{tab.label}</Text>
               </Pressable>
@@ -229,7 +222,7 @@ export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
               key={`${auction.id}-${auction.computedStatus}`}
               auction={auction}
               now={now}
-              onJoin={() => onNavigate?.(`auctionRoom:${auction.id}`)}
+              onJoin={() => onNavigate?.(`auctionItemDetail:${auction.auctionItemId}`)}
             />
           ))
         )}
@@ -263,6 +256,7 @@ function LiveAuctionsShowcase({ auctions, now, onOpenAuction }) {
               key={`live-feature-${auction.id}`}
               style={styles.liveFeatureCard}
               onPress={() => onOpenAuction?.(auction)}
+              disabled={!auction.auctionItemId}
             >
               <Image source={{ uri: imageUri }} style={styles.liveFeatureImage} resizeMode="cover" />
               <LinearGradient
@@ -312,8 +306,14 @@ function AuctionCard({ auction, now, onJoin }) {
     setActiveImageIndex((index) => (index + 1) % images.length);
   };
 
+  const CardContainer = isLive ? Pressable : View;
+
   return (
-    <View style={[styles.card, isEnded && styles.endedCard]}>
+    <CardContainer
+      style={[styles.card, isEnded && styles.endedCard]}
+      onPress={isLive ? onJoin : undefined}
+      disabled={isLive && !auction.auctionItemId}
+    >
       <View style={styles.imageWrap}>
         <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
         <View style={[styles.badge, isEnded && styles.badgeEnded, isScheduled && styles.badgeLight]}>
@@ -377,7 +377,7 @@ function AuctionCard({ auction, now, onJoin }) {
       ) : null}
 
       {isEnded && startDate ? <Text style={styles.endedDate}>{formatPastDate(startDate)}</Text> : null}
-    </View>
+    </CardContainer>
   );
 }
 
@@ -409,7 +409,32 @@ function normalizeAuction(raw) {
     auctioneerName: [subastador?.nombre, subastador?.apellido].filter(Boolean).join(' ') || subastador?.name,
     currentOffer: raw?.ofertaActual || raw?.currentOffer || raw?.montoActual,
     imageUri: raw?.imagenPrincipal || raw?.image || raw?.imageUrl,
+    auctionItemId: raw?.auctionItemId || raw?.itemSubastaId || getAuctionItemId(raw?.item) || getAuctionItemId(raw?.currentItem),
   };
+}
+
+function getCatalogItems(payload) {
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.data?.items)) return payload.data.items;
+  return [];
+}
+
+async function fetchCatalogItems(catalogId, fetchJson) {
+  if (!catalogId) return [];
+
+  try {
+    return normalizeList(await fetchJson(`/api/v1/${catalogId}/items`));
+  } catch (primaryError) {
+    try {
+      return normalizeList(await fetchJson(`/api/v1/catalogs/${catalogId}/items`));
+    } catch (legacyError) {
+      return [];
+    }
+  }
+}
+
+function getAuctionItemId(item) {
+  return item?.auctionItemId || item?.identificador || item?.itemId || item?.id;
 }
 
 async function fetchProductImages(productId, fetchJson) {
