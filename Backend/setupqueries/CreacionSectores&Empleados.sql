@@ -75,3 +75,17 @@ UPDATE sectores SET responsable_sector = 31 WHERE identificador = 7;
 UPDATE sectores SET responsable_sector = 36 WHERE identificador = 8;
 
 SELECT * FROM sectores;
+
+-- Subastador demo (persona 41)
+INSERT INTO subastadores (identificador, matricula, region)
+VALUES (41, 'MAT-DEMO-01', 'Buenos Aires');
+
+-- Dueños demo (personas 42 y 43)
+INSERT INTO duenios (identificador, numero_pais, verificacion_financiera, verificacion_judicial, calificacion_riesgo, verificador)
+VALUES
+(42, 32, 'si', 'si', 1, 1),
+(43, 32, 'si', 'si', 1, 1);
+
+-- Empresa como cliente (requerido por app.empresa.cliente-id=1)
+INSERT INTO clientes (identificador, numero_pais, admitido, categoria, verificador)
+VALUES (1, 32, 'si', 'platino', 1);
