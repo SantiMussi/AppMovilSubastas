@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View } from 'react-native';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
- 
+
 import SplashScreen from './src/screens/SplashScreen';
 import AuthChoiceScreen from './src/screens/AuthChoiceScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
@@ -15,7 +15,7 @@ import MembershipCategoriesScreen from './src/screens/MembershipCategoriesScreen
 import ProfileScreen from './src/screens/ProfileScreen';
 import FinesScreen from './src/screens/FinesScreen';
 import FineDetailScreen from './src/screens/FineDetailScreen';
-import AuctionsScreen from './src/screens/AuctionsScreen';
+//import AuctionsScreen from './src/screens/AuctionsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
 import PaymentMethodsScreen from './src/screens/PaymentMethodsScreen';
@@ -30,19 +30,19 @@ import { DrawerLayout } from './src/components/DrawerLayout';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CurrencyProvider } from './src/context/CurrencyContext';
 
-ExpoSplashScreen.preventAutoHideAsync().catch(() => {});
+ExpoSplashScreen.preventAutoHideAsync().catch(() => { });
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
- 
+
 export default function App() {
   const [appReady, setAppReady] = useState(false);
- 
+
   useEffect(() => {
     (async () => {
       try {
         await Font.loadAsync({
         });
- 
+
         await pingBackend();
       } catch (e) {
         console.warn('[Bootstrap] error:', e);
@@ -51,11 +51,11 @@ export default function App() {
       }
     })();
   }, []);
- 
+
   const onLayoutRootView = useCallback(async () => {
-    await ExpoSplashScreen.hideAsync().catch(() => {});
+    await ExpoSplashScreen.hideAsync().catch(() => { });
   }, []);
- 
+
   return (
     <CurrencyProvider>
       <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
@@ -187,11 +187,11 @@ function RootNavigator() {
 
     return (
       <AuthChoiceScreen
-        onBack={() => {}}
+        onBack={() => { }}
         onLogin={() => setScreen('login')}
         onRegister={() => setScreen('register')}
         onForgotPassword={() => setScreen('passwordRecovery')}
-        onLoginSuccess={() => setScreen('auctions') }
+        onLoginSuccess={() => setScreen('auctions')}
       />
     );
   }
@@ -262,7 +262,7 @@ function RootNavigator() {
             onNavigate={handleNavigate}
           />
         );
-      
+
       case 'auctionRoom':
         return (
           <PlaceholderScreen
@@ -435,7 +435,7 @@ function RootNavigator() {
     </DrawerLayout>
   );
 }
- 
+
 async function pingBackend() {
   const controller = new AbortController();
 

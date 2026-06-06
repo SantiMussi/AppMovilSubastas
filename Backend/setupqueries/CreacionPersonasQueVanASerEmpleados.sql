@@ -48,4 +48,8 @@ VALUES
 (37, '31444567', 'Tomás Villalba', 'Chacabuco 999, Córdoba', 'activo', NULL),
 (38, '33222111', 'Romina Leiva', 'Mendoza 410, Rosario', 'activo', NULL),
 (39, '35888999', 'Leonardo Escobar', 'España 123, Mendoza', 'activo', NULL),
-(40, '37333111', 'Malena Cejas', 'Calle 60 850, La Plata', 'activo', NULL);
+(40, '37333111', 'Malena Cejas', 'Calle 60 850, La Plata', 'activo', NULL),
+
+(41, '41000001', 'Subastador Demo',  'Av. Demo 100, CABA', 'activo', NULL),
+(42, '42000001', 'Dueño Demo Uno',   'Av. Demo 200, CABA', 'activo', NULL),
+(43, '43000001', 'Dueño Demo Dos',   'Av. Demo 300, CABA', 'activo', NULL);

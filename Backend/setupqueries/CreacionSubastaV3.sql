@@ -191,6 +191,15 @@ WHERE NOT EXISTS (
 DROP TEMPORARY TABLE IF EXISTS tmp_productos_extra;
 DROP TEMPORARY TABLE IF EXISTS tmp_subastas_extra;
 
+-- Moneda para las subastas demo (requerido por el backend)
+INSERT INTO moneda_subasta (subasta, moneda)
+SELECT identificador, 'ARS'
+FROM subastas
+WHERE ubicacion LIKE '[DEMO EXTRA FECHAS]%'
+AND NOT EXISTS (
+    SELECT 1 FROM moneda_subasta ms WHERE ms.subasta = subastas.identificador
+);
+
 SELECT
     'subastas demo extra fechas' AS tabla,
     estado,
