@@ -25,6 +25,8 @@ import AddChequeScreen from './src/screens/AddChequeScreen';
 import PaymentSuccessScreen from './src/screens/PaymentSuccessScreen';
 import FinePaymentScreen from './src/screens/FinePaymentScreen';
 import MetricsScreen from './src/screens/MetricsScreen';
+import CollectionScreen from './src/screens/CollectionScreen';
+import ProductDetailScreen from "./src/screens/ProductDetailScreen";
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -285,11 +287,10 @@ function RootNavigator() {
 
       case 'coleccion':
         return (
-          <PlaceholderScreen
-            title="Mi Colección"
-            subtitle="Explorá los artículos que tenés en tu colección y seguí el estado de tus piezas."
-            iconName="albums-outline"
-            onMenuPress={openDrawer}
+          <CollectionScreen
+              session={session}
+              onMenuPress={openDrawer}
+              onOpenProduct={(productId) => productId && handleNavigate(`productDetail:${productId}`)}
           />
         );
 
@@ -388,6 +389,17 @@ function RootNavigator() {
               iconName="radio-outline"
               onMenuPress={openDrawer}
             />
+          );
+        }
+
+        if (screen.startsWith('productDetail:')) {
+          const productId = screen.split(':')[1];
+          return (
+              <ProductDetailScreen
+                  session={session}
+                  productId={productId}
+                  onBack={goBack}
+              />
           );
         }
 

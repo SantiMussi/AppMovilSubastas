@@ -13,6 +13,7 @@ import com.subastas.backend.exception.MultaVencidaException;
 import com.subastas.backend.service.MultaService;
 import com.subastas.backend.service.PersonaService;
 import com.subastas.backend.service.ProductoService;
+import com.subastas.backend.dto.response.metrics.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -109,17 +110,22 @@ public class UserController {
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<com.subastas.backend.dto.response.metrics.UserStatsResponse> getUserStats(Principal principal) {
+    public ResponseEntity<UserStatsResponse> getUserStats(Principal principal) {
         return ResponseEntity.ok(personaService.obtenerStatsUsuario(principal.getName()));
     }
 
+    @GetMapping("/collection")
+    public ResponseEntity<UserCollectionResponse> getUserCollection(Principal principal) {
+        return ResponseEntity.ok(personaService.obtenerColeccionUsuario(principal.getName()));
+    }
+
     @GetMapping("/wins")
-    public ResponseEntity<com.subastas.backend.dto.response.metrics.UserWinsResponse> getUserWins(Principal principal) {
+    public ResponseEntity<UserWinsResponse> getUserWins(Principal principal) {
         return ResponseEntity.ok(personaService.obtenerWinsUsuario(principal.getName()));
     }
 
     @GetMapping("/bids/history")
-    public ResponseEntity<com.subastas.backend.dto.response.metrics.UserBidsResponse> getUserBidsHistory(Principal principal) {
+    public ResponseEntity<UserBidsResponse> getUserBidsHistory(Principal principal) {
         return ResponseEntity.ok(personaService.obtenerBidsHistory(principal.getName()));
     }
 }

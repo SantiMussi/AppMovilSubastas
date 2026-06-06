@@ -11,4 +11,5 @@ public interface PersonaService {
     com.subastas.backend.dto.response.metrics.UserStatsResponse obtenerStatsUsuario(String email);
     com.subastas.backend.dto.response.metrics.UserWinsResponse obtenerWinsUsuario(String email);
     com.subastas.backend.dto.response.metrics.UserBidsResponse obtenerBidsHistory(String email);
+    com.subastas.backend.dto.response.metrics.UserCollectionResponse obtenerColeccionUsuario(String email);
 }

@@ -38,6 +38,9 @@ public class PersonaServiceImpl implements PersonaService {
     @Autowired
     private com.subastas.backend.repository.RegistroDeSubastaRepository registroDeSubastaRepository;
 
+    @Autowired
+    private com.subastas.backend.repository.FotoRepository fotoRepository;
+
     private Usuario obtenerUsuarioPorEmail(String email) {
         return usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + email));
@@ -185,6 +188,77 @@ public class PersonaServiceImpl implements PersonaService {
         response.setDesgloseInversiones(desglose);
         
         return response;
+    }
+
+    @Override
+    public com.subastas.backend.dto.response.metrics.UserCollectionResponse obtenerColeccionUsuario(String email) {
+        Usuario usuario = obtenerUsuarioPorEmail(email);
+        Integer clienteId = usuario.getPersona().getIdentificador();
+        java.util.List<com.subastas.backend.entity.RegistroDeSubasta> wins = registroDeSubastaRepository.findByClienteIdentificador(clienteId);
+
+        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
+        java.util.List<com.subastas.backend.dto.response.metrics.CollectionItemResponse> items = new java.util.ArrayList<>();
+
+        for (com.subastas.backend.entity.RegistroDeSubasta win : wins) {
+            java.math.BigDecimal importe = win.getImporte() != null ? win.getImporte() : java.math.BigDecimal.ZERO;
+            total = total.add(importe);
+
+            com.subastas.backend.entity.Producto producto = win.getProducto();
+            com.subastas.backend.dto.response.metrics.CollectionItemResponse item = new com.subastas.backend.dto.response.metrics.CollectionItemResponse();
+            item.setRegistroId(win.getIdentificador());
+            item.setProductId(producto != null ? producto.getIdentificador() : null);
+            item.setNombre(obtenerNombreProducto(producto));
+            item.setDescripcion(producto != null ? producto.getDescripcionCompleta() : null);
+            item.setPrecio(importe);
+            item.setEstadoEntrega(obtenerEstadoEntrega(win.getIdentificador()));
+            item.setImagenUrl(obtenerPrimeraFotoUrl(producto));
+            items.add(item);
+        }
+
+        com.subastas.backend.dto.response.metrics.UserCollectionResponse response = new com.subastas.backend.dto.response.metrics.UserCollectionResponse();
+        response.setValorPortfolio(total);
+        response.setAdquisiciones(items.size());
+        response.setItems(items);
+        return response;
+    }
+
+    private String obtenerNombreProducto(com.subastas.backend.entity.Producto producto) {
+        if (producto == null) {
+            return "Artículo adquirido";
+        }
+        String descripcionCatalogo = producto.getDescripcionCatalogo();
+        if (descripcionCatalogo != null && !descripcionCatalogo.isBlank()) {
+            return descripcionCatalogo;
+        }
+        String descripcionCompleta = producto.getDescripcionCompleta();
+        if (descripcionCompleta != null && !descripcionCompleta.isBlank()) {
+            return descripcionCompleta.length() > 42 ? descripcionCompleta.substring(0, 42).trim() : descripcionCompleta;
+        }
+        return "Artículo adquirido";
+    }
+
+    private String obtenerEstadoEntrega(Integer registroId) {
+        String[] estados = { "en depósito", "retirado", "enviado" };
+        int index = registroId != null ? Math.floorMod(registroId - 1, estados.length) : 0;
+        return estados[index];
+    }
+
+    private String obtenerPrimeraFotoUrl(com.subastas.backend.entity.Producto producto) {
+        if (producto == null || producto.getIdentificador() == null) {
+            return null;
+        }
+        Integer photoId = fotoRepository.findByProductoIdentificadorOrderByIdentificadorAsc(producto.getIdentificador())
+                .stream()
+                .map(com.subastas.backend.entity.Foto::getIdentificador)
+                .findFirst()
+                .orElse(null);
+        if (photoId == null) {
+            return null;
+        }
+        return org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/products/photos/{photoId}/content")
+                .buildAndExpand(photoId)
+                .toUriString();
     }
 
     @Override
