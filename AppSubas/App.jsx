@@ -54,15 +54,11 @@ export default function App() {
     await ExpoSplashScreen.hideAsync().catch(() => {});
   }, []);
  
-  if (!appReady) {
-    return (
-      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-        <SplashScreen />
-      </View>
-    );
-  }
- 
-  return <RootNavigator />;
+  return (
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      {!appReady ? <SplashScreen /> : <RootNavigator />}
+    </View>
+  );
 }
 
 function RootNavigator() {

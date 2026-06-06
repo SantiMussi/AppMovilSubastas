@@ -116,7 +116,7 @@ export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
     setError('');
 
     try {
-      const payload = await fetchJson('/api/v1/auctions');
+      const payload = await fetchJson('/api/v1/auctions/active');
       const rawAuctions = normalizeList(payload);
       const detailedAuctions = await Promise.all(rawAuctions.map(hydrateAuction));
 
