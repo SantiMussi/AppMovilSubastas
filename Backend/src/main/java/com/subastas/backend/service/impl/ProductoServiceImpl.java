@@ -1,22 +1,23 @@
 package com.subastas.backend.service.impl;
 
-import com.subastas.backend.dto.response.producto.DetalleProductoResponse;
-import com.subastas.backend.dto.response.producto.DueñoProductoResponse;
-import com.subastas.backend.dto.response.producto.FotosProductoResponse;
-import com.subastas.backend.dto.response.producto.ItemFotoProductoResponse;
-import com.subastas.backend.dto.response.producto.RevisionProductoResponse;
-import com.subastas.backend.dto.response.producto.SeguroProductoResponse;
+import com.subastas.backend.dto.request.AumentarSeguroRequest;
+import com.subastas.backend.dto.response.producto.*;
 import com.subastas.backend.entity.Foto;
 import com.subastas.backend.entity.Producto;
+import com.subastas.backend.entity.Seguro;
+import com.subastas.backend.entity.Usuario;
 import com.subastas.backend.exception.ResourceNotFoundException;
 import com.subastas.backend.repository.FotoRepository;
 import com.subastas.backend.repository.ProductoRepository;
+import com.subastas.backend.repository.UsuarioRepository;
 import com.subastas.backend.service.ProductoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -24,8 +25,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductoServiceImpl implements ProductoService {
 
+    private static final String DEPOSITO_DEFAULT = "Depósito Central";
     private final ProductoRepository productoRepository;
     private final FotoRepository fotoRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     public DetalleProductoResponse obtenerDetalle(Integer productId) {
@@ -58,12 +61,7 @@ public class ProductoServiceImpl implements ProductoService {
         }
 
         if (product.getSeguro() != null) {
-            SeguroProductoResponse insurance = new SeguroProductoResponse();
-            insurance.setNroPoliza(product.getSeguro().getNroPoliza());
-            insurance.setCompania(product.getSeguro().getCompania());
-            insurance.setPolizaCombinada(product.getSeguro().getPolizaCombinada());
-            insurance.setImporte(product.getSeguro().getImporte());
-            response.setInsurance(insurance);
+            response.setInsurance(mapInsurance(product.getSeguro()));
         }
 
         return response;
@@ -83,9 +81,92 @@ public class ProductoServiceImpl implements ProductoService {
         return response;
     }
 
+    @Override
+    public SeguroConsignedItemResponse obtenerSeguroProductoConsignado(Integer productId, String email) {
+        Producto product = obtenerProductoConsignado(productId, email);
+        SeguroProductoResponse insurance = mapInsurance(obtenerSeguro(product));
+
+        SeguroConsignedItemResponse response = new SeguroConsignedItemResponse();
+        response.setProductId(product.getIdentificador());
+        response.setInsurance(insurance);
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public AumentoSeguroResponse solicitarAumentoSeguro(Integer productId, AumentarSeguroRequest request, String email) {
+        if (request == null || request.getIncreaseAmount() == null) {
+            throw new IllegalArgumentException("El importe de aumento es obligatorio");
+        }
+        if (request.getIncreaseAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El importe de aumento debe ser mayor a cero");
+        }
+
+        Producto product = obtenerProductoConsignado(productId, email);
+        Seguro seguro = obtenerSeguro(product);
+        BigDecimal nuevoImporte = seguro.getImporte().add(request.getIncreaseAmount());
+        seguro.setImporte(nuevoImporte);
+
+        AumentoSeguroResponse response = new AumentoSeguroResponse();
+        response.setMessage("Solicitud de ampliación de póliza registrada");
+        response.setNewRequestedAmount(nuevoImporte);
+        return response;
+    }
+
+    @Override
+    public UbicacionProductoResponse obtenerUbicacionProductoConsignado(Integer productId, String email) {
+        Producto product = obtenerProductoConsignado(productId, email);
+
+        UbicacionProductoResponse response = new UbicacionProductoResponse();
+        response.setProductId(product.getIdentificador());
+        response.setDeposito(DEPOSITO_DEFAULT);
+        response.setSector(obtenerNombreSector(product));
+        LocalDateTime ultimaActualizacion = product.getFecha() != null
+                ? product.getFecha().atStartOfDay()
+                : LocalDateTime.now();
+        response.setUltimaActualizacion(ultimaActualizacion);
+        return response;
+    }
+
     private Producto obtenerProducto(Integer productId) {
         return productoRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + productId));
+    }
+
+    private Producto obtenerProductoConsignado(Integer productId, String email) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        Producto product = obtenerProducto(productId);
+        Integer personaId = usuario.getPersona() != null ? usuario.getPersona().getIdentificador() : null;
+        Integer duenioId = product.getDuenio() != null ? product.getDuenio().getIdentificador() : null;
+        if (personaId == null || !personaId.equals(duenioId)) {
+            throw new ResourceNotFoundException("Producto consignado no encontrado con id: " + productId);
+        }
+        return product;
+    }
+
+    private Seguro obtenerSeguro(Producto product) {
+        if (product.getSeguro() == null) {
+            throw new ResourceNotFoundException(
+                    "Seguro no encontrado para el producto con id: " + product.getIdentificador());
+        }
+        return product.getSeguro();
+    }
+
+    private SeguroProductoResponse mapInsurance(Seguro seguro) {
+        SeguroProductoResponse insurance = new SeguroProductoResponse();
+        insurance.setNroPoliza(seguro.getNroPoliza());
+        insurance.setCompania(seguro.getCompania());
+        insurance.setPolizaCombinada(seguro.getPolizaCombinada());
+        insurance.setImporte(seguro.getImporte());
+        return insurance;
+    }
+
+    private String obtenerNombreSector(Producto product) {
+        if (product.getRevisor() == null || product.getRevisor().getSector() == null) {
+            return null;
+        }
+        return product.getRevisor().getSector().getNombreSector();
     }
 
     private ItemFotoProductoResponse mapPhoto(Foto foto) {

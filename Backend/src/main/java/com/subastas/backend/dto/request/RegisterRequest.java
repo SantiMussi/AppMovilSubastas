@@ -31,6 +31,7 @@ public class RegisterRequest {
     @Size(max = 150, message = "El email no puede superar los 150 caracteres")
     private String email;
 
+
     private String password;
 
     @JsonAlias("domicilio")

@@ -1,13 +1,19 @@
 package com.subastas.backend.controller;
 
+import com.subastas.backend.dto.request.AumentarSeguroRequest;
 import com.subastas.backend.dto.request.PagoMultaRequest;
 import com.subastas.backend.dto.response.PerfilResponse;
 import com.subastas.backend.dto.response.multa.MultaListResponse;
 import com.subastas.backend.dto.response.multa.MultaResponse;
 import com.subastas.backend.dto.response.multa.PagoMultaResponse;
+import com.subastas.backend.dto.response.producto.AumentoSeguroResponse;
+import com.subastas.backend.dto.response.producto.SeguroConsignedItemResponse;
+import com.subastas.backend.dto.response.producto.UbicacionProductoResponse;
 import com.subastas.backend.exception.MultaVencidaException;
 import com.subastas.backend.service.MultaService;
 import com.subastas.backend.service.PersonaService;
+import com.subastas.backend.service.ProductoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +29,8 @@ public class UserController {
     private PersonaService personaService;
     @Autowired
     private MultaService multaService;
+    @Autowired
+    private ProductoService productoService;
 
     @GetMapping
     public ResponseEntity<PerfilResponse> getProfile(Principal principal) {
@@ -77,6 +85,28 @@ public class UserController {
             @PathVariable Integer fineId) throws MultaVencidaException{
             return ResponseEntity.ok(multaService.pagarMulta(request, fineId, principal.getName()));
         }
+
+    @GetMapping("/consigned-items/{productId}/insurance")
+    public ResponseEntity<SeguroConsignedItemResponse> getConsignedItemInsurance(
+            Principal principal,
+            @PathVariable Integer productId) {
+        return ResponseEntity.ok(productoService.obtenerSeguroProductoConsignado(productId, principal.getName()));
+    }
+
+    @PatchMapping("/consigned-items/{productId}/insurance")
+    public ResponseEntity<AumentoSeguroResponse> requestInsuranceIncrease(
+            Principal principal,
+            @PathVariable Integer productId,
+            @Valid @RequestBody AumentarSeguroRequest request) {
+        return ResponseEntity.ok(productoService.solicitarAumentoSeguro(productId, request, principal.getName()));
+    }
+
+    @GetMapping("/consigned-items/{productId}/location")
+    public ResponseEntity<UbicacionProductoResponse> getConsignedItemLocation(
+            Principal principal,
+            @PathVariable Integer productId) {
+        return ResponseEntity.ok(productoService.obtenerUbicacionProductoConsignado(productId, principal.getName()));
+    }
 
     @GetMapping("/stats")
     public ResponseEntity<com.subastas.backend.dto.response.metrics.UserStatsResponse> getUserStats(Principal principal) {
