@@ -158,14 +158,11 @@ VALUES
 -- Demos
 (41, '41000001', 'Subastador Demo',   'Av. Demo 100, CABA',                'activo', NULL),
 (42, '42000001', 'Dueño Demo Uno',    'Av. Demo 200, CABA',                'activo', NULL),
-(43, '43000001', 'Dueño Demo Dos',    'Av. Demo 300, CABA',                'activo', NULL),
--- Cliente de prueba (completar registro desde la app con código 1234)
-(44, '44000001', 'Miguel Torres',     'Callao 540, CABA',                  'activo', NULL);
+(43, '43000001', 'Dueño Demo Dos',    'Av. Demo 300, CABA',                'activo', NULL);
 
 SET @id_subastador = (SELECT identificador FROM personas WHERE documento = '41000001' LIMIT 1);
 SET @id_duenio1    = (SELECT identificador FROM personas WHERE documento = '42000001' LIMIT 1);
 SET @id_duenio2    = (SELECT identificador FROM personas WHERE documento = '43000001' LIMIT 1);
-SET @id_cliente    = (SELECT identificador FROM personas WHERE documento = '44000001' LIMIT 1);
 
 -- ================================================================
 -- 3. SECTORES Y EMPLEADOS
@@ -336,18 +333,6 @@ INSERT INTO items_catalogo (catalogo, producto, precio_base, comision, subastado
 (@cat3, @p7,  2500000.00, 250000.00, 'no'),
 (@cat3, @p8,  1800000.00, 180000.00, 'no'),
 (@cat3, @p9,  3200000.00, 320000.00, 'no');
-
--- Asistente y pujos de prueba (subasta 1, ítem 1)
-INSERT INTO asistentes (numero_postor, cliente, subasta)
-VALUES (101, @id_cliente, @sub1);
-
-SET @asistente1 = LAST_INSERT_ID();
-SET @item1 = (SELECT identificador FROM items_catalogo WHERE producto = @p1 LIMIT 1);
-
-INSERT INTO pujos (asistente, item, importe, ganador) VALUES
-(@asistente1, @item1, 155000.00, 'no'),
-(@asistente1, @item1, 163000.00, 'no'),
-(@asistente1, @item1, 172000.00, 'no');
 
 -- ================================================================
 -- 6. SUBASTAS V2 — 30 subastas masivas (15 abiertas, 15 cerradas)
