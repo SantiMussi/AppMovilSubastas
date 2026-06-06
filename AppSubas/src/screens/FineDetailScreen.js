@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Image, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../themes/colors';
+import { useCurrency } from '../context/CurrencyContext';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
@@ -10,6 +11,7 @@ export default function FineDetailScreen({ session, fineId, onBack, onNavigate }
   const [fine, setFine] = useState(null);
   const [error, setError] = useState('');
   const [paying, setPaying] = useState(false);
+  const { formatGlobalMoney } = useCurrency();
 
   useEffect(() => {
     fetchFineDetail();
@@ -92,7 +94,6 @@ export default function FineDetailScreen({ session, fineId, onBack, onNavigate }
     );
   }
 
-  const currency = fine.moneda || '$';
   const amount = Number(fine.monto || 0);
   const winningOffer = amount * 10;
 
@@ -124,8 +125,8 @@ export default function FineDetailScreen({ session, fineId, onBack, onNavigate }
                 <Text style={styles.infoValue}>{formatDate(fine.subasta?.fecha || fine.fechaEmision)}</Text>
               </View>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Oferta Ganadora:</Text>
-                <Text style={styles.infoValue}>{currency}{winningOffer.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</Text>
+                <Text style={styles.infoLabel}>Oferta Ganadora</Text>
+                <Text style={styles.infoValue}>{formatGlobalMoney(winningOffer)}</Text>
               </View>
             </View>
           </View>
@@ -146,22 +147,22 @@ export default function FineDetailScreen({ session, fineId, onBack, onNavigate }
           <View style={styles.breakdownRow}>
             <View>
               <Text style={styles.breakdownLabel}>Multa Administrativa</Text>
-              <Text style={styles.breakdownSub}>10% sobre la oferta final de {currency}{winningOffer.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</Text>
+              <Text style={styles.breakdownSub}>10% sobre la oferta final de {formatGlobalMoney(winningOffer)}</Text>
             </View>
-            <Text style={styles.breakdownValue}>{currency}{amount.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</Text>
+            <Text style={styles.breakdownValue}>{formatGlobalMoney(amount)}</Text>
           </View>
 
           {/* Commented out operation fee to keep the total perfectly aligned with the backend's 'monto' */}
           {/* <View style={styles.breakdownRow}>
             <Text style={styles.breakdownLabel}>Gastos de Operación Notarial</Text>
-            <Text style={styles.breakdownValue}>{currency}1,250.00</Text>
+            <Text style={styles.breakdownValue}>{formatGlobalMoney(1250)}</Text>
           </View> */}
 
           <View style={styles.divider} />
 
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total Adeudado</Text>
-            <Text style={styles.totalValue}>{currency}{amount.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</Text>
+            <Text style={styles.totalValue}>{formatGlobalMoney(amount)}</Text>
           </View>
         </View>
 

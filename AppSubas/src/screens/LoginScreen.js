@@ -12,6 +12,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { palette } from '../constants/palette';
 import { safeJson } from '../utils/safeJson';
@@ -24,6 +26,7 @@ export default function LoginScreen({ onBack, onRegister, onForgotPassword, onLo
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
@@ -47,6 +50,13 @@ export default function LoginScreen({ onBack, onRegister, onForgotPassword, onLo
 
       if (!response.ok) {
         throw new Error(payload?.message || payload?.error || `No pudimos iniciar sesión (${response.status})`);
+      }
+
+      if (rememberMe) {
+        const token = payload?.accessToken || payload?.access_token || payload?.token;
+        if (token) {
+          await AsyncStorage.setItem('vantage_access_token', token);
+        }
       }
 
       setMessage('Sesión iniciada correctamente.');
@@ -110,6 +120,18 @@ export default function LoginScreen({ onBack, onRegister, onForgotPassword, onLo
                   style={styles.input}
                 />
               </View>
+
+              <Pressable 
+                style={styles.rememberMeRow} 
+                onPress={() => setRememberMe(!rememberMe)}
+              >
+                <Ionicons 
+                  name={rememberMe ? "checkbox-outline" : "square-outline"} 
+                  size={18} 
+                  color={rememberMe ? palette.gold : "#8e95a4"} 
+                />
+                <Text style={styles.rememberMeText}>Recordarme</Text>
+              </Pressable>
             </View>
 
             {message ? <Text style={styles.feedback}>{message}</Text> : null}
@@ -292,4 +314,14 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.72,
   },
+  rememberMeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: -8,
+  },
+  rememberMeText: {
+    fontSize: 11,
+    color: '#5c616a',
+    marginLeft: 6,
+  }
 });

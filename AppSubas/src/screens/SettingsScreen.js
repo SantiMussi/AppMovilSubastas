@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { TopBar } from '../components/TopBar';
 import { Colors } from '../themes/colors';
+import { useCurrency } from '../context/CurrencyContext';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
@@ -19,7 +20,7 @@ export default function SettingsScreen({ session, onMenuPress, onNavigate, onLog
 
   const [auctionAlerts, setAuctionAlerts] = useState(true);
   const [outbidAlerts, setOutbidAlerts] = useState(false);
-  const [currency, setCurrency] = useState('USD');
+  const { currency, changeCurrency } = useCurrency();
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   useEffect(() => {
@@ -271,7 +272,7 @@ export default function SettingsScreen({ session, onMenuPress, onNavigate, onLog
               <Text style={styles.currencyLabel}>Moneda</Text>
               <Pressable 
                 style={{flexDirection: 'row', alignItems: 'center'}}
-                onPress={() => setCurrency(prev => prev === 'USD' ? 'ARS' : 'USD')}
+                onPress={() => changeCurrency(currency === 'USD' ? 'ARS' : 'USD')}
               >
                 <Text style={styles.currencyValue}>{currency} ($)</Text>
                 <Ionicons name="swap-vertical" size={14} color="#888" style={{marginLeft: 4}} />

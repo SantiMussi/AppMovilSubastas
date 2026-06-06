@@ -21,6 +21,8 @@ import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CurrencyProvider } from './src/context/CurrencyContext';
 
 ExpoSplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -41,9 +43,6 @@ export default function App() {
         // 2) Health-check al back de Spring (opcional pero recomendado)
         //  
         await pingBackend();
- 
-        // 3) Cualquier otra precarga: token, perfil, feature flags, etc.
-        // await restoreSession();
       } catch (e) {
         console.warn('[Bootstrap] error:', e);
       } finally {
@@ -57,9 +56,11 @@ export default function App() {
   }, []);
  
   return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      {!appReady ? <SplashScreen /> : <RootNavigator />}
-    </View>
+    <CurrencyProvider>
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        {!appReady ? <SplashScreen /> : <RootNavigator />}
+      </View>
+    </CurrencyProvider>
   );
 }
 
@@ -68,6 +69,33 @@ function RootNavigator() {
   const [session, setSession] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [screenHistory, setScreenHistory] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem('vantage_access_token');
+        if (storedToken) {
+          const res = await fetch(`${API_BASE}/api/v1/users/me`, {
+            headers: { Authorization: `Bearer ${storedToken}` },
+          });
+          if (res.ok) {
+            const profile = await res.json();
+            setSession({
+              authPayload: {},
+              accessToken: storedToken,
+              profile,
+              profileError: '',
+            });
+            setScreen('auctions');
+          } else {
+            await AsyncStorage.removeItem('vantage_access_token');
+          }
+        }
+      } catch (error) {
+        console.warn('Error restoring session:', error);
+      }
+    })();
+  }, []);
 
   const extractAccessToken = (payload) => payload?.accessToken || payload?.access_token || payload?.token || '';
 
@@ -104,10 +132,11 @@ function RootNavigator() {
     setScreen(defaultScreen);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setDrawerOpen(false);
     setSession(null);
     setScreen('authChoice');
+    await AsyncStorage.removeItem('vantage_access_token');
   };
 
   const handleNavigate = (screenKey) => {

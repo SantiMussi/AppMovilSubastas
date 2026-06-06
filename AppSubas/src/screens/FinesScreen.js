@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Image, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../themes/colors';
+import { useCurrency } from '../context/CurrencyContext';
 
 const { width } = Dimensions.get('window');
 
@@ -12,6 +13,7 @@ export default function FinesScreen({ session, onBack, onNavigate }) {
   const [fines, setFines] = useState([]);
   const [error, setError] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
+  const { formatGlobalMoney } = useCurrency();
 
   useEffect(() => {
     fetchFines();
@@ -77,8 +79,6 @@ export default function FinesScreen({ session, onBack, onNavigate }) {
 
   const renderPopulatedState = () => {
     const totalAmount = fines.reduce((acc, curr) => acc + (curr.monto || 0), 0);
-    // Assuming uniform currency for the total, or taking the first one
-    const currency = fines[0]?.moneda || '$';
 
     return (
       <View style={styles.content}>
@@ -131,7 +131,7 @@ export default function FinesScreen({ session, onBack, onNavigate }) {
                 <View style={styles.fineAmountRow}>
                   <View>
                     <Text style={styles.fineAmountLabel}>IMPORTE MULTA</Text>
-                    <Text style={styles.fineAmountValue}>{multa.moneda || '$'}{Number(multa.monto || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })}</Text>
+                    <Text style={styles.fineAmountValue}>{formatGlobalMoney(multa.monto || 0)}</Text>
                   </View>
                   <View style={styles.timeLeftContainer}>
                     <Ionicons name="time-outline" size={14} color="#B22222" />
@@ -151,7 +151,7 @@ export default function FinesScreen({ session, onBack, onNavigate }) {
 
         <View style={styles.totalContainer}>
           <Text style={styles.totalLabel}>TOTAL PENDIENTE</Text>
-          <Text style={styles.totalValue}>{currency}{totalAmount.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</Text>
+          <Text style={styles.totalValue}>{formatGlobalMoney(totalAmount)}</Text>
         </View>
       </View>
     );

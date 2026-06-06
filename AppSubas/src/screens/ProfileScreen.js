@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Image, ActivityIndicator
 import { Ionicons } from '@expo/vector-icons';
 import { TopBar } from '../components/TopBar';
 import { Colors } from '../themes/colors';
+import { useCurrency } from '../context/CurrencyContext';
 
 export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
   const [profile, setProfile] = useState(session?.profile || {});
   const [loading, setLoading] = useState(false);
+  const { formatGlobalMoney } = useCurrency();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -48,7 +50,7 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
   const inversiones = profile?.inversiones || [];
 
   const formatCurrency = (val) => {
-    return Number(val).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+    return formatGlobalMoney(val);
   };
   return (
     <View style={styles.container}>

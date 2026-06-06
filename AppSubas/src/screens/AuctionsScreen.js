@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TopBar } from '../components/TopBar';
 import { Colors } from '../themes/colors';
+import { useCurrency } from '../context/CurrencyContext';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 const { width } = Dimensions.get('window');
@@ -239,6 +240,7 @@ export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
 
 function LiveAuctionsShowcase({ auctions, now, onOpenAuction }) {
   const featuredAuctions = auctions.slice(0, 5);
+  const { formatGlobalMoney } = useCurrency();
 
   return (
     <View style={styles.liveShowcase}>
@@ -276,7 +278,7 @@ function LiveAuctionsShowcase({ auctions, now, onOpenAuction }) {
                   {auction.title || `Subasta #${auction.id}`}
                 </Text>
                 <Text style={styles.liveFeatureMeta}>
-                  {formatMoney(auction.currentOffer, auction.currency)} · {formatCountdown(auction.endDate, now)}
+                  {formatGlobalMoney(auction.currentOffer)} · {formatCountdown(auction.endDate, now)}
                 </Text>
               </View>
             </Pressable>
@@ -288,6 +290,7 @@ function LiveAuctionsShowcase({ auctions, now, onOpenAuction }) {
 }
 
 function AuctionCard({ auction, now, onJoin }) {
+  const { formatGlobalMoney } = useCurrency();
   const isLive = auction.computedStatus === 'live';
   const isScheduled = auction.computedStatus === 'scheduled';
   const isEnded = auction.computedStatus === 'ended';
@@ -338,7 +341,7 @@ function AuctionCard({ auction, now, onJoin }) {
         {isLive && (
           <View style={styles.offerBox}>
             <Text style={styles.offerLabel}>OFERTA ACTUAL</Text>
-            <Text style={styles.offerValue}>{formatMoney(auction.currentOffer, auction.currency)}</Text>
+            <Text style={styles.offerValue}>{formatGlobalMoney(auction.currentOffer)}</Text>
             <Pressable style={styles.joinButton} onPress={onJoin}>
               <Text style={styles.joinButtonText}>PARTICIPAR AHORA</Text>
             </Pressable>
@@ -538,11 +541,6 @@ function byteArrayToDataUri(value) {
 
 function formatCategory(category) {
   return `${category}`.replace(/_/g, ' ').toUpperCase();
-}
-
-function formatMoney(value, currency = 'USD') {
-  if (value === null || value === undefined || value === '') return `${currency} 0`;
-  return `${currency} ${Number(value).toLocaleString('es-ES', { maximumFractionDigits: 0 })}`;
 }
 
 function formatCountdown(endDate, now) {
