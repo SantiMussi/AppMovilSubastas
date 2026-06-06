@@ -126,7 +126,6 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
           {/* Inversión por Categoría */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Inversión por Categoría</Text>
-            <Text style={styles.sectionSubtitle}>AÑO DE INICIO EN SUBASTAS: 2024</Text>
 
             <View style={styles.barsContainer}>
               {inversiones.length > 0 ? (
