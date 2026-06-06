@@ -16,10 +16,11 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
         setLoading(true);
         const API_BASE = process.env.EXPO_PUBLIC_API_URL;
         
-        const [profileRes, statsRes, winsRes] = await Promise.all([
+        const [profileRes, statsRes, winsRes, proposalsRes] = await Promise.all([
           fetch(`${API_BASE}/api/v1/users/me`, { headers: { Authorization: `Bearer ${session?.accessToken}` } }),
           fetch(`${API_BASE}/api/v1/users/me/stats`, { headers: { Authorization: `Bearer ${session?.accessToken}` } }),
-          fetch(`${API_BASE}/api/v1/users/me/wins`, { headers: { Authorization: `Bearer ${session?.accessToken}` } })
+          fetch(`${API_BASE}/api/v1/users/me/wins`, { headers: { Authorization: `Bearer ${session?.accessToken}` } }),
+          fetch(`${API_BASE}/api/v1/users/me/proposals`, { headers: { Authorization: `Bearer ${session?.accessToken}` } })
         ]);
 
         let data = {};
@@ -37,6 +38,15 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
         if (winsRes.ok) {
           const wins = await winsRes.json();
           data.inversiones = wins.desgloseInversiones || [];
+        }
+        if (proposalsRes.ok) {
+          const proposals = await proposalsRes.json();
+          data.consignaciones = proposals.items?.map(p => ({
+            titulo: p.titulo,
+            subtitulo: `Estado: ${p.status.toUpperCase()}`,
+            ubicacion: 'Depósito Central',
+            valorEstimado: 'A definir'
+          })) || [];
         }
 
         setProfile(prev => ({ ...prev, ...data }));
