@@ -1,7 +1,3 @@
-// SplashScreen.jsx
-// Splash screen Vantage — React Native + Expo
-// Barra dorada indeterminada (loop infinito hasta que termine la carga)
- 
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -17,7 +13,6 @@ import { LinearGradient } from 'expo-linear-gradient';
  
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
  
-// Paleta extraída del mockup
 const COLORS = {
   bgTop: '#0B1528',
   bgBottom: '#050A14',
@@ -33,15 +28,12 @@ const BAR_WIDTH = SCREEN_WIDTH * 0.55;
 const INDICATOR_WIDTH = BAR_WIDTH * 0.35;
  
 export default function SplashScreen({ onReady }) {
-  // Animación de la barra dorada (indeterminada)
   const translateX = useRef(new Animated.Value(-INDICATOR_WIDTH)).current;
  
-  // Fade-in del logo y textos
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const logoScale = useRef(new Animated.Value(0.92)).current;
  
   useEffect(() => {
-    // Loop indeterminado: el indicador se desliza de izq a der eternamente
     const barLoop = Animated.loop(
       Animated.timing(translateX, {
         toValue: BAR_WIDTH,
@@ -52,7 +44,6 @@ export default function SplashScreen({ onReady }) {
     );
     barLoop.start();
  
-    // Entrada suave del contenido
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -78,18 +69,12 @@ export default function SplashScreen({ onReady }) {
     >
       <StatusBar barStyle="light-content" />
  
-      {/* Bloque central: logo + tagline */}
       <Animated.View
         style={[
           styles.centerBlock,
           { opacity: fadeAnim, transform: [{ scale: logoScale }] },
         ]}
       >
-        {/*
-          IMPORTANTE: reemplazá esta Image por tu asset real.
-          Exportá el isotipo (V con corona) a PNG transparente 3x.
-          Path sugerido: assets/branding/vantage-logo.png
-        */}
         <Image
           source={require('../../assets/images/logo_vantage.png')}
           style={styles.logo}
@@ -103,7 +88,6 @@ export default function SplashScreen({ onReady }) {
         <Text style={styles.subtagline}>FINE AUCTIONS</Text>
       </Animated.View>
  
-      {/* Barra de carga indeterminada */}
       <View style={styles.bottomBlock}>
         <View style={styles.progressTrack}>
           <Animated.View
@@ -158,8 +142,6 @@ const styles = StyleSheet.create({
     letterSpacing: 8,
     color: COLORS.goldLight,
     fontWeight: '600',
-    // Si usás expo-font, reemplazá por una serif elegante (ej. PlayfairDisplay)
-    // fontFamily: 'PlayfairDisplay-SemiBold',
   },
   divider: {
     height: 1,

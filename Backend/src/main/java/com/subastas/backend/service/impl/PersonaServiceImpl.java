@@ -86,4 +86,25 @@ public class PersonaServiceImpl implements PersonaService {
 
         personaRepository.save(persona);
     }
+
+    @Override
+    @Transactional
+    public void eliminarCuenta(String email) {
+        Usuario usuario = obtenerUsuarioPorEmail(email);
+        Persona persona = usuario.getPersona();
+        
+        // Anonymize user to allow re-registration with same email/document while preserving referential integrity
+        usuario.setEmail("del_" + persona.getIdentificador() + "@deleted.com");
+        usuario.setPassword("");
+        usuarioRepository.save(usuario);
+        
+        persona.setDocumento("del_" + persona.getIdentificador());
+        persona.setEstado("inactivo");
+        personaRepository.save(persona);
+        
+        clienteRepository.findById(persona.getIdentificador()).ifPresent(cliente -> {
+            cliente.setAdmitido("no");
+            clienteRepository.save(cliente);
+        });
+    }
 }

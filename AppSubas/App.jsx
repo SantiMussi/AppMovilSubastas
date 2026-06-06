@@ -18,6 +18,11 @@ import FineDetailScreen from './src/screens/FineDetailScreen';
 import AuctionsScreen from './src/screens/AuctionsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
+import PaymentMethodsScreen from './src/screens/PaymentMethodsScreen';
+import AddCreditCardScreen from './src/screens/AddCreditCardScreen';
+import LinkBankAccountScreen from './src/screens/LinkBankAccountScreen';
+import AddChequeScreen from './src/screens/AddChequeScreen';
+import PaymentSuccessScreen from './src/screens/PaymentSuccessScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -34,14 +39,9 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        // 1) Cargar fuentes / assets críticos
         await Font.loadAsync({
-          // 'PlayfairDisplay-SemiBold': require('./assets/fonts/PlayfairDisplay-SemiBold.ttf'),
-          // agregá tus fuentes acá
         });
  
-        // 2) Health-check al back de Spring (opcional pero recomendado)
-        //  
         await pingBackend();
       } catch (e) {
         console.warn('[Bootstrap] error:', e);
@@ -157,7 +157,7 @@ function RootNavigator() {
   const openDrawer = () => setDrawerOpen(true);
   const closeDrawer = () => setDrawerOpen(false);
 
-  /* ── Pre-auth screens (no drawer) ── */
+
 
   if (!session) {
     if (screen === 'login') {
@@ -195,7 +195,7 @@ function RootNavigator() {
     );
   }
 
-  /* ── Post-auth screens (with drawer) ── */
+
 
   const renderSidebar = () => (
     <Sidebar
@@ -285,11 +285,49 @@ function RootNavigator() {
 
       case 'pagos':
         return (
-          <PlaceholderScreen
-            title="Métodos de Pago"
-            subtitle="Gestioná tus tarjetas y métodos de pago para realizar ofertas en las subastas."
-            iconName="card-outline"
+          <PaymentMethodsScreen
+            session={session}
             onMenuPress={openDrawer}
+            onNavigate={handleNavigate}
+          />
+        );
+
+      case 'addCreditCard':
+        return (
+          <AddCreditCardScreen
+            session={session}
+            onBack={goBack}
+            onMenuPress={openDrawer}
+            onNavigate={handleNavigate}
+          />
+        );
+
+      case 'linkBankAccount':
+        return (
+          <LinkBankAccountScreen
+            session={session}
+            onBack={goBack}
+            onMenuPress={openDrawer}
+            onNavigate={handleNavigate}
+          />
+        );
+
+      case 'addCheque':
+        return (
+          <AddChequeScreen
+            session={session}
+            onBack={goBack}
+            onMenuPress={openDrawer}
+            onNavigate={handleNavigate}
+          />
+        );
+
+      case 'paymentSuccess':
+        return (
+          <PaymentSuccessScreen
+            session={session}
+            onMenuPress={openDrawer}
+            onNavigate={handleNavigate}
           />
         );
 

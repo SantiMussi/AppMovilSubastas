@@ -24,19 +24,23 @@ public class UserController {
     @Autowired
     private MultaService multaService;
 
-    // GET /api/v1/users/me
     @GetMapping
     public ResponseEntity<PerfilResponse> getProfile(Principal principal) {
-        String email = principal.getName(); // Esto viene del JWT
+        String email = principal.getName();
         return ResponseEntity.ok(personaService.obtenerPerfil(email));
     }
 
-    // PATCH /api/v1/users/me
     @PatchMapping
     public ResponseEntity<PerfilResponse> updateProfile(java.security.Principal principal,
             @RequestBody com.subastas.backend.dto.request.PerfilRequest request) {
         String email = principal.getName();
         return ResponseEntity.ok(personaService.actualizarPerfil(email, request));
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAccount(Principal principal) {
+        personaService.eliminarCuenta(principal.getName());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping(value = "/foto", consumes = "multipart/form-data")
@@ -50,7 +54,7 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Error de validación: " + e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace(); // Imprimir en la consola para debugging
+            e.printStackTrace();
             return ResponseEntity.internalServerError()
                     .body("Error al subir la imagen: " + e.getClass().getName() + " - " + e.getMessage());
         }

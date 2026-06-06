@@ -38,9 +38,7 @@ export default function FineDetailScreen({ session, fineId, onBack, onNavigate }
   const handlePay = async () => {
     setPaying(true);
     try {
-      // The endpoint requires PagoMultaRequest. We might not have the full payment method flow here, 
-      // but we'll try sending an empty object or dummy data as required by the backend.
-      // Usually it might need a medioPagoId. 
+
       const response = await fetch(`${API_BASE}/api/v1/users/me/fines/${fineId}/pay`, {
         method: 'POST',
         headers: { 
@@ -48,7 +46,7 @@ export default function FineDetailScreen({ session, fineId, onBack, onNavigate }
           Authorization: `Bearer ${session?.accessToken}` 
         },
         body: JSON.stringify({
-          // Mock data if required by backend. Assuming it can process with just the endpoint or a dummy id.
+
           medioPagoId: 1
         })
       });

@@ -26,7 +26,7 @@ public class AdminController {
     private final CurrentUser currentUser;
 
 
-    //  SUBASTAS
+
 
     @PostMapping("/auctions")
     @ResponseStatus(HttpStatus.CREATED)
@@ -47,7 +47,7 @@ public class AdminController {
     }
 
 
-    //  USUARIOS
+
 
     @GetMapping("/users")
     public List<AdminUserResponse> obtenerUsuarios() {
@@ -66,7 +66,7 @@ public class AdminController {
     }
 
     
-    //  MEDIOS DE PAGO
+
 
     @PostMapping("/payments/{pagoId}/verify")
     public MessageResponse verificarPago(@PathVariable Integer pagoId, @Valid @RequestBody VerificarPagoRequest req) {
@@ -74,7 +74,7 @@ public class AdminController {
     }
 
 
-    //  PROPUESTAS
+
 
     @PostMapping("/proposals/{propuestaId}/review")
     public MessageResponse revisarPropuesta(@PathVariable Integer propuestaId, @Valid @RequestBody RevisarPropuestaRequest req) {
@@ -82,7 +82,7 @@ public class AdminController {
     }
 
 
-    // MULTAS
+
 
     @PostMapping("/fines")
     @ResponseStatus(HttpStatus.CREATED)
