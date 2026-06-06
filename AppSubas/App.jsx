@@ -15,7 +15,7 @@ import MembershipCategoriesScreen from './src/screens/MembershipCategoriesScreen
 import ProfileScreen from './src/screens/ProfileScreen';
 import FinesScreen from './src/screens/FinesScreen';
 import FineDetailScreen from './src/screens/FineDetailScreen';
-//import AuctionsScreen from './src/screens/AuctionsScreen';
+import AuctionsScreen from './src/screens/AuctionsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
 import PaymentMethodsScreen from './src/screens/PaymentMethodsScreen';

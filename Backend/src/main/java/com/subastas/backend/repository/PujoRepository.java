@@ -13,4 +13,7 @@ public interface PujoRepository extends JpaRepository<Pujo, Integer> {
     Optional<Pujo> findFirstByItemIdentificadorOrderByImporteDescIdentificadorDesc(Integer itemId);
 
     Page<Pujo> findByItemIdentificador(Integer itemId, Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT AVG(p.importe) FROM Pujo p WHERE p.asistente.cliente.identificador = :clienteId")
+    Double getAveragePujaByClienteId(@org.springframework.data.repository.query.Param("clienteId") Integer clienteId);
 }

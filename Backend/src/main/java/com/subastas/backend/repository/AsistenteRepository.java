@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface AsistenteRepository extends JpaRepository<Asistente, Integer> {
     List<Asistente> findBySubastaIdentificador(Integer subastaId);
     Optional<Asistente> findByClienteIdentificadorAndSubastaIdentificador(Integer clienteId, Integer subastaId);
+    Integer countByClienteIdentificador(Integer clienteId);
 }
