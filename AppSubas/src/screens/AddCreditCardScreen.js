@@ -146,7 +146,7 @@ export default function AddCreditCardScreen({ session, onMenuPress, onBack, onNa
       return;
     }
     if (cleanNumber.length < 13 || !validateLuhn(cleanNumber)) {
-      Alert.alert('Error', 'El número de tarjeta no es válido (falló validación de red).');
+      Alert.alert('Error', 'El número de tarjeta no es válido.');
       return;
     }
     if (!validateExpiry(vencimiento)) {

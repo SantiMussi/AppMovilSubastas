@@ -37,7 +37,7 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
   const apellido = profile?.apellido || '';
   const fullName = `${nombre} ${apellido}`.trim();
   const categoria = profile?.categoria ? `${profile.categoria}`.toUpperCase() : 'COMÚN';
-  
+
   const saldoGarantia = profile?.saldoGarantia || 0;
   const limiteCompra = profile?.limiteCompra || 0;
   const subastasVisitadas = profile?.subastasVisitadas || 0;
@@ -45,8 +45,7 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
   const pujasRealizadas = profile?.pujasRealizadas || 0;
   const valorTotalEstimado = profile?.valorTotalEstimado || 0;
   const incrementoAnual = profile?.incrementoAnual || 0;
-  
-  // Fake empty array to map if empty
+
   const inversiones = profile?.inversiones || [];
 
   const formatCurrency = (val) => {
@@ -61,158 +60,159 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header / Member Info */}
-        <View style={styles.header}>
-          <View style={styles.memberBadge}>
-            <Ionicons name="card" size={12} color="#000" />
-            <Text style={styles.memberBadgeText}>{categoria} MEMBER</Text>
-          </View>
-          <Text style={styles.userName}>{fullName}</Text>
-
-          <View style={styles.balancesContainer}>
-            <View style={styles.balanceCard}>
-              <Text style={styles.balanceLabel}>SALDO EN GARANTÍA</Text>
-              <Text style={styles.balanceValue}>{formatCurrency(saldoGarantia)}</Text>
+          {/* Header / Member Info */}
+          <View style={styles.header}>
+            <View style={styles.memberBadge}>
+              <Ionicons name="card" size={12} color="#000" />
+              <Text style={styles.memberBadgeText}>{categoria} MEMBER</Text>
             </View>
-            <View style={styles.balanceDivider} />
-            <View style={styles.balanceCard}>
-              <Text style={styles.balanceLabel}>LÍMITE DE COMPRA</Text>
-              <Text style={styles.balanceValue}>{formatCurrency(limiteCompra)}</Text>
+            <Text style={styles.userName}>{fullName}</Text>
+
+            <View style={styles.balancesContainer}>
+              <View style={styles.balanceCard}>
+                <Text style={styles.balanceLabel}>SALDO EN GARANTÍA</Text>
+                <Text style={styles.balanceValue}>{formatCurrency(saldoGarantia)}</Text>
+              </View>
+              <View style={styles.balanceDivider} />
+              <View style={styles.balanceCard}>
+                <Text style={styles.balanceLabel}>LÍMITE DE COMPRA</Text>
+                <Text style={styles.balanceValue}>{formatCurrency(limiteCompra)}</Text>
+              </View>
+            </View>
+
+            <Pressable style={styles.redButton} onPress={() => onNavigate('fines')}>
+              <Text style={styles.redButtonText}>CONSULTAR MULTAS</Text>
+            </Pressable>
+          </View>
+
+          {/* Resumen de Actividad */}
+          <View style={styles.activityCard}>
+            <Text style={styles.activityTitle}>RESUMEN DE ACTIVIDAD</Text>
+
+            <View style={styles.activityRow}>
+              <Text style={styles.activityLabel}>Subastas visitadas</Text>
+              <Text style={styles.activityValue}>{subastasVisitadas}</Text>
+            </View>
+
+            <View style={styles.activityRow}>
+              <Text style={styles.activityLabel}>Victorias</Text>
+              <Text style={[styles.activityValue, { color: Colors.secondary }]}>{victorias < 10 ? `0${victorias}` : victorias}</Text>
+            </View>
+
+            <View style={styles.activityRow}>
+              <Text style={styles.activityLabel}>Pujas Realizadas</Text>
+              <Text style={styles.activityValue}>{pujasRealizadas}</Text>
             </View>
           </View>
 
-          <Pressable style={styles.redButton} onPress={() => onNavigate('fines')}>
-            <Text style={styles.redButtonText}>CONSULTAR MULTAS</Text>
-          </Pressable>
-        </View>
+          {/* Inversión por Categoría */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Inversión por Categoría</Text>
+            <Text style={styles.sectionSubtitle}>AÑO DE INICIO EN SUBASTAS: 2024</Text>
 
-        {/* Resumen de Actividad */}
-        <View style={styles.activityCard}>
-          <Text style={styles.activityTitle}>RESUMEN DE ACTIVIDAD</Text>
-
-          <View style={styles.activityRow}>
-            <Text style={styles.activityLabel}>Subastas visitadas</Text>
-            <Text style={styles.activityValue}>{subastasVisitadas}</Text>
-          </View>
-
-          <View style={styles.activityRow}>
-            <Text style={styles.activityLabel}>Victorias</Text>
-            <Text style={[styles.activityValue, { color: Colors.secondary }]}>{victorias < 10 ? `0${victorias}` : victorias}</Text>
-          </View>
-
-          <View style={styles.activityRow}>
-            <Text style={styles.activityLabel}>Pujas Realizadas</Text>
-            <Text style={styles.activityValue}>{pujasRealizadas}</Text>
-          </View>
-        </View>
-
-        {/* Inversión por Categoría */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Inversión por Categoría</Text>
-
-          <View style={styles.barsContainer}>
-            {inversiones.length > 0 ? (
-              inversiones.map((inv, idx) => (
-                <View key={idx} style={styles.barItem}>
-                  <View style={styles.barLabelRow}>
-                    <Text style={styles.barLabel}>{inv.categoria}</Text>
-                    <Text style={styles.barPercent}>{inv.porcentaje}%</Text>
+            <View style={styles.barsContainer}>
+              {inversiones.length > 0 ? (
+                inversiones.map((inv, idx) => (
+                  <View key={idx} style={styles.barItem}>
+                    <View style={styles.barLabelRow}>
+                      <Text style={styles.barLabel}>{inv.categoria}</Text>
+                      <Text style={styles.barPercent}>{inv.porcentaje}%</Text>
+                    </View>
+                    <View style={styles.barTrack}>
+                      <View style={[styles.barFill, { width: `${inv.porcentaje}%`, backgroundColor: idx === 2 ? Colors.secondary : '#000' }]} />
+                    </View>
                   </View>
-                  <View style={styles.barTrack}>
-                    <View style={[styles.barFill, { width: `${inv.porcentaje}%`, backgroundColor: idx === 2 ? Colors.secondary : '#000' }]} />
+                ))
+              ) : (
+                <Text style={{ color: '#888', fontSize: 12, textAlign: 'center', marginVertical: 20 }}>
+                  No hay datos de inversión para mostrar.
+                </Text>
+              )}
+            </View>
+
+            <View style={styles.totalValueContainer}>
+              <Text style={styles.totalValueLabel}>VALOR TOTAL ESTIMADO</Text>
+              <Text style={styles.totalValue}>{formatCurrency(valorTotalEstimado)}</Text>
+              {incrementoAnual > 0 && (
+                <Text style={styles.totalValueIncrease}>↗ +{incrementoAnual}% este año</Text>
+              )}
+            </View>
+          </View>
+
+          {/* Gestionar Fondos */}
+          <View style={styles.manageFundsCard}>
+            <View style={styles.manageFundsHeader}>
+              <Ionicons name="wallet-outline" size={20} color="#000" />
+              <Text style={styles.manageFundsTitle}>Gestionar Fondos</Text>
+            </View>
+            <Text style={styles.manageFundsText}>
+              Aumenta tu límite de puja mediante un depósito adicional.
+            </Text>
+            <Pressable style={styles.blueButton}>
+              <Text style={styles.blueButtonText}>TRANSFERIR FONDOS</Text>
+            </Pressable>
+          </View>
+
+          {/* Artículos en Consignación */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Artículos en{'\n'}Consignación</Text>
+              <Pressable>
+                <Text style={styles.viewAllText}>VER{'\n'}TODOS ➔</Text>
+              </Pressable>
+            </View>
+
+            {profile?.consignaciones && profile.consignaciones.length > 0 ? (
+              profile.consignaciones.map((item, idx) => (
+                <View key={idx} style={styles.itemCard}>
+                  <Image
+                    source={{ uri: item.imagen || 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?q=80&w=800&auto=format&fit=crop' }}
+                    style={styles.itemImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.itemContent}>
+                    <View style={styles.itemTitleRow}>
+                      <Text style={styles.itemTitle}>{item.titulo}</Text>
+                      <Ionicons name="qr-code-outline" size={24} color="#ccc" />
+                    </View>
+                    <Text style={styles.itemSubtitle}>{item.subtitulo}</Text>
+
+                    <View style={styles.itemBulletRow}>
+                      <View style={styles.goldDot} />
+                      <View>
+                        <Text style={styles.itemBulletLabel}>UBICACIÓN ACTUAL</Text>
+                        <Text style={styles.itemBulletValue}>{item.ubicacion}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.itemBulletRow}>
+                      <Ionicons name="shield-checkmark-outline" size={14} color="#666" style={{ marginTop: 2 }} />
+                      <View style={{ marginLeft: 6 }}>
+                        <Text style={styles.itemBulletLabel}>PÓLIZA DE SEGURO</Text>
+                        <Text style={styles.itemBulletLink}>Descargar Certificado</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.itemDivider} />
+
+                    <View style={styles.itemValueRow}>
+                      <Text style={styles.itemValueLabel}>VALOR ESTIMADO</Text>
+                      <Text style={styles.itemValue}>{item.valorEstimado}</Text>
+                    </View>
                   </View>
                 </View>
               ))
             ) : (
-              <Text style={{ color: '#888', fontSize: 12, textAlign: 'center', marginVertical: 20 }}>
-                No hay datos de inversión para mostrar.
+              <Text style={{ color: '#888', fontSize: 13, textAlign: 'center', marginTop: 10 }}>
+                No cuentas con artículos en consignación en este momento.
               </Text>
             )}
           </View>
 
-          <View style={styles.totalValueContainer}>
-            <Text style={styles.totalValueLabel}>VALOR TOTAL ESTIMADO</Text>
-            <Text style={styles.totalValue}>{formatCurrency(valorTotalEstimado)}</Text>
-            {incrementoAnual > 0 && (
-              <Text style={styles.totalValueIncrease}>↗ +{incrementoAnual}% este año</Text>
-            )}
-          </View>
-        </View>
-
-        {/* Gestionar Fondos */}
-        <View style={styles.manageFundsCard}>
-          <View style={styles.manageFundsHeader}>
-            <Ionicons name="wallet-outline" size={20} color="#000" />
-            <Text style={styles.manageFundsTitle}>Gestionar Fondos</Text>
-          </View>
-          <Text style={styles.manageFundsText}>
-            Aumenta tu límite de puja mediante un depósito adicional.
-          </Text>
-          <Pressable style={styles.blueButton} onPress={() => onNavigate('pagos')}>
-            <Text style={styles.blueButtonText}>TRANSFERIR FONDOS</Text>
+          <Pressable style={styles.blackButton}>
+            <Text style={styles.blackButtonText}>VISUALIZAR MÉTRICAS</Text>
           </Pressable>
-        </View>
-
-        {/* Artículos en Consignación */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Artículos en{'\n'}Consignación</Text>
-            <Pressable>
-              <Text style={styles.viewAllText}>VER{'\n'}TODOS ➔</Text>
-            </Pressable>
-          </View>
-
-          {profile?.consignaciones && profile.consignaciones.length > 0 ? (
-            profile.consignaciones.map((item, idx) => (
-              <View key={idx} style={styles.itemCard}>
-                <Image
-                  source={{ uri: item.imagen || 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?q=80&w=800&auto=format&fit=crop' }}
-                  style={styles.itemImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.itemContent}>
-                  <View style={styles.itemTitleRow}>
-                    <Text style={styles.itemTitle}>{item.titulo}</Text>
-                    <Ionicons name="qr-code-outline" size={24} color="#ccc" />
-                  </View>
-                  <Text style={styles.itemSubtitle}>{item.subtitulo}</Text>
-
-                  <View style={styles.itemBulletRow}>
-                    <View style={styles.goldDot} />
-                    <View>
-                      <Text style={styles.itemBulletLabel}>UBICACIÓN ACTUAL</Text>
-                      <Text style={styles.itemBulletValue}>{item.ubicacion}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.itemBulletRow}>
-                    <Ionicons name="shield-checkmark-outline" size={14} color="#666" style={{ marginTop: 2 }} />
-                    <View style={{ marginLeft: 6 }}>
-                      <Text style={styles.itemBulletLabel}>PÓLIZA DE SEGURO</Text>
-                      <Text style={styles.itemBulletLink}>Descargar Certificado</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.itemDivider} />
-
-                  <View style={styles.itemValueRow}>
-                    <Text style={styles.itemValueLabel}>VALOR ESTIMADO</Text>
-                    <Text style={styles.itemValue}>{item.valorEstimado}</Text>
-                  </View>
-                </View>
-              </View>
-            ))
-          ) : (
-            <Text style={{ color: '#888', fontSize: 13, textAlign: 'center', marginTop: 10 }}>
-              No cuentas con artículos en consignación en este momento.
-            </Text>
-          )}
-        </View>
-
-        <Pressable style={styles.blackButton}>
-          <Text style={styles.blackButtonText}>VISUALIZAR MÉTRICAS</Text>
-        </Pressable>
-      </ScrollView>
+        </ScrollView>
       )}
     </View>
   );
