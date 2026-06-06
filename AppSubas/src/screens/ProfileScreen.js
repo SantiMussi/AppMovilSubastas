@@ -1,11 +1,36 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TopBar } from '../components/TopBar';
 import { Colors } from '../themes/colors';
 
 export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
-  const profile = session?.profile || {};
+  const [profile, setProfile] = useState(session?.profile || {});
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const API_BASE = process.env.EXPO_PUBLIC_API_URL;
+        const response = await fetch(`${API_BASE}/api/v1/users/me`, {
+          headers: { Authorization: `Bearer ${session?.accessToken}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setProfile(prev => ({ ...prev, ...data }));
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (session?.accessToken) {
+      fetchProfile();
+    }
+  }, [session?.accessToken]);
+
   const nombre = profile?.nombre || 'Usuario';
   const apellido = profile?.apellido || '';
   const fullName = `${nombre} ${apellido}`.trim();
@@ -23,12 +48,17 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
   const inversiones = profile?.inversiones || [];
 
   const formatCurrency = (val) => {
-    return Number(val).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+    return Number(val).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
   };
   return (
     <View style={styles.container}>
       <TopBar onMenuPress={onMenuPress} />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={Colors.secondary} />
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header / Member Info */}
         <View style={styles.header}>
           <View style={styles.memberBadge}>
@@ -182,6 +212,7 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
           <Text style={styles.blackButtonText}>VISUALIZAR MÉTRICAS</Text>
         </Pressable>
       </ScrollView>
+      )}
     </View>
   );
 }

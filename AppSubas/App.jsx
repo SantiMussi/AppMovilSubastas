@@ -16,6 +16,8 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import FinesScreen from './src/screens/FinesScreen';
 import FineDetailScreen from './src/screens/FineDetailScreen';
 import AuctionsScreen from './src/screens/AuctionsScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
+import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -274,11 +276,19 @@ function RootNavigator() {
 
       case 'ajustes':
         return (
-          <PlaceholderScreen
-            title="Ajustes"
-            subtitle="Configurá notificaciones, privacidad, idioma y otras preferencias de la aplicación."
-            iconName="settings-outline"
+          <SettingsScreen
+            session={session}
             onMenuPress={openDrawer}
+            onNavigate={handleNavigate}
+            onLogout={handleLogout}
+          />
+        );
+
+      case 'changePassword':
+        return (
+          <ChangePasswordScreen
+            session={session}
+            onBack={goBack}
           />
         );
 

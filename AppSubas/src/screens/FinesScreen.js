@@ -11,6 +11,7 @@ export default function FinesScreen({ session, onBack, onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [fines, setFines] = useState([]);
   const [error, setError] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     fetchFines();
@@ -92,14 +93,22 @@ export default function FinesScreen({ session, onBack, onNavigate }) {
 
         <ScrollView 
           horizontal 
-          pagingEnabled 
+          snapToInterval={width - 20}
+          decelerationRate="fast"
+          snapToAlignment="start"
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingVertical: 16 }}
+          onScroll={(e) => {
+            const x = e.nativeEvent.contentOffset.x;
+            const index = Math.round(x / (width - 20));
+            setActiveIndex(prev => prev !== index ? index : prev);
+          }}
+          scrollEventThrottle={16}
         >
           {fines.map((multa, index) => (
             <Pressable 
               key={multa.identificador || index} 
-              style={styles.fineCard}
+              style={[styles.fineCard, index === fines.length - 1 && { marginRight: 0 }]}
               onPress={() => onNavigate(`fineDetail:${multa.identificador}`)}
             >
               <Image 
@@ -136,7 +145,7 @@ export default function FinesScreen({ session, onBack, onNavigate }) {
 
         <View style={styles.paginationDots}>
            {fines.map((_, i) => (
-             <View key={i} style={[styles.dot, i === 0 && styles.activeDot]} />
+             <View key={i} style={[styles.dot, i === activeIndex && styles.activeDot]} />
            ))}
         </View>
 
