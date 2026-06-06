@@ -2,6 +2,7 @@ package com.subastas.backend.service.impl;
 
 import com.subastas.backend.entity.Catalogo;
 import com.subastas.backend.entity.ItemCatalogo;
+import com.subastas.backend.dto.response.catalogo.CatalogoResponse;
 import com.subastas.backend.dto.response.catalogo.ItemCatalogoResponse;
 import com.subastas.backend.dto.response.producto.ProductoResponse;
 import com.subastas.backend.exception.ResourceNotFoundException;
@@ -23,8 +24,17 @@ public class CatalogoServiceImpl implements CatalogoService {
     private ItemCatalogoRepository itemCatalogoRepository;
 
     @Override
-    public List<Catalogo> obtenerPorSubasta(Integer idSubasta) {
-        return catalogoRepository.findBySubastaIdentificador(idSubasta);
+    public List<CatalogoResponse> obtenerPorSubasta(Integer idSubasta) {
+        return catalogoRepository.findBySubastaIdentificador(idSubasta).stream()
+                .map(this::toCatalogoResponse)
+                .collect(Collectors.toList());
+    }
+
+    private CatalogoResponse toCatalogoResponse(Catalogo catalogo) {
+        CatalogoResponse response = new CatalogoResponse();
+        response.setIdentificador(catalogo.getIdentificador());
+        response.setDescripcion(catalogo.getDescripcion());
+        return response;
     }
 
     @Override
