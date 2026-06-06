@@ -2,14 +2,9 @@ package com.subastas.backend.service.impl;
 
 import com.subastas.backend.dto.request.AumentarSeguroRequest;
 import com.subastas.backend.dto.response.producto.*;
-import com.subastas.backend.entity.Foto;
-import com.subastas.backend.entity.Producto;
-import com.subastas.backend.entity.Seguro;
-import com.subastas.backend.entity.Usuario;
+import com.subastas.backend.entity.*;
 import com.subastas.backend.exception.ResourceNotFoundException;
-import com.subastas.backend.repository.FotoRepository;
-import com.subastas.backend.repository.ProductoRepository;
-import com.subastas.backend.repository.UsuarioRepository;
+import com.subastas.backend.repository.*;
 import com.subastas.backend.service.ProductoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +24,8 @@ public class ProductoServiceImpl implements ProductoService {
     private final ProductoRepository productoRepository;
     private final FotoRepository fotoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final RegistroDeSubastaRepository registroDeSubastaRepository;
+    private final ItemCatalogoRepository itemCatalogoRepository;
 
     @Override
     public DetalleProductoResponse obtenerDetalle(Integer productId) {
@@ -43,6 +40,7 @@ public class ProductoServiceImpl implements ProductoService {
         response.setFechaRegistro(product.getFecha());
         response.setDisponible(esSi(product.getDisponible()));
         response.setPhotosCount(fotoRepository.countByProductoIdentificador(productId));
+        completarDatosSubastaYValores(response, product);
 
         if (product.getDuenio() != null) {
             DueñoProductoResponse owner = new DueñoProductoResponse();
@@ -126,6 +124,47 @@ public class ProductoServiceImpl implements ProductoService {
                 : LocalDateTime.now();
         response.setUltimaActualizacion(ultimaActualizacion);
         return response;
+    }
+
+    private void completarDatosSubastaYValores(DetalleProductoResponse response, Producto product) {
+        RegistroDeSubasta registro = registroDeSubastaRepository
+                .findByProductoIdentificador(product.getIdentificador())
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        if (registro != null) {
+            response.setPrecioAdjudicado(registro.getImporte());
+            response.setComisionVenta(registro.getComision());
+            if (registro.getSubasta() != null) {
+                response.setSubastaId(registro.getSubasta().getIdentificador());
+                if (registro.getSubasta().getCategoria() != null) {
+                    response.setCategoriaSubasta(registro.getSubasta().getCategoria().toString());
+                }
+            }
+        }
+
+        ItemCatalogo itemCatalogo = itemCatalogoRepository
+                .findByProductoIdentificador(product.getIdentificador())
+                .stream()
+                .findFirst()
+                .orElse(null);
+        if (itemCatalogo != null) {
+            response.setPrecioBasePropuesto(itemCatalogo.getPrecioBase());
+            if (response.getComisionVenta() == null) {
+                response.setComisionVenta(itemCatalogo.getComision());
+            }
+        }
+
+        if (product.getSeguro() != null) {
+            response.setSeguroAdministracion("Included");
+            response.setValorEstimado(product.getSeguro().getImporte());
+        } else {
+            response.setSeguroAdministracion("No incluido");
+            response.setValorEstimado(response.getPrecioAdjudicado() != null
+                    ? response.getPrecioAdjudicado()
+                    : response.getPrecioBasePropuesto());
+        }
     }
 
     private Producto obtenerProducto(Integer productId) {

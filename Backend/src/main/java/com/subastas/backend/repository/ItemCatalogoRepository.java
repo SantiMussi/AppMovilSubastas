@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface ItemCatalogoRepository extends JpaRepository<ItemCatalogo, Integer> {
     List<ItemCatalogo> findByCatalogoIdentificador(Integer idCatalogo);
+    List<ItemCatalogo> findByProductoIdentificador(Integer idProducto);
 }
