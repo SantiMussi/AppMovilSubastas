@@ -77,4 +77,19 @@ public class UserController {
             @PathVariable Integer fineId) throws MultaVencidaException{
             return ResponseEntity.ok(multaService.pagarMulta(request, fineId, principal.getName()));
         }
+
+    @GetMapping("/stats")
+    public ResponseEntity<com.subastas.backend.dto.response.metrics.UserStatsResponse> getUserStats(Principal principal) {
+        return ResponseEntity.ok(personaService.obtenerStatsUsuario(principal.getName()));
+    }
+
+    @GetMapping("/wins")
+    public ResponseEntity<com.subastas.backend.dto.response.metrics.UserWinsResponse> getUserWins(Principal principal) {
+        return ResponseEntity.ok(personaService.obtenerWinsUsuario(principal.getName()));
+    }
+
+    @GetMapping("/bids/history")
+    public ResponseEntity<com.subastas.backend.dto.response.metrics.UserBidsResponse> getUserBidsHistory(Principal principal) {
+        return ResponseEntity.ok(personaService.obtenerBidsHistory(principal.getName()));
+    }
 }

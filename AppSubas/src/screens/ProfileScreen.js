@@ -209,7 +209,7 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
             )}
           </View>
 
-          <Pressable style={styles.blackButton}>
+          <Pressable style={styles.blackButton} onPress={() => onNavigate('metrics')}>
             <Text style={styles.blackButtonText}>VISUALIZAR MÉTRICAS</Text>
           </Pressable>
         </ScrollView>

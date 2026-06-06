@@ -24,6 +24,7 @@ import LinkBankAccountScreen from './src/screens/LinkBankAccountScreen';
 import AddChequeScreen from './src/screens/AddChequeScreen';
 import PaymentSuccessScreen from './src/screens/PaymentSuccessScreen';
 import FinePaymentScreen from './src/screens/FinePaymentScreen';
+import MetricsScreen from './src/screens/MetricsScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -260,6 +261,14 @@ function RootNavigator() {
             session={session}
             onBack={goBack}
             onNavigate={handleNavigate}
+          />
+        );
+
+      case 'metrics':
+        return (
+          <MetricsScreen
+            session={session}
+            onBack={goBack}
           />
         );
 
