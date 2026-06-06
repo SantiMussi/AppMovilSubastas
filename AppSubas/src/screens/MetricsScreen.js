@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../themes/colors';
 import { useCurrency } from '../context/CurrencyContext';
 
@@ -97,7 +98,12 @@ export default function MetricsScreen({ session, onBack }) {
           <Text style={styles.cardLabel}>ASISTENCIA</Text>
           <Text style={styles.cardValue}>{stats.asistencia}</Text>
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: '85%' }]} />
+            <LinearGradient
+              colors={['#1F1C2C', '#928DAB']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.progressFill, { width: '85%' }]}
+            />
           </View>
           <Text style={styles.cardSub}>Top 5% participación en subastas</Text>
         </View>
@@ -106,7 +112,12 @@ export default function MetricsScreen({ session, onBack }) {
           <Text style={styles.cardLabel}>VICTORIAS</Text>
           <Text style={styles.cardValue}>{stats.victorias}</Text>
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: '60%', backgroundColor: Colors.secondary }]} />
+            <LinearGradient
+              colors={['#D4AF37', '#F3E5AB']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.progressFill, { width: '60%' }]}
+            />
           </View>
           <Text style={styles.cardSub}>Lotes adquiridos</Text>
         </View>
@@ -115,7 +126,12 @@ export default function MetricsScreen({ session, onBack }) {
           <Text style={styles.cardLabel}>PROMEDIO PUJA</Text>
           <Text style={styles.cardValue}>{formatGlobalMoney(stats.promedioPuja)}</Text>
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: '70%', backgroundColor: '#0B132B' }]} />
+            <LinearGradient
+              colors={['#0B132B', '#1C2541']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.progressFill, { width: '70%' }]}
+            />
           </View>
         </View>
 
@@ -130,13 +146,15 @@ export default function MetricsScreen({ session, onBack }) {
                   <Text style={styles.barPercent}>{inv.porcentaje}%</Text>
                 </View>
                 <View style={styles.barTrack}>
-                  <View style={[
-                    styles.barFill, 
-                    { 
-                      width: `${inv.porcentaje}%`, 
-                      backgroundColor: idx === 0 ? '#000' : idx === 1 ? Colors.secondary : '#0B132B' 
-                    }
-                  ]} />
+                  <LinearGradient
+                    colors={idx === 0 ? ['#000000', '#434343'] : idx === 1 ? ['#D4AF37', '#AA771C'] : ['#1C2541', '#3A506B']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={[
+                      styles.barFill, 
+                      { width: `${inv.porcentaje}%` }
+                    ]}
+                  />
                 </View>
               </View>
             ))
@@ -148,11 +166,16 @@ export default function MetricsScreen({ session, onBack }) {
         <View style={styles.successRateCard}>
           <Text style={styles.successRateLabel}>TASA DE ÉXITO</Text>
           <View style={styles.circleContainer}>
-            <View style={styles.circleOut}>
-              <View style={styles.circleIn}>
+            <LinearGradient
+              colors={['#D4AF37', '#F3E5AB']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.circleOut}
+            >
+              <View style={styles.circleInnerBg}>
                 <Text style={styles.successRateValue}>{Math.round(wins.tasaExito)}%</Text>
               </View>
-            </View>
+            </LinearGradient>
           </View>
         </View>
 
@@ -341,15 +364,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   circleOut: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    borderWidth: 4,
-    borderColor: Colors.secondary,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 6,
+    shadowColor: '#D4AF37',
+    shadowOpacity: 0.4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12,
+    elevation: 8,
   },
-  circleIn: {
+  circleInnerBg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 75,
+    backgroundColor: '#0B132B',
     alignItems: 'center',
     justifyContent: 'center',
   },

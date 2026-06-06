@@ -166,7 +166,7 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
             <Text style={styles.manageFundsText}>
               Aumenta tu límite de puja mediante un depósito adicional.
             </Text>
-            <Pressable style={styles.blueButton}>
+            <Pressable style={styles.blueButton} onPress={() => onNavigate('pagos')}>
               <Text style={styles.blueButtonText}>TRANSFERIR FONDOS</Text>
             </Pressable>
           </View>
