@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { TopBar } from '../components/TopBar';
 import { Colors } from '../themes/colors';
 
@@ -72,6 +73,7 @@ export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
       if (!catalogId) {
         return {
           ...normalized,
+          imageUris: getAuctionImages(normalized, false),
           title: normalized.title || firstCatalog?.descripcion || `Subasta #${normalized.id}`,
         };
       }
@@ -80,20 +82,31 @@ export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
       const items = normalizeList(itemsPayload);
       const firstItem = items[0];
       const firstProduct = firstItem?.producto || firstItem?.product || {};
+      const itemImages = getItemImages(items);
+      const productId = firstProduct?.identificador || firstProduct?.id || firstItem?.productId;
+      const photoImages = productId ? await fetchProductImages(productId, fetchJson) : [];
+      const imageUris = uniqueImages([...itemImages, ...photoImages, ...getAuctionImages(normalized, false)]);
+      const auctionItemId = firstItem?.identificador || firstItem?.auctionItemId;
+      const topBid = auctionItemId ? await fetchTopBid(auctionItemId, fetchJson) : null;
 
       return {
         ...normalized,
         catalogTitle: firstCatalog?.descripcion,
         title: normalized.title || firstCatalog?.descripcion || firstProduct?.nombre || firstProduct?.descripcionCatalogo || `Subasta #${normalized.id}`,
         category: normalized.category || firstProduct?.categoria,
-        imageUri: extractImageUri(firstProduct, firstItem),
-        currentOffer: firstItem?.precioBase || firstItem?.basePrice || firstItem?.precioActual || normalized.currentOffer,
-        currency: normalized.currency || firstItem?.moneda || 'USD',
-        auctionItemId: firstItem?.identificador || firstItem?.auctionItemId,
+        imageUri: imageUris[0],
+        imageUris,
+        currentOffer: topBid?.currentBid || firstItem?.precioBase || firstItem?.basePrice || firstItem?.precioActual || normalized.currentOffer,
+        currency: topBid?.currency || normalized.currency || firstItem?.moneda || 'USD',
+        auctionItemId,
         itemDescription: firstProduct?.descripcionCatalogo || firstProduct?.descripcionCompleta || firstItem?.descripcion,
+        itemCount: items.length,
       };
     } catch (catalogError) {
-      return normalized;
+        return {
+        ...normalized,
+        imageUris: getAuctionImages(normalized, false),
+      };
     }
   }, [fetchJson]);
 
@@ -146,6 +159,12 @@ export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
     [activeTab, auctionsWithStatus]
   );
 
+  const liveAuctions = useMemo(
+    () => auctionsWithStatus.filter((auction) => auction.computedStatus === 'live'),
+    [auctionsWithStatus]
+  );
+
+
   return (
     <View style={styles.container}>
       <TopBar onMenuPress={onMenuPress} />
@@ -160,6 +179,14 @@ export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
         }
       >
         <Text style={styles.kicker}>SUBASTAS</Text>
+
+				{!loading && !error && liveAuctions.length > 0 ? (
+          <LiveAuctionsShowcase
+            auctions={liveAuctions}
+            now={now}
+            onOpenAuction={(auction) => onNavigate?.(`auctionRoom:${auction.id}`)}
+          />
+        ) : null}
 
         <View style={styles.tabsCard}>
           {TAB_OPTIONS.map((tab) => {
@@ -210,12 +237,77 @@ export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
   );
 }
 
+function LiveAuctionsShowcase({ auctions, now, onOpenAuction }) {
+  const featuredAuctions = auctions.slice(0, 5);
+
+  return (
+    <View style={styles.liveShowcase}>
+      <View style={styles.liveHeaderRow}>
+        <View>
+          <Text style={styles.liveEyebrow}>TRANSMITIENDO AHORA</Text>
+          <Text style={styles.liveTitle}>Subastas en vivo</Text>
+        </View>
+        <View style={styles.liveCountBadge}>
+          <View style={styles.livePulse} />
+          <Text style={styles.liveCountText}>{auctions.length} live</Text>
+        </View>
+      </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.liveRail}>
+        {featuredAuctions.map((auction) => {
+          const imageUri = getAuctionImages(auction)[0];
+          return (
+            <Pressable
+              key={`live-feature-${auction.id}`}
+              style={styles.liveFeatureCard}
+              onPress={() => onOpenAuction?.(auction)}
+            >
+              <Image source={{ uri: imageUri }} style={styles.liveFeatureImage} resizeMode="cover" />
+              <LinearGradient
+                colors={['rgba(6,15,28,0.06)', 'rgba(6,15,28,0.78)']}
+                style={styles.liveFeatureOverlay}
+              />
+              <View style={styles.liveFeatureBadge}>
+                <View style={styles.liveDot} />
+                <Text style={styles.liveFeatureBadgeText}>EN VIVO</Text>
+              </View>
+              <View style={styles.liveFeatureContent}>
+                <Text style={styles.liveFeatureTitle} numberOfLines={2}>
+                  {auction.title || `Subasta #${auction.id}`}
+                </Text>
+                <Text style={styles.liveFeatureMeta}>
+                  {formatMoney(auction.currentOffer, auction.currency)} · {formatCountdown(auction.endDate, now)}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
 function AuctionCard({ auction, now, onJoin }) {
   const isLive = auction.computedStatus === 'live';
   const isScheduled = auction.computedStatus === 'scheduled';
   const isEnded = auction.computedStatus === 'ended';
   const startDate = getAuctionDate(auction);
-  const imageUri = auction.imageUri || FALLBACK_IMAGES[auction.computedStatus] || FALLBACK_IMAGES.live;
+  const images = getAuctionImages(auction, false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const imageUri = images[activeImageIndex] || FALLBACK_IMAGES[auction.computedStatus] || FALLBACK_IMAGES.live;
+  const hasMultipleImages = images.length > 1;
+
+  useEffect(() => {
+    setActiveImageIndex(0);
+  }, [auction.id, images.length]);
+
+  const showPreviousImage = () => {
+    setActiveImageIndex((index) => (index === 0 ? images.length - 1 : index - 1));
+  };
+
+  const showNextImage = () => {
+    setActiveImageIndex((index) => (index + 1) % images.length);
+  };
 
   return (
     <View style={[styles.card, isEnded && styles.endedCard]}>
@@ -228,12 +320,20 @@ function AuctionCard({ auction, now, onJoin }) {
           </Text>
         </View>
 
-        <Pressable style={[styles.carouselButton, styles.carouselLeft]}>
-          <Ionicons name="chevron-back" size={18} color="#0A1628" />
-        </Pressable>
-        <Pressable style={[styles.carouselButton, styles.carouselRight]}>
-          <Ionicons name="chevron-forward" size={18} color="#0A1628" />
-        </Pressable>
+				{hasMultipleImages ? (
+          <>
+            <Pressable style={[styles.carouselButton, styles.carouselLeft]} onPress={showPreviousImage}>
+              <Ionicons name="chevron-back" size={18} color="#0A1628" />
+            </Pressable>
+            <Pressable style={[styles.carouselButton, styles.carouselRight]} onPress={showNextImage}>
+              <Ionicons name="chevron-forward" size={18} color="#0A1628" />
+            </Pressable>
+            <View style={styles.imageCounter}>
+              <Ionicons name="images-outline" size={13} color="#FFFFFF" />
+              <Text style={styles.imageCounterText}>{activeImageIndex + 1}/{images.length}</Text>
+            </View>
+          </>
+        ) : null}
 
         {isLive && (
           <View style={styles.offerBox}>
@@ -307,6 +407,64 @@ function normalizeAuction(raw) {
     currentOffer: raw?.ofertaActual || raw?.currentOffer || raw?.montoActual,
     imageUri: raw?.imagenPrincipal || raw?.image || raw?.imageUrl,
   };
+}
+
+async function fetchProductImages(productId, fetchJson) {
+  try {
+    const payload = await fetchJson(`/api/v1/products/${productId}/photos`);
+    return normalizeList(payload).map(normalizeImageValue).filter(Boolean);
+  } catch (photoError) {
+    return [];
+  }
+}
+
+async function fetchTopBid(auctionItemId, fetchJson) {
+  try {
+    return await fetchJson(`/api/v1/auction-items/${auctionItemId}/top-bid`);
+  } catch (bidError) {
+    return null;
+  }
+}
+
+function getAuctionImages(auction, includeFallback = true) {
+  return uniqueImages([
+    ...(Array.isArray(auction.imageUris) ? auction.imageUris : []),
+    auction.imageUri,
+    auction.imagenPrincipal,
+    auction.image,
+    auction.imageUrl,
+    ...(includeFallback ? [FALLBACK_IMAGES[auction.computedStatus], FALLBACK_IMAGES.live] : []),
+  ]);
+}
+
+function getItemImages(items) {
+  return uniqueImages(items.flatMap((item) => {
+    const product = item?.producto || item?.product || {};
+    return [
+      extractImageUri(product, item),
+      product.imagenPrincipal,
+      product.image,
+      product.imageUrl,
+      item.imagenPrincipal,
+      item.image,
+      item.imageUrl,
+      ...(Array.isArray(product.imagenes) ? product.imagenes : []),
+      ...(Array.isArray(item.imagenes) ? item.imagenes : []),
+      ...(Array.isArray(product.fotos) ? product.fotos : []),
+      ...(Array.isArray(item.fotos) ? item.fotos : []),
+    ];
+  }).map(normalizeImageValue));
+}
+
+function uniqueImages(images) {
+  return images.map(normalizeImageValue).filter(Boolean).filter((image, index, list) => list.indexOf(image) === index);
+}
+
+function normalizeImageValue(value) {
+  if (!value) return null;
+  if (typeof value === 'string') return byteArrayToDataUri(value);
+  if (Array.isArray(value)) return byteArrayToDataUri(value);
+  return value.url || value.uri || value.imageUrl || value.imagenPrincipal || byteArrayToDataUri(value.foto);
 }
 
 function getAuctionDate(auction) {
@@ -425,6 +583,104 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
     marginBottom: 14,
   },
+	liveShowcase: {
+    marginBottom: 24,
+  },
+  liveHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  liveEyebrow: {
+    color: Colors.secondary,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.3,
+    marginBottom: 3,
+  },
+  liveTitle: {
+    color: '#07162A',
+    fontFamily: 'serif',
+    fontSize: 28,
+    lineHeight: 31,
+  },
+  liveCountBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    backgroundColor: '#07162A',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  livePulse: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF3B30',
+  },
+  liveCountText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.4,
+  },
+  liveRail: {
+    gap: 12,
+    paddingRight: 22,
+  },
+  liveFeatureCard: {
+    width: Math.min(width * 0.72, 310),
+    height: 184,
+    borderRadius: 18,
+    overflow: 'hidden',
+    backgroundColor: '#07162A',
+  },
+  liveFeatureImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+  },
+  liveFeatureOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  liveFeatureBadge: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    backgroundColor: 'rgba(7,22,42,0.82)',
+    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+  },
+  liveFeatureBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  liveFeatureContent: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 16,
+  },
+  liveFeatureTitle: {
+    color: '#FFFFFF',
+    fontFamily: 'serif',
+    fontSize: 23,
+    lineHeight: 26,
+    marginBottom: 6,
+  },
+  liveFeatureMeta: {
+    color: '#EEF3F8',
+    fontSize: 12,
+    fontWeight: '800',
+  },
   tabsCard: {
     flexDirection: 'row',
     backgroundColor: '#EFEFF1',
@@ -525,6 +781,23 @@ const styles = StyleSheet.create({
   },
   carouselRight: {
     right: -6,
+  },
+	imageCounter: {
+    position: 'absolute',
+    right: 14,
+    bottom: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(7,22,42,0.74)',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  imageCounterText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '900',
   },
   offerBox: {
     position: 'absolute',
