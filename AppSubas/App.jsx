@@ -15,6 +15,7 @@ import MembershipCategoriesScreen from './src/screens/MembershipCategoriesScreen
 import ProfileScreen from './src/screens/ProfileScreen';
 import FinesScreen from './src/screens/FinesScreen';
 import FineDetailScreen from './src/screens/FineDetailScreen';
+import AuctionsScreen from './src/screens/AuctionsScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -72,7 +73,7 @@ function RootNavigator() {
 
   const extractAccessToken = (payload) => payload?.accessToken || payload?.access_token || payload?.token || '';
 
-  const openUserDataScreen = async (authPayload) => {
+  const openUserDataScreen = async (authPayload, defaultScreen = 'userData') => {
     const accessToken = extractAccessToken(authPayload);
     let profile = authPayload?.user || null;
     let profileError = '';
@@ -102,7 +103,7 @@ function RootNavigator() {
       profile,
       profileError,
     });
-    setScreen('userData');
+    setScreen(defaultScreen);
   };
 
   const handleLogout = () => {
@@ -137,21 +138,21 @@ function RootNavigator() {
         <LoginScreen
           onBack={() => setScreen('authChoice')}
           onRegister={() => setScreen('register')}
-          onLoginSuccess={openUserDataScreen}
+          onLoginSuccess={(payload) => openUserDataScreen(payload, 'auctions')}
           onForgotPassword={() => setScreen('passwordRecovery')}
         />
       );
     }
 
     if (screen === 'register') {
-      return <RegisterScreen onBack={() => setScreen('authChoice')} onRegisterSuccess={openUserDataScreen} />;
+      return <RegisterScreen onBack={() => setScreen('authChoice')} onRegisterSuccess={(payload) => openUserDataScreen(payload, 'auctions')} />;
     }
 
     if (screen === 'passwordRecovery') {
       return (
         <PasswordRecoveryScreen
           onBack={() => setScreen('login')}
-          onFinished={openUserDataScreen}
+          onFinished={() => setScreen('perfil')}
         />
       );
     }
@@ -162,7 +163,7 @@ function RootNavigator() {
         onLogin={() => setScreen('login')}
         onRegister={() => setScreen('register')}
         onForgotPassword={() => setScreen('passwordRecovery')}
-        onLoginSuccess={openUserDataScreen}
+        onLoginSuccess={() => setScreen('auctions') }
       />
     );
   }
@@ -181,6 +182,15 @@ function RootNavigator() {
 
   const renderCurrentScreen = () => {
     switch (screen) {
+      case 'auctions':
+        return (
+          <AuctionsScreen
+            session={session}
+            onMenuPress={openDrawer}
+            onNavigate={handleNavigate}
+          />
+        );
+
       case 'userData':
         return (
           <UserDataScreen
@@ -224,6 +234,17 @@ function RootNavigator() {
             onNavigate={handleNavigate}
           />
         );
+      
+      case 'auctionRoom':
+        return (
+          <PlaceholderScreen
+            title="Sala de Subasta"
+            subtitle="La experiencia para participar en vivo se implementará en una próxima iteración."
+            iconName="radio-outline"
+            onMenuPress={openDrawer}
+          />
+        );
+
 
       case 'coleccion':
         return (
@@ -276,6 +297,17 @@ function RootNavigator() {
         );
 
       default:
+        if (screen.startsWith('auctionRoom:')) {
+          return (
+            <PlaceholderScreen
+              title="Sala de Subasta"
+              subtitle="La experiencia para participar en vivo se implementará en una próxima iteración."
+              iconName="radio-outline"
+              onMenuPress={openDrawer}
+            />
+          );
+        }
+
         if (screen.startsWith('fineDetail:')) {
           const fineId = screen.split(':')[1];
           return (

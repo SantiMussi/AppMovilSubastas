@@ -83,7 +83,7 @@ public class SecurityConfig {
 
                         // Listar TODAS las subastas (incluyendo borradores y pasadas)
                         // GET /api/v1/auctions (sin sub-path) es solo para admins
-                        .requestMatchers(HttpMethod.GET, "/api/v1/auctions").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auctions").permitAll()
 
                         // Gestión interna: crear países
                         .requestMatchers(HttpMethod.POST, "/api/paises").hasAuthority("ADMIN")
