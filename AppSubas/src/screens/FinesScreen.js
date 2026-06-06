@@ -26,7 +26,10 @@ export default function FinesScreen({ session, onBack, onNavigate }) {
       });
       if (response.ok) {
         const data = await response.json();
-        setFines(data.multas || []);
+        const allFines = data.multas || [];
+        // Filter out paid fines so they don't show up in the pending list
+        const pendingFines = allFines.filter(m => (m.estado || '').toLowerCase() !== 'paga');
+        setFines(pendingFines);
       } else {
         setError('No se pudieron cargar las multas.');
       }

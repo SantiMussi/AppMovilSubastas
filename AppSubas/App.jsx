@@ -23,6 +23,7 @@ import AddCreditCardScreen from './src/screens/AddCreditCardScreen';
 import LinkBankAccountScreen from './src/screens/LinkBankAccountScreen';
 import AddChequeScreen from './src/screens/AddChequeScreen';
 import PaymentSuccessScreen from './src/screens/PaymentSuccessScreen';
+import FinePaymentScreen from './src/screens/FinePaymentScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -389,6 +390,27 @@ function RootNavigator() {
               fineId={fineId}
               onBack={goBack}
               onNavigate={handleNavigate}
+            />
+          );
+        }
+
+        if (screen.startsWith('finePayment:')) {
+          const fineId = screen.split(':')[1];
+          return (
+            <FinePaymentScreen
+              session={session}
+              fineId={fineId}
+              onBack={goBack}
+              onPaymentSuccess={(id) => {
+                // Clear the fine-related history and navigate back to fines
+                setScreenHistory(prev => {
+                  const copy = [...prev];
+                  // Pop until we find the screen that led to 'fines'
+                  const idx = copy.lastIndexOf('fines');
+                  return idx >= 0 ? copy.slice(0, idx) : [];
+                });
+                setScreen('fines');
+              }}
             />
           );
         }

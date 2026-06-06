@@ -35,34 +35,9 @@ export default function FineDetailScreen({ session, fineId, onBack, onNavigate }
     }
   };
 
-  const handlePay = async () => {
-    setPaying(true);
-    try {
-
-      const response = await fetch(`${API_BASE}/api/v1/users/me/fines/${fineId}/pay`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.accessToken}` 
-        },
-        body: JSON.stringify({
-
-          medioPagoId: 1
-        })
-      });
-
-      if (response.ok) {
-        Alert.alert('Éxito', 'El pago se procesó correctamente.', [
-          { text: 'OK', onPress: onBack }
-        ]);
-      } else {
-        const errorData = await response.json().catch(() => null);
-        Alert.alert('Error', errorData?.message || 'No se pudo procesar el pago.');
-      }
-    } catch (err) {
-      Alert.alert('Error', 'Ocurrió un problema de red.');
-    } finally {
-      setPaying(false);
+  const handlePay = () => {
+    if (onNavigate) {
+      onNavigate(`finePayment:${fine.identificador}`);
     }
   };
 
