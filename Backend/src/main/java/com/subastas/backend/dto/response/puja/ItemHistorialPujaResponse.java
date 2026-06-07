@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public class ItemHistorialPujaResponse {
     private Integer bidId;
     private Integer bidderNumber;
+    private String bidderName;
     private BigDecimal importe;
     private LocalDateTime fecha;
 }

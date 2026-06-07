@@ -10,6 +10,7 @@ public class TopPujaResponse {
     private BigDecimal currentBid;
     private String currency;
     private Integer bidderNumber;
+    private String bidderName;
     private BigDecimal nextMinBid;
     private BigDecimal nextMaxBid;
     private Boolean appliesCap;

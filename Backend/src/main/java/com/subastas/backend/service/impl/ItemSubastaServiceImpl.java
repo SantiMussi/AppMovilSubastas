@@ -83,7 +83,7 @@ public class ItemSubastaServiceImpl implements ItemSubastaService {
         TopPujaResponse response = new TopPujaResponse();
         response.setAuctionItemId(item.getIdentificador());
         response.setCurrentBid(currentBid);
-                Integer auctionId = item.getCatalogo() != null && item.getCatalogo().getSubasta() != null
+        Integer auctionId = item.getCatalogo() != null && item.getCatalogo().getSubasta() != null
                 ? item.getCatalogo().getSubasta().getIdentificador()
                 : null;
         response.setCurrency(auctionId == null ? DEFAULT_CURRENCY : monedaSubastaRepository.findById(auctionId)
@@ -92,6 +92,7 @@ public class ItemSubastaServiceImpl implements ItemSubastaService {
         response.setBidderNumber(topBid != null && topBid.getAsistente() != null
                 ? topBid.getAsistente().getNumeroPostor()
                 : null);
+        response.setBidderName(resolveBidderName(topBid));
         Categoria category = item.getCatalogo() != null && item.getCatalogo().getSubasta() != null
                 ? item.getCatalogo().getSubasta().getCategoria()
                 : null;
@@ -130,9 +131,18 @@ public class ItemSubastaServiceImpl implements ItemSubastaService {
         ItemHistorialPujaResponse response = new ItemHistorialPujaResponse();
         response.setBidId(pujo.getIdentificador());
         response.setBidderNumber(pujo.getAsistente() != null ? pujo.getAsistente().getNumeroPostor() : null);
+        response.setBidderName(resolveBidderName(pujo));
         response.setImporte(pujo.getImporte());
         response.setFecha(pujo.getMetadata() != null ? pujo.getMetadata().getFecha() : null);
         return response;
+    }
+
+	private String resolveBidderName(Pujo pujo) {
+        if (pujo == null || pujo.getAsistente() == null || pujo.getAsistente().getCliente() == null
+                || pujo.getAsistente().getCliente().getPersona() == null) {
+            return null;
+        }
+        return pujo.getAsistente().getCliente().getPersona().getNombre();
     }
 
     private boolean esSi(String value) {

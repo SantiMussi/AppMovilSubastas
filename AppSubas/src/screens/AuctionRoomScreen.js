@@ -248,7 +248,7 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
           {bids.slice(0, 5).map((bid, index) => (
             <View key={bid.bidId || index} style={styles.historyRow}>
               <View style={[styles.historyDot, index === 0 && styles.firstHistoryDot]} />
-              <View style={styles.bidder}><Text style={styles.bidderName}>{index === 0 ? 'Julian R.' : `Postor #${bid.bidderNumber || '—'}`}</Text><Text style={styles.bidTime}>{relativeTime(bid.date, now)}</Text></View>
+                            <View style={styles.bidder}><Text style={styles.bidderName}>{formatBidderName(bid)}</Text><Text style={styles.bidTime}>{relativeTime(bid.date, now)}</Text></View>
               <Text style={[styles.historyAmount, index > 0 && styles.mutedAmount]}>{formatMoney(formatGlobalMoney, bid.amount)}</Text>
             </View>
           ))}
@@ -287,13 +287,15 @@ function normalizeSnapshot(payload, receivedAt) {
     },
     topBid: {
       currentBid: topBid?.currentBid || topBid?.pujaActual,
+      bidderName: topBid?.bidderName || topBid?.nombrePostor || topBid?.nombrePujador,
       nextMinBid: topBid?.nextMinBid || topBid?.pujaMinima,
-			nextMaxBid: topBid?.nextMaxBid || topBid?.pujaMaxima,
+      nextMaxBid: topBid?.nextMaxBid || topBid?.pujaMaxima,
       appliesCap: topBid?.appliesCap !== false,
     },
     bids: rawHistory.slice().reverse().map((bid) => ({
       bidId: bid?.bidId || bid?.id,
       bidderNumber: bid?.bidderNumber || bid?.numeroPostor,
+      bidderName: bid?.bidderName || bid?.nombrePostor || bid?.nombrePujador,
       amount: bid?.importe || bid?.amount,
       date: bid?.fecha || bid?.date,
     })),
@@ -315,6 +317,11 @@ function resolveImageUri(uri) {
 function toWebSocketUrl(base, path, accessToken) {
   const resolved = base || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8080');
   return `${resolved.replace(/^http/, 'ws').replace(/\/$/, '')}${path}?access_token=${encodeURIComponent(accessToken)}`;
+}
+
+function formatBidderName(bid) {
+  const name = String(bid?.bidderName || '').trim();
+  return name || `Postor #${bid?.bidderNumber || '—'}`;
 }
 
 function formatMoney(formatter, amount) {
