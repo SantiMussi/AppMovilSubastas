@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 
+import { TopBar }   from '../components/TopBar';
 import { styles }   from '../styles/proposalDetailStyles';
 import { safeJson } from '../utils/safeJson';
 
@@ -351,7 +352,9 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
 
     return (
         <SafeAreaView style={styles.stage}>
-            <StatusBar barStyle="dark-content" />
+            {/* <StatusBar barStyle="dark-content" /> */}
+
+            <TopBar onMenuPress={onMenuPress} />
 
             <View style={styles.backRow}>
                 <TouchableOpacity onPress={onBack}>
