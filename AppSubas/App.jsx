@@ -1,5 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View } from 'react-native';
+import {
+  ActivityIndicator,
+  Modal,
+  Text,
+  View,
+} from 'react-native';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
 
@@ -35,6 +40,9 @@ import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CurrencyProvider } from './src/context/CurrencyContext';
+import { Ionicons } from '@expo/vector-icons';
+import { ActionButton } from './src/components';
+import { styles as registerStyles } from './src/styles/registerStyles';
 
 ExpoSplashScreen.preventAutoHideAsync().catch(() => { });
 
@@ -77,6 +85,8 @@ function RootNavigator() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [screenHistory, setScreenHistory] = useState([]);
   const [registerParams, setRegisterParams] = useState(null);
+  const [paymentPromptVisible, setPaymentPromptVisible] = useState(false);
+  const [checkingPayments, setCheckingPayments] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -107,7 +117,7 @@ function RootNavigator() {
 
   const extractAccessToken = (payload) => payload?.accessToken || payload?.access_token || payload?.token || '';
 
-  const openUserDataScreen = async (authPayload, defaultScreen = 'userData') => {
+  const openUserDataScreen = async (authPayload, defaultScreen = 'userData', options = {}) => {
     const accessToken = extractAccessToken(authPayload);
     let profile = authPayload?.user || null;
     let profileError = '';
@@ -138,11 +148,54 @@ function RootNavigator() {
       profileError,
     });
     setScreen(defaultScreen);
+
+    if (options.checkPaymentMethods) {
+      checkPaymentMethodsAfterLogin(accessToken);
+    }
+  };
+
+  async function checkPaymentMethodsAfterLogin(accessToken) {
+    if (!accessToken) return;
+
+    setCheckingPayments(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/v1/users/me/payments`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        return;
+      }
+
+      const paymentItems = Array.isArray(payload)
+          ? payload
+          : payload?.items || [];
+      if (paymentItems.length === 0) {
+        setPaymentPromptVisible(true);
+      }
+    } catch (error) {
+      console.warn('Error checking payment methods:', error);
+    } finally {
+      setCheckingPayments(false);
+    }
+  }
+
+  const handleGoToPaymentMethodsFromPrompt = () => {
+    setPaymentPromptVisible(false);
+    setScreenHistory((prev) => [...prev, 'auctions']);
+    setScreen('pagos');
+  };
+
+  const handleContinueToAuctionsFromPrompt = () => {
+    setPaymentPromptVisible(false);
+    setScreen('auctions');
   };
 
   const handleLogout = async () => {
     setDrawerOpen(false);
     setSession(null);
+    setPaymentPromptVisible(false);
     setScreen('authChoice');
     await AsyncStorage.removeItem('vantage_access_token');
   };
@@ -210,7 +263,9 @@ function RootNavigator() {
               setRegisterParams(null);
               setScreen('register');
             }}
-            onLoginSuccess={(payload) => openUserDataScreen(payload, 'auctions')}
+            onLoginSuccess={(payload) =>
+                openUserDataScreen(payload, 'auctions', { checkPaymentMethods: true })
+            }
             onForgotPassword={() => setScreen('passwordRecovery')}
           />
         );
@@ -491,7 +546,55 @@ function RootNavigator() {
       renderSidebar={renderSidebar}
     >
       {renderCurrentScreen()}
+      <PaymentMethodPromptModal
+          visible={paymentPromptVisible}
+          checking={checkingPayments}
+          onAddPaymentMethod={handleGoToPaymentMethodsFromPrompt}
+          onContinueToAuctions={handleContinueToAuctionsFromPrompt}
+      />
     </DrawerLayout>
+  );
+}
+
+function PaymentMethodPromptModal({
+                                    visible,
+                                    checking,
+                                    onAddPaymentMethod,
+                                    onContinueToAuctions,
+                                  }) {
+  return (
+      <Modal
+          visible={visible}
+          transparent
+          animationType="fade"
+          onRequestClose={onContinueToAuctions}
+      >
+        <View style={[registerStyles.modalStage, paymentPromptBackdropStyle]}>
+          <View style={registerStyles.modalBox}>
+            <View style={paymentPromptIconStyle}>
+              {checking ? (
+                  <ActivityIndicator color="#9d7a3a" />
+              ) : (
+                  <Ionicons name="card-outline" size={34} color="#9d7a3a" />
+              )}
+            </View>
+            <Text style={registerStyles.modalText}>Agregá un metodo de pago</Text>
+            <Text style={[registerStyles.modalText, paymentPromptTextStyle]}>
+              No tenés métodos de pago almacenados. Podés agregar uno ahora para
+              participar con mayor agilidad en las subastas.
+            </Text>
+
+            <ActionButton label="IR A MÉTODOS DE PAGO" wide onPress={onAddPaymentMethod} />
+
+            <ActionButton
+                label="IR A SUBASTAS"
+                variant="ghost"
+                wide
+                onPress={onContinueToAuctions}
+            />
+          </View>
+        </View>
+      </Modal>
   );
 }
 
@@ -524,3 +627,17 @@ async function pingBackend() {
     clearTimeout(timeoutId);
   }
 }
+
+const paymentPromptBackdropStyle = {
+  backgroundColor: 'rgba(8, 10, 14, 0.58)',
+};
+
+const paymentPromptIconStyle = {
+  marginBottom: 18,
+};
+
+const paymentPromptTextStyle = {
+  color: '#5D6472',
+  fontSize: 14,
+  lineHeight: 21,
+};
