@@ -35,7 +35,7 @@ const FALLBACK_IMAGES = {
 const STATUS_ALIASES = {
   live: ['abierta', 'en_vivo', 'en vivo', 'in_progress', 'in progress', 'activa'],
   scheduled: ['programada', 'proxima', 'próxima', 'scheduled', 'pendiente'],
-  ended: ['cerrada', 'finalizada', 'ended', 'vendida', 'terminada'],
+  ended: ['cerrada', 'carrada', 'finalizada', 'ended', 'vendida', 'terminada'],
 };
 
 export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
@@ -318,7 +318,19 @@ function AuctionCard({ auction, now, onJoin }) {
     >
       
       <View style={styles.imageWrap}>
-        <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
+        <Image
+          source={{ uri: imageUri }}
+          style={styles.image}
+          resizeMode="cover"
+          onLoad={() => console.log('IMAGE LOADED', imageUri)}
+          onError={(event) => {
+            console.error(
+              'IMAGE FAILED',
+              imageUri,
+              event.nativeEvent?.error
+            );
+          }}
+        />
         <View style={[styles.badge, isEnded && styles.badgeEnded, isScheduled && styles.badgeLight]}>
           {isLive && <View style={styles.liveDot} />}
           <Text style={[styles.badgeText, isScheduled && styles.badgeTextDark]}>

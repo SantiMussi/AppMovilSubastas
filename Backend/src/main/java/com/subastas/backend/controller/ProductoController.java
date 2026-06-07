@@ -41,7 +41,6 @@ public class ProductoController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(foto.contentType()))
                 .contentLength(foto.bytes().length)
-                .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic().immutable())
                 .eTag(foto.etag())
                 .body(foto.bytes());
     }
