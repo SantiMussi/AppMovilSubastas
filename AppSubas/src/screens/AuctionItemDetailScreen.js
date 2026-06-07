@@ -38,14 +38,18 @@ export default function AuctionDetailScreen({ auctionItemId, session, onMenuPres
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE}/api/v1/auction-items/${auctionItemId}`, { headers });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) {
+      const [detailResponse, topBidResponse] = await Promise.all([
+        fetch(`${API_BASE}/api/v1/auction-items/${auctionItemId}`, { headers }),
+        fetch(`${API_BASE}/api/v1/auction-items/${auctionItemId}/top-bid`, { headers }),
+      ]);
+      const payload = await detailResponse.json().catch(() => null);
+      const topBidPayload = await topBidResponse.json().catch(() => null);
+      if (!detailResponse.ok) {
         throw new Error(
           payload?.message || payload?.error || 'Este artículo ya no está disponible en una subasta en vivo.'
         );
       }
-      setDetail(normalizeDetail(payload));
+      setDetail(normalizeDetail(payload, topBidResponse.ok ? topBidPayload : null));
       setActiveImage(0);
     } catch (loadError) {
       setError(loadError.message || 'No se pudo cargar el artículo en vivo.');
@@ -187,13 +191,14 @@ function StatePanel({ icon, label, loading, onRetry }) {
   );
 }
 
-function normalizeDetail(payload) {
+function normalizeDetail(payload, topBidPayload) {
   const data = payload?.data || payload?.item || payload;
   const product = data?.product || data?.producto || {};
   const owner = data?.ownerSummary || data?.owner || data?.dueño || {};
   const images = data?.images || data?.imagenes || product?.images || product?.imagenes || [];
   const title = data?.title || data?.nombre || product?.name || product?.nombre || data?.description || data?.descripcion;
   const description = data?.description || data?.descripcion || product?.fullDescription || product?.descripcionCompleta || title;
+  const topBid = topBidPayload?.data || topBidPayload || {};
 
   return {
     title: title || `Lote #${data?.lotNumber || data?.numeroLote || data?.auctionItemId || ''}`,
@@ -203,9 +208,9 @@ function normalizeDetail(payload) {
     medium: data?.medium || data?.medio || product?.material || product?.materiales,
     dimensions: data?.dimensions || data?.dimensiones || product?.dimensiones,
     condition: data?.condition || data?.condicion || product?.condicion,
-    currentBid: data?.currentBid || data?.pujaActual || data?.ofertaActual || data?.precioActual,
-    basePrice: data?.basePrice || data?.precioBase,
-    currency: data?.currency || data?.moneda || 'USD',
+    currentBid: topBid?.currentBid ?? topBid?.pujaActual ?? topBid?.ofertaActual ?? data?.currentBid ?? data?.pujaActual ?? data?.ofertaActual ?? data?.precioActual,
+    basePrice: data?.basePrice ?? data?.precioBase,
+    currency: topBid?.currency ?? topBid?.moneda ?? data?.currency ?? data?.moneda ?? 'USD',
     endsAt: data?.endsAt || data?.endDate || data?.fechaFin || data?.auctionEnd,
     lotNumber: data?.lotNumber || data?.numeroLote || data?.auctionItemId || data?.identificador || '—',
     ownerName: owner?.name || owner?.nombre || data?.ownerName || data?.consignorName,
