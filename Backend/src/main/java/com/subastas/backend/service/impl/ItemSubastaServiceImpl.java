@@ -1,5 +1,6 @@
 package com.subastas.backend.service.impl;
 
+import com.subastas.backend.dto.response.producto.ItemFotoProductoResponse;
 import com.subastas.backend.dto.response.puja.HistorialPujaResponse;
 import com.subastas.backend.dto.response.puja.ItemHistorialPujaResponse;
 import com.subastas.backend.dto.response.puja.TopPujaResponse;
@@ -9,9 +10,9 @@ import com.subastas.backend.entity.Foto;
 import com.subastas.backend.entity.ItemCatalogo;
 import com.subastas.backend.entity.Pujo;
 import com.subastas.backend.exception.ResourceNotFoundException;
-import com.subastas.backend.repository.FotoRepository;
 import com.subastas.backend.repository.ItemCatalogoRepository;
 import com.subastas.backend.repository.PujoRepository;
+import com.subastas.backend.service.FotoService;
 import com.subastas.backend.service.ItemSubastaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -35,7 +36,7 @@ public class ItemSubastaServiceImpl implements ItemSubastaService {
 
     private final ItemCatalogoRepository itemCatalogoRepository;
     private final PujoRepository pujoRepository;
-    private final FotoRepository fotoRepository;
+    private final FotoService fotoService;
 
     @Override
     public DetalleItemSubastaResponse obtenerDetalle(Integer auctionItemId) {
@@ -51,10 +52,9 @@ public class ItemSubastaServiceImpl implements ItemSubastaService {
             response.setProductId(item.getProducto().getIdentificador());
             response.setDescription(item.getProducto().getDescripcionCatalogo());
             response.setHistoria(item.getProducto().getDescripcionCompleta());
-            response.setImagenes(fotoRepository
-                    .findByProductoIdentificadorOrderByIdentificadorAsc(item.getProducto().getIdentificador())
+            response.setImagenes(fotoService.obtenerFotosProducto(item.getProducto().getIdentificador())
                     .stream()
-                    .map(this::buildPhotoUrl)
+                    .map(ItemFotoProductoResponse::getUrl)
                     .toList());
 
             if (item.getProducto().getDuenio() != null && item.getProducto().getDuenio().getPersona() != null) {
@@ -118,12 +118,5 @@ public class ItemSubastaServiceImpl implements ItemSubastaService {
 
     private boolean esSi(String value) {
         return "si".equalsIgnoreCase(value);
-    }
-
-    private String buildPhotoUrl(Foto foto) {
-        return ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/v1/products/photos/{photoId}/content")
-                .buildAndExpand(foto.getIdentificador())
-                .toUriString();
     }
 }

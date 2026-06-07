@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { TopBar } from '../components/TopBar';
 import { Colors } from '../themes/colors';
 import { useCurrency } from '../context/CurrencyContext';
+import { normalizeImageUri, uniqueImageUris } from '../utils/images';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 const { width } = Dimensions.get('window');
@@ -251,6 +252,7 @@ function LiveAuctionsShowcase({ auctions, now, onOpenAuction }) {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.liveRail}>
         {featuredAuctions.map((auction) => {
           const imageUri = getAuctionImages(auction)[0];
+          console.log(imageUri)
           return (
             <Pressable
               key={`live-feature-${auction.id}`}
@@ -314,6 +316,7 @@ function AuctionCard({ auction, now, onJoin }) {
       onPress={isLive ? onJoin : undefined}
       disabled={isLive && !auction.auctionItemId}
     >
+      
       <View style={styles.imageWrap}>
         <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
         <View style={[styles.badge, isEnded && styles.badgeEnded, isScheduled && styles.badgeLight]}>
@@ -485,14 +488,11 @@ function getItemImages(items) {
 }
 
 function uniqueImages(images) {
-  return images.map(normalizeImageValue).filter(Boolean).filter((image, index, list) => list.indexOf(image) === index);
+  return uniqueImageUris(images);
 }
 
 function normalizeImageValue(value) {
-  if (!value) return null;
-  if (typeof value === 'string') return byteArrayToDataUri(value);
-  if (Array.isArray(value)) return byteArrayToDataUri(value);
-  return value.url || value.uri || value.imageUrl || value.imagenPrincipal || byteArrayToDataUri(value.foto);
+  return normalizeImageUri(value);
 }
 
 function getAuctionDate(auction) {
@@ -545,23 +545,10 @@ function extractImageUri(product = {}, item = {}) {
   const images = product.imagenes || item.imagenes || product.fotos || item.fotos;
   if (Array.isArray(images) && images.length > 0) {
     if (typeof images[0] === 'string') return images[0];
-    if (images[0]?.url) return images[0].url;
-    if (images[0]?.foto) return byteArrayToDataUri(images[0].foto);
+    return normalizeImageValue(images[0]);
   }
 
-  return byteArrayToDataUri(product.foto || item.foto);
-}
-
-function byteArrayToDataUri(value) {
-  if (!value) return null;
-  if (typeof value === 'string') {
-    return value.startsWith('data:') || value.startsWith('http') ? value : `data:image/jpeg;base64,${value}`;
-  }
-  if (Array.isArray(value)) {
-    const binary = value.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
-    if (typeof btoa === 'function') return `data:image/jpeg;base64,${btoa(binary)}`;
-  }
-  return null;
+  return normalizeImageValue(product.foto || item.foto);
 }
 
 function formatCategory(category) {

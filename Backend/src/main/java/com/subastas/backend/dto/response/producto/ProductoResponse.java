@@ -8,5 +8,5 @@ public class ProductoResponse {
     private String descripcionCatalogo;
     private String descripcionCompleta;
     private String nombre;
-    private byte[] foto;
+    private String imageUrl;
 }

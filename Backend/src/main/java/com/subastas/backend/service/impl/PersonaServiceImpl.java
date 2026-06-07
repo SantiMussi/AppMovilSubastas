@@ -39,7 +39,7 @@ public class PersonaServiceImpl implements PersonaService {
     private com.subastas.backend.repository.RegistroDeSubastaRepository registroDeSubastaRepository;
 
     @Autowired
-    private com.subastas.backend.repository.FotoRepository fotoRepository;
+    private com.subastas.backend.service.FotoService fotoService;
 
     private Usuario obtenerUsuarioPorEmail(String email) {
         return usuarioRepository.findByEmail(email)
@@ -247,18 +247,10 @@ public class PersonaServiceImpl implements PersonaService {
         if (producto == null || producto.getIdentificador() == null) {
             return null;
         }
-        Integer photoId = fotoRepository.findByProductoIdentificadorOrderByIdentificadorAsc(producto.getIdentificador())
-                .stream()
-                .map(com.subastas.backend.entity.Foto::getIdentificador)
+        return fotoService.obtenerFotosProducto(producto.getIdentificador()).stream()
                 .findFirst()
+                .map(com.subastas.backend.dto.response.producto.ItemFotoProductoResponse::getUrl)
                 .orElse(null);
-        if (photoId == null) {
-            return null;
-        }
-        return org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/v1/products/photos/{photoId}/content")
-                .buildAndExpand(photoId)
-                .toUriString();
     }
 
     @Override

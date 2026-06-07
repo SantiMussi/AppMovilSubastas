@@ -5,6 +5,7 @@ import com.subastas.backend.dto.response.producto.*;
 import com.subastas.backend.entity.*;
 import com.subastas.backend.exception.ResourceNotFoundException;
 import com.subastas.backend.repository.*;
+import com.subastas.backend.service.FotoService;
 import com.subastas.backend.service.ProductoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class ProductoServiceImpl implements ProductoService {
     private static final String DEPOSITO_DEFAULT = "Depósito Central";
     private final ProductoRepository productoRepository;
     private final FotoRepository fotoRepository;
+    private final FotoService fotoService;
     private final UsuarioRepository usuarioRepository;
     private final RegistroDeSubastaRepository registroDeSubastaRepository;
     private final ItemCatalogoRepository itemCatalogoRepository;
@@ -68,10 +70,7 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     public FotosProductoResponse obtenerFotos(Integer productId) {
         obtenerProducto(productId);
-        List<ItemFotoProductoResponse> photos = fotoRepository.findByProductoIdentificadorOrderByIdentificadorAsc(productId)
-                .stream()
-                .map(this::mapPhoto)
-                .toList();
+        List<ItemFotoProductoResponse> photos = fotoService.obtenerFotosProducto(productId);
 
         FotosProductoResponse response = new FotosProductoResponse();
         response.setProductId(productId);
@@ -206,20 +205,6 @@ public class ProductoServiceImpl implements ProductoService {
             return null;
         }
         return product.getRevisor().getSector().getNombreSector();
-    }
-
-    private ItemFotoProductoResponse mapPhoto(Foto foto) {
-        ItemFotoProductoResponse response = new ItemFotoProductoResponse();
-        response.setPhotoId(foto.getIdentificador());
-        response.setUrl(buildPhotoUrl(foto));
-        return response;
-    }
-
-    private String buildPhotoUrl(Foto foto) {
-        return ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/v1/products/photos/{photoId}/content")
-                .buildAndExpand(foto.getIdentificador())
-                .toUriString();
     }
 
     private boolean esSi(String value) {

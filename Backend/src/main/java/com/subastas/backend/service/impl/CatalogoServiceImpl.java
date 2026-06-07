@@ -9,19 +9,22 @@ import com.subastas.backend.exception.ResourceNotFoundException;
 import com.subastas.backend.repository.CatalogoRepository;
 import com.subastas.backend.repository.ItemCatalogoRepository;
 import com.subastas.backend.service.CatalogoService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.subastas.backend.service.FotoService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class CatalogoServiceImpl implements CatalogoService {
 
-    @Autowired
-    private CatalogoRepository catalogoRepository;
-
-    @Autowired
-    private ItemCatalogoRepository itemCatalogoRepository;
+    private final CatalogoRepository catalogoRepository;
+    private final ItemCatalogoRepository itemCatalogoRepository;
+    private final FotoService fotoService;
 
     @Override
     public List<CatalogoResponse> obtenerPorSubasta(Integer idSubasta) {
@@ -48,6 +51,13 @@ public class CatalogoServiceImpl implements CatalogoService {
             throw new ResourceNotFoundException("No se encontraron ítems para el catálogo con id: " + idCatalogo);
         }
 
+        Set<Integer> productIds = items.stream()
+                .map(ItemCatalogo::getProducto)
+                .filter(Objects::nonNull)
+                .map(producto -> producto.getIdentificador())
+                .collect(Collectors.toSet());
+        Map<Integer, String> firstPhotoUrls = fotoService.obtenerUrlsPrimerasFotos(productIds);
+
         return items.stream().map(item -> {
             ItemCatalogoResponse response = new ItemCatalogoResponse();
             response.setIdentificador(item.getIdentificador());
@@ -61,11 +71,8 @@ public class CatalogoServiceImpl implements CatalogoService {
                 productoResp.setDescripcionCatalogo(item.getProducto().getDescripcionCatalogo());
                 productoResp.setDescripcionCompleta(item.getProducto().getDescripcionCompleta());
                 
-                // Mapeo adicional para nombre y foto
-                productoResp.setNombre(item.getProducto().getDescripcionCatalogo()); // Usamos descripcionCatalogo como nombre
-                if (item.getProducto().getFotos() != null && !item.getProducto().getFotos().isEmpty()) {
-                    productoResp.setFoto(item.getProducto().getFotos().get(0).getFoto());
-                }
+                productoResp.setNombre(item.getProducto().getDescripcionCatalogo());
+                productoResp.setImageUrl(firstPhotoUrls.get(item.getProducto().getIdentificador()));
 
                 response.setProducto(productoResp);
             }
