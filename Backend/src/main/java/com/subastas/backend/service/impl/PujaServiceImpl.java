@@ -1,13 +1,16 @@
 package com.subastas.backend.service.impl;
+
+import com.subastas.backend.entity.Asistente;
 import com.subastas.backend.entity.Categoria;
+import com.subastas.backend.entity.Cliente;
 import com.subastas.backend.entity.ItemCatalogo;
 import com.subastas.backend.entity.Pujo;
 import com.subastas.backend.entity.PujoMetadata;
 import com.subastas.backend.entity.Subasta;
 import com.subastas.backend.entity.Usuario;
-import com.subastas.backend.entity.Asistente;
 import com.subastas.backend.exception.PujaRechazadaException;
 import com.subastas.backend.repository.AsistenteRepository;
+import com.subastas.backend.repository.ClienteRepository;
 import com.subastas.backend.repository.ItemCatalogoRepository;
 import com.subastas.backend.repository.MultaRepository;
 import com.subastas.backend.repository.PujoMetadataRepository;
@@ -36,13 +39,46 @@ public class PujaServiceImpl implements PujaService {
     private final PujoRepository pujoRepository;
     private final PujoMetadataRepository pujoMetadataRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ClienteRepository clienteRepository;
     private final AsistenteRepository asistenteRepository;
     private final MultaRepository multaRepository;
 
     @Override
     @Transactional
+    public void registrarAsistenteSiPuedePujar(Integer auctionItemId, String userEmail) {
+        BidContext context = validateBidContext(auctionItemId, userEmail);
+        findOrCreateAttendee(context.client(), context.auction());
+    }
+
+    @Override
+    @Transactional
     public Pujo realizarPuja(Integer auctionItemId, String userEmail, BigDecimal amount) {
         validateAmount(amount);
+        BidContext context = validateBidContext(auctionItemId, userEmail);
+        Asistente attendee = findOrCreateAttendee(context.client(), context.auction());
+
+        BigDecimal normalizedAmount = amount.setScale(2, RoundingMode.UNNECESSARY);
+        BigDecimal currentBid = pujoRepository
+                .findFirstByItemIdentificadorOrderByImporteDescIdentificadorDesc(auctionItemId)
+                .map(Pujo::getImporte)
+                .orElse(context.item().getPrecioBase())
+                .setScale(2, RoundingMode.HALF_UP);
+        validateRange(normalizedAmount, currentBid, context.item().getPrecioBase(), context.auction().getCategoria());
+
+        Pujo bid = new Pujo();
+        bid.setAsistente(attendee);
+        bid.setItem(context.item());
+        bid.setImporte(normalizedAmount);
+        bid.setGanador("no");
+        bid = pujoRepository.saveAndFlush(bid);
+
+        PujoMetadata metadata = new PujoMetadata();
+        metadata.setPujo(bid);
+        pujoMetadataRepository.save(metadata);
+        return bid;
+    }
+
+    private BidContext validateBidContext(Integer auctionItemId, String userEmail) {
         ItemCatalogo item = itemCatalogoRepository.findByIdForBid(auctionItemId)
                 .orElseThrow(() -> rejected("AUCTION_ITEM_NOT_FOUND", "El ítem de subasta no existe."));
         Subasta auction = item.getCatalogo() == null ? null : item.getCatalogo().getSubasta();
@@ -58,37 +94,31 @@ public class PujaServiceImpl implements PujaService {
         if (user.getPersona() == null) {
             throw rejected("CLIENT_NOT_FOUND", "El usuario no tiene un cliente asociado.");
         }
-        Integer clientId = user.getPersona().getIdentificador();
-        Asistente attendee = asistenteRepository
-                .findByClienteIdentificadorAndSubastaIdentificador(clientId, auction.getIdentificador())
-                .orElseThrow(() -> rejected("NOT_REGISTERED", "Debes estar registrado como asistente de esta subasta para pujar."));
-        if (!"si".equalsIgnoreCase(attendee.getCliente().getAdmitido())) {
+        Cliente client = clienteRepository.findById(user.getPersona().getIdentificador())
+                .orElseThrow(() -> rejected("CLIENT_NOT_FOUND", "El usuario no tiene un cliente asociado."));
+        if (!"si".equalsIgnoreCase(client.getAdmitido())) {
             throw rejected("CLIENT_NOT_ADMITTED", "El usuario no está habilitado para participar.");
         }
         if (multaRepository.existsByUsuarioIdentificadorAndEstadoIn(user.getIdentificador(), BLOCKING_FINE_STATES)) {
             throw rejected("OUTSTANDING_FINE", "Debes cancelar tus multas pendientes antes de volver a pujar.");
         }
-
-        BigDecimal normalizedAmount = amount.setScale(2, RoundingMode.UNNECESSARY);
-        BigDecimal currentBid = pujoRepository
-                .findFirstByItemIdentificadorOrderByImporteDescIdentificadorDesc(auctionItemId)
-                .map(Pujo::getImporte)
-                .orElse(item.getPrecioBase())
-                .setScale(2, RoundingMode.HALF_UP);
-        validateRange(normalizedAmount, currentBid, item.getPrecioBase(), auction.getCategoria());
-
-        Pujo bid = new Pujo();
-        bid.setAsistente(attendee);
-        bid.setItem(item);
-        bid.setImporte(normalizedAmount);
-        bid.setGanador("no");
-        bid = pujoRepository.saveAndFlush(bid);
-
-        PujoMetadata metadata = new PujoMetadata();
-        metadata.setPujo(bid);
-        pujoMetadataRepository.save(metadata);
-        return bid;
+        return new BidContext(item, auction, client);
     }
+    
+    private Asistente findOrCreateAttendee(Cliente client, Subasta auction) {
+        return asistenteRepository
+                .findByClienteIdentificadorAndSubastaIdentificador(client.getIdentificador(), auction.getIdentificador())
+                .orElseGet(() -> createAttendee(client, auction));
+    }
+
+    private Asistente createAttendee(Cliente client, Subasta auction) {
+        Asistente attendee = new Asistente();
+        attendee.setCliente(client);
+        attendee.setSubasta(auction);
+        attendee.setNumeroPostor(asistenteRepository.findMaxNumeroPostorBySubastaIdentificador(auction.getIdentificador()) + 1);
+        return asistenteRepository.save(attendee);
+    }
+    
 
     private void validateAmount(BigDecimal amount) {
         if (amount == null || amount.signum() <= 0) {
@@ -118,5 +148,8 @@ public class PujaServiceImpl implements PujaService {
 
     private PujaRechazadaException rejected(String code, String message) {
         return new PujaRechazadaException(code, message);
+    }
+
+    private record BidContext(ItemCatalogo item, Subasta auction, Cliente client) {
     }
 }

@@ -50,6 +50,7 @@ public class AuctionWebSocketHandler extends TextWebSocketHandler {
             previous.close(CloseStatus.POLICY_VIOLATION.withReason("A user can only join one auction room at a time"));
         }
         sessions.put(session.getId(), session);
+        registerAttendeeIfAllowed(itemId.get(), email);
         sendSnapshot(session);
     }
 
@@ -115,6 +116,17 @@ public class AuctionWebSocketHandler extends TextWebSocketHandler {
                 removeSession(session);
             }
         });
+    }
+
+    private void registerAttendeeIfAllowed(Integer itemId, String email) {
+        try {
+            pujaService.registrarAsistenteSiPuedePujar(itemId, email);
+        } catch (PujaRechazadaException exception) {
+            log.debug("User {} joined auction room for item {} but is not eligible to bid: {}",
+                    email, itemId, exception.getCode());
+        } catch (RuntimeException exception) {
+            log.error("Unexpected error while registering attendee {} for auction item {}", email, itemId, exception);
+        }
     }
 
     private void sendSnapshot(WebSocketSession session) throws IOException {

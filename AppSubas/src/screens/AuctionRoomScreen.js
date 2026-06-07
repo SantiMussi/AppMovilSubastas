@@ -24,6 +24,7 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
 	const [bidPending, setBidPending] = useState(false);
   const [bidMessage, setBidMessage] = useState('');
   const [now, setNow] = useState(Date.now());
+  const closedRefreshRef = useRef(false);
   const socketRef = useRef(null);
   const reconnectRef = useRef(null);
   const { formatGlobalMoney } = useCurrency();
@@ -35,7 +36,7 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
   );
 
   const applySnapshot = useCallback((payload) => {
-    setSnapshot(normalizeSnapshot(payload));
+    setSnapshot(normalizeSnapshot(payload, Date.now()));
     setError('');
     setLoading(false);
   }, []);
@@ -130,6 +131,17 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
     }
   }, [bidAmount, snapshot?.topBid?.nextMinBid]);
 
+  const serverNow = now + (snapshot?.serverOffsetMs || 0);
+  const auctionClosed = Boolean(snapshot?.detail?.auctionClosed)
+    || (snapshot?.detail?.endsAt && new Date(snapshot.detail.endsAt).getTime() <= serverNow);
+  const biddingOpen = snapshot?.detail?.biddingOpen !== false && !auctionClosed;
+
+  useEffect(() => {
+    if (!auctionClosed || closedRefreshRef.current) return;
+    closedRefreshRef.current = true;
+    requestLiveRefresh();
+  }, [auctionClosed]);
+
   const requestLiveRefresh = () => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify({ type: 'refresh' }));
@@ -140,6 +152,10 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
 
 	const placeBid = () => {
     if (bidPending) return;
+    if (!biddingOpen) {
+      setError(auctionClosed ? 'La subasta está cerrada y ya no recibe pujas.' : 'La subasta todavía no comenzó.');
+      return;
+    }
     const amount = Number(String(bidAmount).replace(',', '.'));
     const minimum = Number(snapshot?.topBid?.nextMinBid);
     const maximum = Number(snapshot?.topBid?.nextMaxBid);
@@ -196,7 +212,7 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.lotRow}>
           <Text style={styles.lot}>LOTE ◆ {String(detail.lotNumber).padStart(3, '0')}</Text>
-          <View style={styles.liveWrap}><View style={[styles.liveDot, connection !== 'live' && styles.offlineDot]} /><Text style={styles.liveLabel}>{connection === 'live' ? 'EN VIVO' : 'RECONECTANDO'}</Text></View>
+          <View style={styles.liveWrap}><View style={[styles.liveDot, connection !== 'live' && styles.offlineDot]} /><Text style={styles.liveLabel}>{auctionClosed ? 'CERRADA' : connection === 'live' ? 'EN VIVO' : 'RECONECTANDO'}</Text></View>
         </View>
         <Text style={styles.title}>{detail.title}</Text>
 
@@ -207,12 +223,13 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
         <View style={styles.bidCard}>
           <View style={styles.summaryRow}>
             <View><Text style={styles.eyebrow}>ÚLTIMA OFERTA</Text><Text style={styles.currentBid}>{formatMoney(formatGlobalMoney, topBid.currentBid || detail.basePrice)}</Text></View>
-            <View><Text style={styles.eyebrow}>TIEMPO RESTANTE</Text><Text style={styles.countdown}>{formatCountdown(detail.endsAt, now)}</Text></View>
+            <View><Text style={styles.eyebrow}>TIEMPO RESTANTE</Text><Text style={styles.countdown}>{auctionClosed ? 'CERRADA' : formatCountdown(detail.endsAt, serverNow)}</Text></View>
           </View>
           <View style={styles.rule} />
           <View style={styles.minimumRow}><Text style={styles.eyebrow}>TU PUJA MÍNIMA</Text><Text style={styles.minimum}>{formatMoney(formatGlobalMoney, topBid.nextMinBid)}</Text></View>
           <TextInput
             value={bidAmount}
+            editable={biddingOpen}
             onChangeText={setBidAmount}
             keyboardType="numeric"
             style={styles.bidInput}
@@ -221,8 +238,8 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
           {topBid.appliesCap && topBid.nextMaxBid ? <Text style={styles.bidLimit}>Máximo: {formatMoney(formatGlobalMoney, topBid.nextMaxBid)}</Text> : null}
           {error ? <Text style={styles.bidError}>{error}</Text> : null}
           {bidMessage ? <Text style={styles.bidSuccess}>{bidMessage}</Text> : null}
-          <Pressable style={[styles.bidButton, bidPending && styles.bidButtonDisabled]} onPress={placeBid} disabled={bidPending}>
-            <Text style={styles.bidButtonText}>{bidPending ? 'REGISTRANDO PUJA…' : 'PUJAR AHORA'}</Text>
+          <Pressable style={[styles.bidButton, (bidPending || !biddingOpen) && styles.bidButtonDisabled]} onPress={placeBid} disabled={bidPending || !biddingOpen}>
+            <Text style={styles.bidButtonText}>{auctionClosed ? 'SUBASTA CERRADA' : !biddingOpen ? 'SUBASTA PRÓXIMA' : bidPending ? 'REGISTRANDO PUJA…' : 'PUJAR AHORA'}</Text>
           </Pressable>
         </View>
 
@@ -249,17 +266,23 @@ function normalizeAuctionItemId(value) {
   return /^[1-9]\d*$/.test(normalized) ? normalized : null;
 }
 
-function normalizeSnapshot(payload) {
+function normalizeSnapshot(payload, receivedAt) {
   const detailData = payload?.detail || payload?.item || {};
   const topBid = payload?.topBid || {};
   const rawHistory = asArray(payload?.history?.items ?? payload?.bids);
   const images = asArray(detailData?.imagenes ?? detailData?.images);
+  const serverTimestamp = payload?.generatedAt || detailData?.serverTime;
+  const parsedServerTime = serverTimestamp ? new Date(serverTimestamp).getTime() : NaN;
+  const status = String(detailData?.auctionStatus || detailData?.estado || '').toLowerCase();
   return {
+    serverOffsetMs: Number.isFinite(parsedServerTime) ? parsedServerTime - receivedAt : 0,
     detail: {
       title: detailData?.title || detailData?.nombre || detailData?.description || detailData?.descripcion || `Lote #${detailData?.auctionItemId || ''}`,
       lotNumber: detailData?.lotNumber || detailData?.numeroLote || detailData?.auctionItemId || '—',
       basePrice: detailData?.basePrice || detailData?.precioBase,
       endsAt: detailData?.endsAt || detailData?.fechaFin,
+      auctionClosed: detailData?.auctionClosed === true || !['', 'abierta', 'open', 'live'].includes(status),
+      biddingOpen: detailData?.biddingOpen !== false,
       images: images.map((image) => resolveImageUri(typeof image === 'string' ? image : image?.url || image?.uri)).filter(Boolean),
     },
     topBid: {
