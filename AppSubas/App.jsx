@@ -28,6 +28,7 @@ import FinePaymentScreen from './src/screens/FinePaymentScreen';
 import MetricsScreen from './src/screens/MetricsScreen';
 import CollectionScreen from './src/screens/CollectionScreen';
 import ProductDetailScreen from "./src/screens/ProductDetailScreen";
+import BiddingHistoryScreen from './src/screens/BiddingHistoryScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -345,11 +346,11 @@ function RootNavigator() {
 
       case 'historial':
         return (
-          <PlaceholderScreen
-            title="Historial de Pujas"
-            subtitle="Revisá todas tus pujas anteriores, resultados y montos ofrecidos."
-            iconName="time-outline"
+          <BiddingHistoryScreen
+            session={session}
             onMenuPress={openDrawer}
+            onNavigate={handleNavigate}
+            onBack={goBack}
           />
         );
 

@@ -263,9 +263,69 @@ public class PersonaServiceImpl implements PersonaService {
 
     @Override
     public com.subastas.backend.dto.response.metrics.UserBidsResponse obtenerBidsHistory(String email) {
+        Usuario usuario = obtenerUsuarioPorEmail(email);
+        Integer clienteId = usuario.getPersona().getIdentificador();
+        
+        java.util.List<com.subastas.backend.entity.Pujo> userPujos = pujoRepository.findByAsistenteClienteIdentificador(clienteId);
+        
+        // Group by ItemCatalogo and find max bid per item
+        java.util.Map<com.subastas.backend.entity.ItemCatalogo, com.subastas.backend.entity.Pujo> maxPujoPerItem = userPujos.stream()
+            .collect(java.util.stream.Collectors.toMap(
+                com.subastas.backend.entity.Pujo::getItem,
+                p -> p,
+                (p1, p2) -> p1.getImporte().compareTo(p2.getImporte()) > 0 ? p1 : p2
+            ));
+
+        java.util.List<com.subastas.backend.dto.response.metrics.BidItemDto> items = new java.util.ArrayList<>();
+        
+        for (java.util.Map.Entry<com.subastas.backend.entity.ItemCatalogo, com.subastas.backend.entity.Pujo> entry : maxPujoPerItem.entrySet()) {
+            com.subastas.backend.entity.ItemCatalogo item = entry.getKey();
+            com.subastas.backend.entity.Pujo maxBid = entry.getValue();
+            com.subastas.backend.entity.Producto producto = item.getProducto();
+            com.subastas.backend.entity.Catalogo catalogo = item.getCatalogo();
+            com.subastas.backend.entity.Subasta subasta = catalogo != null ? catalogo.getSubasta() : null;
+            
+            com.subastas.backend.dto.response.metrics.BidItemDto dto = new com.subastas.backend.dto.response.metrics.BidItemDto();
+            dto.setId(maxBid.getIdentificador());
+            
+            // Status
+            String status = "ACTIVA";
+            if (subasta != null && "cerrada".equalsIgnoreCase(subasta.getEstado())) {
+                status = "si".equalsIgnoreCase(maxBid.getGanador()) ? "GANADA" : "PERDIDA";
+            }
+            dto.setStatus(status);
+            
+            dto.setLotNumber(String.valueOf(item.getIdentificador()));
+            dto.setCategory(subasta != null && subasta.getCategoria() != null ? subasta.getCategoria().toString().replace("_", " ") : "GENERAL");
+            dto.setTitle(obtenerNombreProducto(producto));
+            dto.setDescription(producto != null ? producto.getDescripcionCompleta() : "Sin descripción");
+            dto.setPrice(maxBid.getImporte());
+            
+            if (subasta != null && subasta.getSubastador() != null && subasta.getSubastador().getPersona() != null) {
+                dto.setAuctioneer(subasta.getSubastador().getPersona().getNombre());
+            } else {
+                dto.setAuctioneer("Vantage Fine Auctions");
+            }
+            
+            if (subasta != null && subasta.getFecha() != null) {
+                java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy", new java.util.Locale("es", "ES"));
+                dto.setAuctionDate(subasta.getFecha().format(formatter));
+            } else {
+                dto.setAuctionDate("Por definir");
+            }
+            
+            dto.setImage(obtenerPrimeraFotoUrl(producto));
+            
+            items.add(dto);
+        }
+        
+        // Sort items by auctionDate or ID descending
+        items.sort((a, b) -> b.getId().compareTo(a.getId()));
+
         com.subastas.backend.dto.response.metrics.UserBidsResponse response = new com.subastas.backend.dto.response.metrics.UserBidsResponse();
         response.setStatus("OK");
-        response.setMessage("Bids history mock");
+        response.setMessage("Historial recuperado exitosamente");
+        response.setItems(items);
         return response;
     }
 }
