@@ -22,6 +22,7 @@ import FinesScreen from './src/screens/FinesScreen';
 import FineDetailScreen from './src/screens/FineDetailScreen';
 import AuctionsScreen from './src/screens/AuctionsScreen';
 import AuctionItemDetailScreen from './src/screens/AuctionItemDetailScreen';
+import AuctionRoomScreen from './src/screens/AuctionRoomScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
 import PaymentMethodsScreen from './src/screens/PaymentMethodsScreen';
@@ -356,11 +357,11 @@ function RootNavigator() {
         );
 
       case 'auctionRoom':
+        const auctionItemId = screen.split(':')[1];
         return (
-          <PlaceholderScreen
-            title="Sala de Subasta"
-            subtitle="La experiencia para participar en vivo se implementará en una próxima iteración."
-            iconName="radio-outline"
+          <AuctionRoomScreen
+            auctionItemId={auctionItemId}
+            session={session}
             onMenuPress={openDrawer}
           />
         );
@@ -475,11 +476,11 @@ function RootNavigator() {
         }
 
         if (screen.startsWith('auctionRoom:')) {
+          const auctionItemId = screen.split(':')[1]
           return (
-            <PlaceholderScreen
-              title="Sala de Subasta"
-              subtitle="La experiencia para participar en vivo se implementará en una próxima iteración."
-              iconName="radio-outline"
+            <AuctionRoomScreen
+              auctionItemId={auctionItemId}
+              session={session}
               onMenuPress={openDrawer}
             />
           );

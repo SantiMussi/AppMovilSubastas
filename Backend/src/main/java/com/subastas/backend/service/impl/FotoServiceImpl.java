@@ -5,10 +5,15 @@ import com.subastas.backend.exception.ResourceNotFoundException;
 import com.subastas.backend.repository.FotoRepository;
 import com.subastas.backend.service.FotoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
+import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -21,7 +26,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FotoServiceImpl implements FotoService {
 
+    private static final String PHOTO_CONTENT_PATH = "/api/v1/products/photos/{photoId}/content";
+
+
     private final FotoRepository fotoRepository;
+
+    @Value("${app.public-base-url:}")
+    private String publicBaseUrl;
 
     @Override
     public List<ItemFotoProductoResponse> obtenerFotosProducto(Integer productId) {
@@ -58,10 +69,22 @@ public class FotoServiceImpl implements FotoService {
     }
 
     private String buildPhotoUrl(Integer photoId) {
-        return ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/v1/products/photos/{photoId}/content")
+        String photoPath = UriComponentsBuilder.fromPath(PHOTO_CONTENT_PATH)
+            .buildAndExpand(photoId)
+            .toUriString();
+        if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes) {
+            return ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path(PHOTO_CONTENT_PATH)
                 .buildAndExpand(photoId)
                 .toUriString();
+        }
+        if (StringUtils.hasText(publicBaseUrl)) {
+            return UriComponentsBuilder.fromUriString(publicBaseUrl.replaceAll("/+$", ""))
+                .path(photoPath)
+                .build()
+                .toUriString();
+        }
+        return photoPath;
     }
 
     static String detectContentType(byte[] bytes) {

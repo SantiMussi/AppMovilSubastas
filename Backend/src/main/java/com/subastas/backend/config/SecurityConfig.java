@@ -54,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/auction-items/{auctionItemId}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auction-items/{auctionItemId}/top-bid").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auction-items/{auctionItemId}/bids").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/{productId}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/{productId}/photos").permitAll()
