@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCurrency } from '../context/CurrencyContext';
-import { TopBar } from '../components/TopBar';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
