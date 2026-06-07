@@ -29,6 +29,7 @@ import MetricsScreen from './src/screens/MetricsScreen';
 import CollectionScreen from './src/screens/CollectionScreen';
 import ProductDetailScreen from "./src/screens/ProductDetailScreen";
 import BiddingHistoryScreen from './src/screens/BiddingHistoryScreen';
+import RegistrationStatusScreen from './src/screens/RegistrationStatusScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -71,10 +72,11 @@ export default function App() {
 }
 
 function RootNavigator() {
-  const [screen, setScreen] = useState('authChoice');
+  const [screen, setScreen] = useState('auctions');
   const [session, setSession] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [screenHistory, setScreenHistory] = useState([]);
+  const [registerParams, setRegisterParams] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -163,46 +165,6 @@ function RootNavigator() {
   const openDrawer = () => setDrawerOpen(true);
   const closeDrawer = () => setDrawerOpen(false);
 
-
-
-  if (!session) {
-    if (screen === 'login') {
-      return (
-        <LoginScreen
-          onBack={() => setScreen('authChoice')}
-          onRegister={() => setScreen('register')}
-          onLoginSuccess={(payload) => openUserDataScreen(payload, 'auctions')}
-          onForgotPassword={() => setScreen('passwordRecovery')}
-        />
-      );
-    }
-
-    if (screen === 'register') {
-      return <RegisterScreen onBack={() => setScreen('authChoice')} onRegisterSuccess={(payload) => openUserDataScreen(payload, 'auctions')} />;
-    }
-
-    if (screen === 'passwordRecovery') {
-      return (
-        <PasswordRecoveryScreen
-          onBack={() => setScreen('login')}
-          onFinished={() => setScreen('perfil')}
-        />
-      );
-    }
-
-    return (
-      <AuthChoiceScreen
-        onBack={() => { }}
-        onLogin={() => setScreen('login')}
-        onRegister={() => setScreen('register')}
-        onForgotPassword={() => setScreen('passwordRecovery')}
-        onLoginSuccess={() => setScreen('auctions')}
-      />
-    );
-  }
-
-
-
   const renderSidebar = () => (
     <Sidebar
       profile={session?.profile}
@@ -215,6 +177,68 @@ function RootNavigator() {
 
   const renderCurrentScreen = () => {
     switch (screen) {
+      case 'checkStatus':
+        return (
+          <RegistrationStatusScreen
+            onBack={() => setScreen('authChoice')}
+            onContinueRegistration={(email) => {
+              setRegisterParams({ email, step: 'security' });
+              setScreen('register');
+            }}
+          />
+        );
+      case 'authChoice':
+        return (
+          <AuthChoiceScreen
+            onBack={() => setScreen('auctions')}
+            onLogin={() => setScreen('login')}
+            onRegister={() => {
+              setRegisterParams(null);
+              setScreen('register');
+            }}
+            onCheckStatus={() => setScreen('checkStatus')}
+            onForgotPassword={() => setScreen('passwordRecovery')}
+            onLoginSuccess={() => setScreen('auctions')}
+          />
+        );
+
+      case 'login':
+        return (
+          <LoginScreen
+            onBack={() => setScreen('authChoice')}
+            onRegister={() => {
+              setRegisterParams(null);
+              setScreen('register');
+            }}
+            onLoginSuccess={(payload) => openUserDataScreen(payload, 'auctions')}
+            onForgotPassword={() => setScreen('passwordRecovery')}
+          />
+        );
+
+      case 'register':
+        return (
+          <RegisterScreen 
+            initialEmail={registerParams?.email}
+            initialStep={registerParams?.step || 'details'}
+            onBack={() => {
+              setRegisterParams(null);
+              setScreen('authChoice');
+            }} 
+            onRegisterSuccess={(payload) => {
+              setRegisterParams(null);
+              openUserDataScreen(payload, 'auctions');
+            }} 
+          />
+        );
+
+      case 'passwordRecovery':
+        return (
+          <PasswordRecoveryScreen
+            onBack={() => setScreen('login')}
+            onFinished={() => setScreen('perfil')}
+          />
+        );
+
       case 'auctions':
         return (
           <AuctionsScreen

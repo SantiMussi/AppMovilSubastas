@@ -73,10 +73,10 @@ export default function LoginScreen({ onBack, onRegister, onForgotPassword, onLo
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.keyboard}>
+        <Pressable accessibilityLabel="Volver" onPress={onBack} style={styles.backButton}>
+          <Text style={styles.backIcon}>←</Text>
+        </Pressable>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <Pressable accessibilityLabel="Volver" onPress={onBack} style={styles.backButton}>
-            <Text style={styles.backIcon}>←</Text>
-          </Pressable>
 
           <View style={styles.header}>
             <Text style={styles.brand}>Vantage</Text>
@@ -177,11 +177,14 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
   },
   backButton: {
-    alignSelf: 'flex-start',
-    height: 39,
-    width: 42,
+    position: 'absolute',
+    top: 10,
+    left: 20,
+    zIndex: 10,
+    height: 44,
+    width: 44,
     justifyContent: 'center',
-    marginLeft: -12,
+    alignItems: 'center',
   },
   backIcon: {
     color: '#0b0c0f',

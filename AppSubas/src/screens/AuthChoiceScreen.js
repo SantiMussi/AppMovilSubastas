@@ -3,7 +3,7 @@ import { Image, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-na
 
 import { palette } from '../constants/palette';
 
-export default function AuthChoiceScreen({ onLogin, onRegister, onBack }) {
+export default function AuthChoiceScreen({ onLogin, onRegister, onCheckStatus, onBack }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.shell}>
@@ -22,6 +22,9 @@ export default function AuthChoiceScreen({ onLogin, onRegister, onBack }) {
           </Pressable>
           <Pressable onPress={onRegister} style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
             <Text style={styles.secondaryText}>CREAR CUENTA</Text>
+          </Pressable>
+          <Pressable onPress={onCheckStatus} style={({ pressed }) => [styles.tertiaryButton, pressed && styles.pressed]}>
+            <Text style={styles.tertiaryText}>VERIFICAR ESTADO DE REGISTRO</Text>
           </Pressable>
         </View>
       </View>
@@ -101,6 +104,21 @@ const styles = StyleSheet.create({
   },
   secondaryText: {
     color: palette.gold,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 4,
+  },
+  tertiaryButton: {
+    minHeight: 49,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  tertiaryText: {
+    color: '#666',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 4,

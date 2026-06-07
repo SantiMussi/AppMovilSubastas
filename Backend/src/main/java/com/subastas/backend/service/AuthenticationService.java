@@ -159,11 +159,13 @@ public class AuthenticationService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró un usuario registrado con ese email"));
         Cliente cliente = getCliente(usuario);
-        boolean puedeCompletarEtapa2 = cliente != null && "si".equalsIgnoreCase(cliente.getAdmitido());
+        boolean isAdmitido = cliente != null && "si".equalsIgnoreCase(cliente.getAdmitido());
+        boolean tienePassword = usuario.getPassword() != null && !usuario.getPassword().isBlank();
+        boolean puedeCompletarEtapa2 = isAdmitido && !tienePassword;
 
         return EstadoRegistroResponse.builder()
                 .email(usuario.getEmail())
-                .status(puedeCompletarEtapa2 ? "aprobado" : "pendiente_verificacion")
+                .status(isAdmitido ? "aprobado" : "pendiente_verificacion")
                 .categoria(cliente != null && cliente.getCategoria() != null ? cliente.getCategoria().name() : null)
                 .puedeCompletarEtapa2(puedeCompletarEtapa2)
                 .build();

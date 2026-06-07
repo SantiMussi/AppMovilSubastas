@@ -33,9 +33,9 @@ const normalizeCountry = (country) => {
   };
 };
 
-export default function RegisterScreen({ onBack, onRegisterSuccess }) {
-  const [step, setStep] = useState('details');
-  const [form, setForm] = useState(initialForm);
+export default function RegisterScreen({ onBack, onRegisterSuccess, initialEmail, initialStep = 'details' }) {
+  const [step, setStep] = useState(initialStep);
+  const [form, setForm] = useState({ ...initialForm, email: initialEmail || '' });
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [verificationCode, setVerificationCode] = useState('');

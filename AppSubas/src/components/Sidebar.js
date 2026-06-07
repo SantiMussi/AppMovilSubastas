@@ -78,7 +78,7 @@ const MENU_SECTIONS = [
 ];
 
 export function Sidebar({ profile, currentScreen, onNavigate, onClose, onLogout }) {
-  const userName  = [profile?.nombre, profile?.apellido].filter(Boolean).join(' ') || 'Usuario';
+  const userName  = profile ? ([profile?.nombre, profile?.apellido].filter(Boolean).join(' ') || 'Usuario') : 'Invitado';
   const badge     = getBadge(profile?.categoria);
   const avatarUri = profile?.foto || null;
 
@@ -120,18 +120,20 @@ export function Sidebar({ profile, currentScreen, onNavigate, onClose, onLogout 
             </View>
           )}
           {/* Online indicator dot */}
-          <View style={styles.onlineDot} />
+          {profile && <View style={styles.onlineDot} />}
         </View>
 
         <Text style={styles.userName} numberOfLines={1}>{userName}</Text>
 
-        <Pressable 
-          style={[styles.badge, { backgroundColor: badge.bg }]}
-          onPress={() => onNavigate?.('membershipCategories')}
-        >
-          <Text style={[styles.badgeText, { color: badge.text }]}>{badge.label}</Text>
-          <View style={[styles.badgeDot, { backgroundColor: badge.text }]} />
-        </Pressable>
+        {profile && (
+          <Pressable 
+            style={[styles.badge, { backgroundColor: badge.bg }]}
+            onPress={() => onNavigate?.('membershipCategories')}
+          >
+            <Text style={[styles.badgeText, { color: badge.text }]}>{badge.label}</Text>
+            <View style={[styles.badgeDot, { backgroundColor: badge.text }]} />
+          </Pressable>
+        )}
       </View>
 
       {/* ── scrollable menu ── */}
@@ -140,56 +142,74 @@ export function Sidebar({ profile, currentScreen, onNavigate, onClose, onLogout 
         contentContainerStyle={styles.menuContent}
         showsVerticalScrollIndicator={false}
       >
-        {MENU_SECTIONS.map((section, sectionIdx) => (
-          <View key={sectionIdx}>
-            {sectionIdx > 0 && <View style={styles.separator} />}
-            {section.items.map((item) => {
-              const isActive = currentScreen === item.key;
-              return (
-                <Pressable
-                  key={item.key}
-                  style={({ pressed }) => [
-                    styles.menuItem,
-                    isActive && styles.menuItemActive,
-                    pressed && styles.menuItemPressed,
-                  ]}
-                  onPress={() => onNavigate?.(item.key)}
-                >
-                  <View style={styles.menuIconWrap}>
-                    <Ionicons
-                      name={item.icon}
-                      size={19}
-                      color={isActive ? C.white : C.whiteOff}
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.menuLabel,
-                      isActive && styles.menuLabelActive,
+        {MENU_SECTIONS.map((section, sectionIdx) => {
+          // If no profile, only allow auctions
+          const visibleItems = section.items.filter(item => profile || item.key === 'auctions');
+          if (visibleItems.length === 0) return null;
+
+          return (
+            <View key={sectionIdx}>
+              {sectionIdx > 0 && <View style={styles.separator} />}
+              {visibleItems.map((item) => {
+                const isActive = currentScreen === item.key;
+                return (
+                  <Pressable
+                    key={item.key}
+                    style={({ pressed }) => [
+                      styles.menuItem,
+                      isActive && styles.menuItemActive,
+                      pressed && styles.menuItemPressed,
                     ]}
-                    numberOfLines={1}
+                    onPress={() => onNavigate?.(item.key)}
                   >
-                    {item.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        ))}
+                    <View style={styles.menuIconWrap}>
+                      <Ionicons
+                        name={item.icon}
+                        size={19}
+                        color={isActive ? C.white : C.whiteOff}
+                      />
+                    </View>
+                    <Text
+                      style={[
+                        styles.menuLabel,
+                        isActive && styles.menuLabelActive,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          );
+        })}
       </ScrollView>
 
-      {/* ── bottom: logout ── */}
+      {/* ── bottom: logout or login ── */}
       <View style={styles.bottomSection}>
         <View style={styles.separator} />
-        <Pressable
-          style={({ pressed }) => [styles.logoutBtn, pressed && styles.menuItemPressed]}
-          onPress={onLogout}
-        >
-          <View style={styles.menuIconWrap}>
-            <Ionicons name="log-out-outline" size={19} color={C.danger} />
-          </View>
-          <Text style={styles.logoutText}>Cerrar Sesión</Text>
-        </Pressable>
+        {profile ? (
+          <Pressable
+            style={({ pressed }) => [styles.logoutBtn, pressed && styles.menuItemPressed]}
+            onPress={onLogout}
+          >
+            <View style={styles.menuIconWrap}>
+              <Ionicons name="log-out-outline" size={19} color={C.danger} />
+            </View>
+            <Text style={styles.logoutText}>Cerrar Sesión</Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            style={({ pressed }) => [styles.logoutBtn, pressed && styles.menuItemPressed]}
+            onPress={() => onNavigate?.('authChoice')}
+          >
+            <View style={styles.menuIconWrap}>
+              <Ionicons name="log-in-outline" size={19} color={C.gold} />
+            </View>
+            <Text style={[styles.logoutText, { color: C.gold }]}>Iniciar Sesión</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
