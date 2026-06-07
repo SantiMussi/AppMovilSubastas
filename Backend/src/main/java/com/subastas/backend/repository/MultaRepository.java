@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface MultaRepository extends JpaRepository<Multa, Integer> {
     List<Multa> findByUsuarioIdentificador(Integer idUsuario);
+    boolean existsByUsuarioIdentificadorAndEstadoIn(Integer idUsuario, List<String> estados);
 }

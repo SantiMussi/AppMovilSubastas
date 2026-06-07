@@ -21,6 +21,8 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
   const [error, setError] = useState('');
   const [connection, setConnection] = useState('connecting');
   const [bidAmount, setBidAmount] = useState('');
+	const [bidPending, setBidPending] = useState(false);
+  const [bidMessage, setBidMessage] = useState('');
   const [now, setNow] = useState(Date.now());
   const socketRef = useRef(null);
   const reconnectRef = useRef(null);
@@ -73,22 +75,41 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
         return;
       }
       setConnection('connecting');
-      const socket = new WebSocket(toWebSocketUrl(API_BASE, `/ws/auction-items/${validAuctionItemId}`));
+      if (!session?.accessToken) {
+        setConnection('offline');
+        setError('Debes iniciar sesión para ingresar a una sala de subasta.');
+        return;
+      }
+      const socket = new WebSocket(toWebSocketUrl(API_BASE, `/ws/auction-items/${validAuctionItemId}`, session.accessToken));
       socketRef.current = socket;
       socket.onopen = () => setConnection('live');
       socket.onmessage = (event) => {
         try {
-          applySnapshot(JSON.parse(event.data));
+          const payload = JSON.parse(event.data);
+          if (payload.type === 'bid_accepted') {
+            setBidPending(false);
+            setBidMessage('Tu puja fue registrada correctamente.');
+          } else if (payload.type === 'bid_rejected') {
+            setBidPending(false);
+            setError(payload.message || 'La puja fue rechazada.');
+          } else {
+            applySnapshot(payload);
+          }
         } catch (error) {
           console.warn('[Auction room] Invalid live update', error);
         }
       };
       socket.onerror = () => setConnection('offline');
-      socket.onclose = () => {
-        if (!mounted) return;
+      socket.onclose = (event) => {
+				if (!mounted) return;
         setConnection('offline');
-        reconnectRef.current = setTimeout(connect, 3000);
-      };
+				setBidPending(false);
+        if (event.code === 1008) {
+          setError('Esta sesión se cerró porque ingresaste a otra sala de subasta.');
+          return;
+        }
+				reconnectRef.current = setTimeout(connect, 3000);
+			};
     };
     connect();
     return () => {
@@ -96,7 +117,7 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
       clearTimeout(reconnectRef.current);
       socketRef.current?.close();
     };
-  }, [applySnapshot, validAuctionItemId]);
+  }, [applySnapshot, session?.accessToken, validAuctionItemId]);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -115,6 +136,33 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
     } else {
       loadSnapshot().catch((loadError) => setError(loadError.message || 'No se pudo actualizar la sala.'));
     }
+  };
+
+	const placeBid = () => {
+    if (bidPending) return;
+    const amount = Number(String(bidAmount).replace(',', '.'));
+    const minimum = Number(snapshot?.topBid?.nextMinBid);
+    const maximum = Number(snapshot?.topBid?.nextMaxBid);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError('Ingresa un importe válido para pujar.');
+      return;
+    }
+    if (Number.isFinite(minimum) && amount < minimum) {
+      setError(`La puja mínima permitida es ${minimum.toFixed(2)}.`);
+      return;
+    }
+    if (snapshot?.topBid?.appliesCap && Number.isFinite(maximum) && amount > maximum) {
+      setError(`La puja máxima permitida es ${maximum.toFixed(2)}.`);
+      return;
+    }
+    if (socketRef.current?.readyState !== WebSocket.OPEN) {
+      setError('Espera a que se restablezca la conexión antes de pujar.');
+      return;
+    }
+    setError('');
+    setBidMessage('');
+    setBidPending(true);
+    socketRef.current.send(JSON.stringify({ type: 'place_bid', amount }));
   };
 
   if (loading && !snapshot) {
@@ -170,7 +218,12 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
             style={styles.bidInput}
             accessibilityLabel="Importe de puja"
           />
-          <Pressable style={styles.bidButton} onPress={requestLiveRefresh}><Text style={styles.bidButtonText}>PUJAR AHORA</Text></Pressable>
+          {topBid.appliesCap && topBid.nextMaxBid ? <Text style={styles.bidLimit}>Máximo: {formatMoney(formatGlobalMoney, topBid.nextMaxBid)}</Text> : null}
+          {error ? <Text style={styles.bidError}>{error}</Text> : null}
+          {bidMessage ? <Text style={styles.bidSuccess}>{bidMessage}</Text> : null}
+          <Pressable style={[styles.bidButton, bidPending && styles.bidButtonDisabled]} onPress={placeBid} disabled={bidPending}>
+            <Text style={styles.bidButtonText}>{bidPending ? 'REGISTRANDO PUJA…' : 'PUJAR AHORA'}</Text>
+          </Pressable>
         </View>
 
         <View style={styles.historyHeader}><Text style={styles.historyTitle}>Historial de Pujas</Text><Text style={styles.liveCount}>{bids.length} OFERTAS</Text></View>
@@ -212,6 +265,8 @@ function normalizeSnapshot(payload) {
     topBid: {
       currentBid: topBid?.currentBid || topBid?.pujaActual,
       nextMinBid: topBid?.nextMinBid || topBid?.pujaMinima,
+			nextMaxBid: topBid?.nextMaxBid || topBid?.pujaMaxima,
+      appliesCap: topBid?.appliesCap !== false,
     },
     bids: rawHistory.slice().reverse().map((bid) => ({
       bidId: bid?.bidId || bid?.id,
@@ -234,9 +289,9 @@ function resolveImageUri(uri) {
   return `${resolvedBase.replace(/\/$/, '')}${uri}`;
 }
 
-function toWebSocketUrl(base, path) {
+function toWebSocketUrl(base, path, accessToken) {
   const resolved = base || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8080');
-  return `${resolved.replace(/^http/, 'ws').replace(/\/$/, '')}${path}`;
+  return `${resolved.replace(/^http/, 'ws').replace(/\/$/, '')}${path}?access_token=${encodeURIComponent(accessToken)}`;
 }
 
 function formatMoney(formatter, amount) {
@@ -281,7 +336,11 @@ const styles = StyleSheet.create({
   minimumRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   minimum: { color: '#111', fontSize: 11, fontWeight: '700' },
   bidInput: { height: 38, backgroundColor: '#F1F1F1', paddingHorizontal: 12, color: '#111', fontSize: 12, marginBottom: 11 },
+  bidLimit: { color: '#666', fontSize: 8, marginBottom: 8 },
+  bidError: { color: '#A12222', fontSize: 8, marginBottom: 8 },
+  bidSuccess: { color: '#287A40', fontSize: 8, marginBottom: 8 },
   bidButton: { height: 39, backgroundColor: '#06033E', alignItems: 'center', justifyContent: 'center' },
+  bidButtonDisabled: { opacity: 0.55 },
   bidButtonText: { color: '#FFF', fontFamily: 'serif', fontSize: 8, letterSpacing: 1.2 },
   historyHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
   historyTitle: { color: '#171717', fontFamily: 'serif', fontSize: 14 },

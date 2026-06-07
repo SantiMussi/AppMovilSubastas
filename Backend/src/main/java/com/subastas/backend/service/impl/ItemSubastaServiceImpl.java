@@ -6,11 +6,12 @@ import com.subastas.backend.dto.response.puja.ItemHistorialPujaResponse;
 import com.subastas.backend.dto.response.puja.TopPujaResponse;
 import com.subastas.backend.dto.response.subasta.DetalleItemSubastaResponse;
 import com.subastas.backend.dto.response.subasta.ResumenDueñoResponse;
-import com.subastas.backend.entity.Foto;
 import com.subastas.backend.entity.ItemCatalogo;
 import com.subastas.backend.entity.Pujo;
 import com.subastas.backend.exception.ResourceNotFoundException;
+import com.subastas.backend.entity.Categoria;
 import com.subastas.backend.repository.ItemCatalogoRepository;
+import com.subastas.backend.repository.MonedaSubastaRepository;
 import com.subastas.backend.repository.PujoRepository;
 import com.subastas.backend.service.FotoService;
 import com.subastas.backend.service.ItemSubastaService;
@@ -23,7 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -31,11 +34,13 @@ import java.util.List;
 public class ItemSubastaServiceImpl implements ItemSubastaService {
 
     private static final String DEFAULT_CURRENCY = "ARS";
-    private static final BigDecimal MIN_BID_INCREMENT = new BigDecimal("200.00");
-    private static final BigDecimal MAX_BID_INCREMENT = new BigDecimal("4000.00");
+    private static final BigDecimal MIN_BID_INCREMENT_RATE = new BigDecimal("0.01");
+    private static final BigDecimal MAX_BID_INCREMENT_RATE = new BigDecimal("0.20");
+    private static final Set<Categoria> UNCAPPED_CATEGORIES = Set.of(Categoria.oro, Categoria.platino);
 
     private final ItemCatalogoRepository itemCatalogoRepository;
     private final PujoRepository pujoRepository;
+    private final MonedaSubastaRepository monedaSubastaRepository;
     private final FotoService fotoService;
 
     @Override
@@ -78,13 +83,27 @@ public class ItemSubastaServiceImpl implements ItemSubastaService {
         TopPujaResponse response = new TopPujaResponse();
         response.setAuctionItemId(item.getIdentificador());
         response.setCurrentBid(currentBid);
-        response.setCurrency(DEFAULT_CURRENCY);
+                Integer auctionId = item.getCatalogo() != null && item.getCatalogo().getSubasta() != null
+                ? item.getCatalogo().getSubasta().getIdentificador()
+                : null;
+        response.setCurrency(auctionId == null ? DEFAULT_CURRENCY : monedaSubastaRepository.findById(auctionId)
+                .map(moneda -> moneda.getMoneda())
+                .orElse(DEFAULT_CURRENCY));
         response.setBidderNumber(topBid != null && topBid.getAsistente() != null
                 ? topBid.getAsistente().getNumeroPostor()
                 : null);
-        response.setNextMinBid(currentBid.add(MIN_BID_INCREMENT));
-        response.setNextMaxBid(currentBid.add(MAX_BID_INCREMENT));
-        response.setAppliesCap(true);
+        Categoria category = item.getCatalogo() != null && item.getCatalogo().getSubasta() != null
+                ? item.getCatalogo().getSubasta().getCategoria()
+                : null;
+        boolean appliesCap = category == null || !UNCAPPED_CATEGORIES.contains(category);
+        BigDecimal minimumIncrement = appliesCap
+                ? item.getPrecioBase().multiply(MIN_BID_INCREMENT_RATE).setScale(2, RoundingMode.HALF_UP)
+                : new BigDecimal("0.01");
+        response.setNextMinBid(currentBid.add(minimumIncrement));
+        response.setNextMaxBid(appliesCap
+                ? currentBid.add(item.getPrecioBase().multiply(MAX_BID_INCREMENT_RATE).setScale(2, RoundingMode.HALF_UP))
+                : null);
+        response.setAppliesCap(appliesCap);
         return response;
     }
 

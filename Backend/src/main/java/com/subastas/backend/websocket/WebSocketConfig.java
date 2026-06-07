@@ -14,10 +14,12 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final AuctionWebSocketHandler auctionWebSocketHandler;
+    private final AuctionWebSocketAuthInterceptor auctionWebSocketAuthInterceptor;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(auctionWebSocketHandler, "/ws/auction-items/{auctionItemId}")
+                .addInterceptors(auctionWebSocketAuthInterceptor)
                 .setAllowedOriginPatterns("*");
     }
 }
