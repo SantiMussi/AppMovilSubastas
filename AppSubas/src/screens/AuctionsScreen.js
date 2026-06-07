@@ -252,7 +252,7 @@ function LiveAuctionsShowcase({ auctions, now, onOpenAuction }) {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.liveRail}>
         {featuredAuctions.map((auction) => {
           const imageUri = getAuctionImages(auction)[0];
-          console.log(imageUri)
+
           return (
             <Pressable
               key={`live-feature-${auction.id}`}
@@ -322,14 +322,6 @@ function AuctionCard({ auction, now, onJoin }) {
           source={{ uri: imageUri }}
           style={styles.image}
           resizeMode="cover"
-          onLoad={() => console.log('IMAGE LOADED', imageUri)}
-          onError={(event) => {
-            console.error(
-              'IMAGE FAILED',
-              imageUri,
-              event.nativeEvent?.error
-            );
-          }}
         />
         <View style={[styles.badge, isEnded && styles.badgeEnded, isScheduled && styles.badgeLight]}>
           {isLive && <View style={styles.liveDot} />}

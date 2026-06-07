@@ -39,7 +39,6 @@ export default function AuctionDetailScreen({ auctionItemId, session, onMenuPres
 
     try {
       const response = await fetch(`${API_BASE}/api/v1/auction-items/${auctionItemId}`, { headers });
-      console.log(response)
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
         throw new Error(
