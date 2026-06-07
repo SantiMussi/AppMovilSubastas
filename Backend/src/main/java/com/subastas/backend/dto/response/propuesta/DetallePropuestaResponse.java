@@ -11,7 +11,9 @@ public class DetallePropuestaResponse {
     private String descripcion;
     private String historia;
     private String status;
-    private String rejectionReason;
+    private String feedback;
+    private String moneda;
+    private Boolean aceptadoPorUsuario;
     private AssignedAuctionResponse assignedAuction;
     private BigDecimal basePrice;
     private BigDecimal commission;

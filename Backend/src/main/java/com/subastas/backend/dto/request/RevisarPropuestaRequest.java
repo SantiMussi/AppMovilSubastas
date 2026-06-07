@@ -11,11 +11,13 @@ public class RevisarPropuestaRequest {
     @NotNull(message = "El campo 'aprobar' es obligatorio")
     private Boolean aprobar;
 
-    private String motivoRechazo;
+    private String feedback;
 
     private BigDecimal precioBase;
 
     private BigDecimal comision;
+
+    private String moneda;
 
     private Integer subastaAsignadaId;
 }

@@ -39,10 +39,10 @@ public class Propuesta {
     @Column(length = 500)
     private String origenLicitoUrl;
 
-    @Column(nullable = false, length = 20)
-    private String estado; // en_revision | aceptada | rechazada | terms_pendientes
+    @Column(nullable = false, length = 30)
+    private String estado;
 
-    //Campos que completa el admin
+    // ── Campos que completa el admin ──────────────────────────────────
 
     @Column(precision = 15, scale = 2)
     private BigDecimal precioBase;
@@ -50,12 +50,30 @@ public class Propuesta {
     @Column(precision = 15, scale = 2)
     private BigDecimal comision;
 
+    /** Moneda propuesta por el admin al aprobar (ARS | USD). */
+    @Column(length = 3)
+    private String moneda;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subastaAsignada")
     private Subasta subastaAsignada;
 
-    @Column(length = 500)
-    private String motivoRechazo;
+    /**
+     * Feedback del admin (antes motivoRechazo).
+     * Se mapea a la columna existente para no alterar la tabla.
+     * Se usa tanto en rechazos como en revisiones con notas.
+     */
+    @Column(length = 1000)
+    private String feedback;
+
+    /**
+     * Decisión del usuario sobre los términos propuestos por el admin.
+     * null  → la empresa rechazó el artículo (el usuario nunca respondió)
+     * false → el usuario rechazó el precio propuesto
+     * true  → el usuario aceptó el precio propuesto
+     */
+    @Column
+    private Boolean aceptadoPorUsuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "revisor")

@@ -364,14 +364,15 @@ public class AdminServiceImpl implements AdminService {
             propuesta.setEstado("aceptada");
             propuesta.setPrecioBase(req.getPrecioBase());
             propuesta.setComision(req.getComision());
+            propuesta.setMoneda(req.getMoneda());
             propuesta.setSubastaAsignada(subastaAsignada);
         } else {
-            if (req.getMotivoRechazo() == null || req.getMotivoRechazo().isBlank()) {
+            if (req.getFeedback() == null || req.getFeedback().isBlank()) {
                 throw new IllegalArgumentException(
                         "Para rechazar una propuesta se requiere motivoRechazo");
             }
             propuesta.setEstado("rechazada");
-            propuesta.setMotivoRechazo(req.getMotivoRechazo());
+            propuesta.setFeedback(req.getFeedback());
         }
 
         Empleado revisor = empleadoRepository.findById(empleadoId)

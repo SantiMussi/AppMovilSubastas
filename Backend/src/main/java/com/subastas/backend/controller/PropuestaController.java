@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -39,13 +40,18 @@ public class PropuestaController {
 
     @PatchMapping("/proposals/{proposalId}/terms")
     public ResponseEntity<TerminosPropuestaResponse> terms(@PathVariable Integer proposalId,
-                                                       @Valid @RequestBody TerminosPropuestaRequest request,
-                                                       Principal principal) {
+                                                            @Valid @RequestBody TerminosPropuestaRequest request,
+                                                            Principal principal) {
         return ResponseEntity.ok(proposalService.respondTerms(proposalId, request, principal.getName()));
     }
 
     @GetMapping("/sales/me/proposals/{proposalId}")
     public ResponseEntity<DetallePropuestaResponse> saleResult(@PathVariable Integer proposalId, Principal principal) {
         return ResponseEntity.ok(proposalService.getMine(proposalId, principal.getName()));
+    }
+
+    @GetMapping("/proposals/{proposalId}/photos")
+    public List<String> photos(@PathVariable Integer proposalId, Principal principal) {
+        return proposalService.getPhotos(proposalId, principal.getName());
     }
 }

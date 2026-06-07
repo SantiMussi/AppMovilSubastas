@@ -11,10 +11,15 @@ import com.subastas.backend.entity.*;
 import com.subastas.backend.exception.ConflictException;
 import com.subastas.backend.exception.ResourceNotFoundException;
 import com.subastas.backend.repository.ClienteRepository;
+import com.subastas.backend.repository.FotoPropuestaRepository;
 import com.subastas.backend.repository.PropuestaRepository;
 import com.subastas.backend.repository.UsuarioRepository;
 import com.subastas.backend.service.PropuestaService;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Base64;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +29,7 @@ public class PropuestaServiceImpl implements PropuestaService {
     private final PropuestaRepository propuestaRepository;
     private final UsuarioRepository usuarioRepository;
     private final ClienteRepository clienteRepository;
+    private final FotoPropuestaRepository fotoPropuestaRepository;
 
     @Override
     @Transactional
@@ -88,9 +94,25 @@ public class PropuestaServiceImpl implements PropuestaService {
         if (!"aceptada".equals(p.getEstado())) {
             throw new ConflictException("409 (propuesta aun no validada)");
         }
-        p.setEstado(Boolean.TRUE.equals(request.getAcceptBasePriceAndCommission()) ? "condiciones_aceptadas" : "rechazada");
+
+        boolean acepta = Boolean.TRUE.equals(request.getAcceptBasePriceAndCommission());
+        p.setAceptadoPorUsuario(acepta);
+        p.setEstado(acepta ? "condiciones_aceptadas" : "rechazada");
         propuestaRepository.save(p);
         return new TerminosPropuestaResponse("Condiciones respondidas correctamente", p.getEstado());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getPhotos(Integer proposalId, String email) {
+        Cliente cliente = resolveCliente(email);
+        Propuesta p = propuestaRepository
+            .findByIdentificadorAndClienteIdentificador(proposalId, cliente.getIdentificador())
+            .orElseThrow(() -> new ResourceNotFoundException("Propuesta no encontrada"));
+
+        return fotoPropuestaRepository.findByPropuesta(p).stream()
+            .map(f -> Base64.getEncoder().encodeToString(f.getFoto()))
+            .toList();
     }
 
     private DetallePropuestaResponse mapDetail(Propuesta p) {
@@ -100,7 +122,9 @@ public class PropuestaServiceImpl implements PropuestaService {
         r.setDescripcion(p.getDescripcion());
         r.setHistoria(p.getHistoria());
         r.setStatus(p.getEstado());
-        r.setRejectionReason(p.getMotivoRechazo());
+        r.setFeedback(p.getFeedback());
+        r.setMoneda(p.getMoneda());
+        r.setAceptadoPorUsuario(p.getAceptadoPorUsuario());
         r.setBasePrice(p.getPrecioBase());
         r.setCommission(p.getComision());
         if (p.getSubastaAsignada() != null) {

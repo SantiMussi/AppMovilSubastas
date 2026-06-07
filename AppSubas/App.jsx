@@ -36,6 +36,8 @@ import ProductDetailScreen from "./src/screens/ProductDetailScreen";
 import BiddingHistoryScreen from './src/screens/BiddingHistoryScreen';
 import RegistrationStatusScreen from './src/screens/RegistrationStatusScreen';
 import InsurancePolicyScreen from "./src/screens/InsurancePolicyScreen";
+import MyItemsScreen from './src/screens/MyItemsScreen';
+import ProposalDetailScreen from './src/screens/ProposalDetailScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -88,6 +90,7 @@ function RootNavigator() {
   const [registerParams, setRegisterParams] = useState(null);
   const [paymentPromptVisible, setPaymentPromptVisible] = useState(false);
   const [checkingPayments, setCheckingPayments] = useState(false);
+  const [proposalDetailId, setProposalDetailId] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -327,6 +330,29 @@ function RootNavigator() {
             onMenuPress={openDrawer}
             onGoToMyItems={() => handleNavigate('coleccion')}
             accessToken={session?.accessToken}
+          />
+        );
+
+      case 'misArticulos':
+        return (
+          <MyItemsScreen
+            session={session}
+            onMenuPress={openDrawer}
+            onProductPress={(item) => {
+              setProposalDetailId(item.proposalId);
+              setScreen('proposalDetail');
+            }}
+          />
+        );
+
+      case 'proposalDetail':
+        return (
+          <ProposalDetailScreen
+            proposalId={proposalDetailId}
+            session={session}
+            onBack={() => setScreen('misArticulos')}
+            onMenuPress={openDrawer}
+            onNavigate={(route) => handleNavigate(route)}
           />
         );
 

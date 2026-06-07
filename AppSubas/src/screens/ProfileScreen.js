@@ -184,7 +184,7 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Artículos en{'\n'}Consignación</Text>
-              <Pressable>
+              <Pressable onPress={() => onNavigate('misArticulos')}>
                 <Text style={styles.viewAllText}>VER{'\n'}TODOS ➔</Text>
               </Pressable>
             </View>
