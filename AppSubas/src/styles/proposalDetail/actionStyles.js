@@ -1,4 +1,4 @@
-import { palette } from '../../../constants/palette';
+import { palette } from '../../constants/palette';
 
 export const actionStyles = {
     // ── Botones principales ───────────────────────────────────────────

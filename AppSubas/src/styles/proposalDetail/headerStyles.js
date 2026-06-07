@@ -1,5 +1,5 @@
 import { Dimensions, Platform } from 'react-native';
-import { palette } from '../../../constants/palette';
+import { palette } from '../../constants/palette';
 
 const { width, height } = Dimensions.get('window');
 const serifFont = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
