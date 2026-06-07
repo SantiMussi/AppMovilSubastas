@@ -56,7 +56,14 @@ export default function ProductDetailScreen({ session, productId, onBack }) {
 
     return (
         <View style={styles.container}>
-            <TopBar onMenuPress={onBack} />
+            <View style={styles.headerRow}>
+                <View style={styles.headerLeft}>
+                    <Pressable onPress={onBack} hitSlop={10} style={styles.backButton}>
+                        <Ionicons name="arrow-back" size={24} color="#000" />
+                    </Pressable>
+                    <Text style={styles.headerTitle}>Detalle</Text>
+                </View>
+            </View>
 
             {loading ? (
                 <View style={styles.centerBox}>
@@ -163,6 +170,28 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F7F7F7',
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingTop: 50,
+        paddingHorizontal: 20,
+        paddingBottom: 16,
+        backgroundColor: '#FFF',
+    },
+    headerLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    backButton: {
+        marginRight: 16,
+    },
+    headerTitle: {
+        fontFamily: 'serif',
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#000',
     },
     centerBox: {
         flex: 1,
