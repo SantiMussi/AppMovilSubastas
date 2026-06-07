@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Alert,
   RefreshControl,
   Platform,
+  Modal,
+  Animated
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TopBar } from '../components/TopBar';
@@ -81,6 +83,23 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState(null);
 
+  // Modal State
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
+  // Toast State
+  const [toastMessage, setToastMessage] = useState('');
+  const toastOpacity = useRef(new Animated.Value(0)).current;
+
+  const showToast = (message) => {
+    setToastMessage(message);
+    Animated.sequence([
+      Animated.timing(toastOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.delay(3000),
+      Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start(() => setToastMessage(''));
+  };
+
   const fetchPayments = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
@@ -107,22 +126,14 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
   }, [fetchPayments]);
 
   const handleDelete = (paymentId, tipo) => {
-    const label = tipo === 'cuenta_bancaria' ? 'desvincular esta cuenta' : 'eliminar este medio de pago';
-    Alert.alert(
-      'Confirmar',
-      `¿Está seguro que desea ${label}?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Confirmar',
-          style: 'destructive',
-          onPress: () => performDelete(paymentId),
-        },
-      ],
-    );
+    setItemToDelete({ id: paymentId, tipo });
+    setIsDeleteModalVisible(true);
   };
 
-  const performDelete = async (paymentId) => {
+  const performDelete = async () => {
+    if (!itemToDelete) return;
+    const { id: paymentId, tipo } = itemToDelete;
+    setIsDeleteModalVisible(false);
     setDeletingId(paymentId);
     try {
       const response = await fetch(`${API_BASE}/api/v1/users/me/payments/${paymentId}`, {
@@ -131,6 +142,7 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
       });
       if (response.ok || response.status === 204) {
         setPayments((prev) => prev.filter((p) => p.id !== paymentId));
+        showToast(tipo === 'cuenta_bancaria' ? 'Cuenta desvinculada con éxito' : 'Método de pago eliminado con éxito');
       } else if (response.status === 409) {
         Alert.alert('No se puede eliminar', 'Este medio de pago está asociado a una operación activa.');
       } else {
@@ -140,6 +152,7 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
       Alert.alert('Error', 'Error de conexión al eliminar.');
     } finally {
       setDeletingId(null);
+      setItemToDelete(null);
     }
   };
 
@@ -361,6 +374,47 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
           <View style={{ height: 40 }} />
         </ScrollView>
       )}
+
+      {/* Delete Modal */}
+      <Modal
+        visible={isDeleteModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsDeleteModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Ionicons name="warning-outline" size={60} color="#D32F2F" style={styles.modalIcon} />
+            <Text style={styles.modalTitle}>¡Atención!</Text>
+            <Text style={styles.modalMessage}>
+              ¿Estás seguro que quieres eliminar el método?{'\n'}¡Esta acción es irreversible!
+            </Text>
+            <View style={styles.modalButtonsRow}>
+              <Pressable
+                style={[styles.modalButton, styles.modalCancelBtn]}
+                onPress={() => setIsDeleteModalVisible(false)}
+              >
+                <Text style={styles.modalCancelText}>CANCELAR</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.modalButton, styles.modalConfirmBtn]}
+                onPress={performDelete}
+              >
+                <Text style={styles.modalConfirmText}>ELIMINAR MÉTODO</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Toast Notification */}
+      {toastMessage ? (
+        <Animated.View style={[styles.toastContainer, { opacity: toastOpacity }]}>
+          <Ionicons name="checkmark-circle" size={24} color="#FFF" style={{ marginRight: 8 }} />
+          <Text style={styles.toastText}>{toastMessage}</Text>
+        </Animated.View>
+      ) : null}
+
     </View>
   );
 
@@ -706,5 +760,98 @@ const styles = StyleSheet.create({
     color: '#AAA',
     textAlign: 'center',
     lineHeight: 18,
+  },
+
+  /* ── Modal ── */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '85%',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  modalIcon: {
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontFamily: 'serif',
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#D32F2F',
+    marginBottom: 12,
+  },
+  modalMessage: {
+    fontSize: 14,
+    color: '#555',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  modalButtonsRow: {
+    width: '100%',
+    flexDirection: 'column',
+  },
+  modalButton: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  modalCancelBtn: {
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#D32F2F',
+  },
+  modalCancelText: {
+    color: '#D32F2F',
+    fontWeight: '700',
+    fontSize: 14,
+    letterSpacing: 1,
+  },
+  modalConfirmBtn: {
+    backgroundColor: '#990000',
+    marginBottom: 0,
+  },
+  modalConfirmText: {
+    color: '#FFF',
+    fontWeight: '700',
+    fontSize: 14,
+    letterSpacing: 1,
+  },
+
+  /* ── Toast ── */
+  toastContainer: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#333',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
+  },
+  toastText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

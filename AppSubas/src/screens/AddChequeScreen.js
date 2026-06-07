@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { TopBar } from '../components/TopBar';
 import { Colors } from '../themes/colors';
 
@@ -25,24 +26,45 @@ export default function AddChequeScreen({ session, onMenuPress, onBack, onNaviga
   const [documentName, setDocumentName] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleUploadPress = () => {
-    // Simulate file selection — in production this would use expo-document-picker
+  const handleUploadPress = async () => {
     Alert.alert(
       'Seleccionar documento',
-      'Elija el origen del archivo',
+      'Elija el origen de la imagen',
       [
         {
           text: 'Cámara',
-          onPress: () => {
-            setDocumentUri('camera_capture_placeholder');
-            setDocumentName('foto_cheque.jpg');
+          onPress: async () => {
+            const permission = await ImagePicker.requestCameraPermissionsAsync();
+            if (!permission.granted) {
+              Alert.alert('Permiso denegado', 'Se necesita permiso para usar la cámara');
+              return;
+            }
+            const result = await ImagePicker.launchCameraAsync({
+              allowsEditing: true,
+              quality: 0.8,
+            });
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+              setDocumentUri(result.assets[0].uri);
+              setDocumentName(result.assets[0].uri.split('/').pop() || 'foto_cheque.jpg');
+            }
           },
         },
         {
-          text: 'Galería / Archivos',
-          onPress: () => {
-            setDocumentUri('file_picker_placeholder');
-            setDocumentName('cheque_escaneado.pdf');
+          text: 'Galería',
+          onPress: async () => {
+            const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!permission.granted) {
+              Alert.alert('Permiso denegado', 'Se necesita permiso para acceder a la galería');
+              return;
+            }
+            const result = await ImagePicker.launchImageLibraryAsync({
+              allowsEditing: true,
+              quality: 0.8,
+            });
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+              setDocumentUri(result.assets[0].uri);
+              setDocumentName(result.assets[0].uri.split('/').pop() || 'cheque_escaneado.jpg');
+            }
           },
         },
         { text: 'Cancelar', style: 'cancel' },

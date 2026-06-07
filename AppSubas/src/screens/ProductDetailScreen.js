@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCurrency } from '../context/CurrencyContext';
+import { TopBar } from '../components/TopBar';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
@@ -55,7 +56,7 @@ export default function ProductDetailScreen({ session, productId, onBack }) {
 
     return (
         <View style={styles.container}>
-            <DetailTopBar onBack={onBack} currency={currency} />
+            <TopBar onMenuPress={onBack} />
 
             {loading ? (
                 <View style={styles.centerBox}>
@@ -96,25 +97,6 @@ export default function ProductDetailScreen({ session, productId, onBack }) {
     );
 }
 
-function DetailTopBar({ onBack, currency }) {
-    return (
-        <View style={styles.topBar}>
-            <Pressable onPress={onBack} hitSlop={10} style={styles.menuButton} accessibilityLabel="Volver">
-                <Ionicons name="menu-outline" size={22} color="#111111" />
-            </Pressable>
-            <View style={styles.brandWrap}>
-                <Text style={styles.brandIcon}>◇</Text>
-                <View>
-                    <Text style={styles.brandText}>VANTAGE</Text>
-                    <Text style={styles.brandSub}>FINE AUCTIONS</Text>
-                </View>
-            </View>
-            <View style={styles.currencyPill}>
-                <Text style={styles.currencyText}>{currency || 'USD'}</Text>
-            </View>
-        </View>
-    );
-}
 
 function InfoSection({ title, children }) {
     return (
@@ -181,62 +163,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F7F7F7',
-    },
-    topBar: {
-        height: 76,
-        paddingTop: 16,
-        paddingHorizontal: 18,
-        backgroundColor: '#FFFFFF',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottomWidth: 1,
-        borderBottomColor: '#EFEFEF',
-    },
-    menuButton: {
-        width: 32,
-        height: 32,
-        justifyContent: 'center',
-    },
-    brandWrap: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginLeft: 8,
-        flex: 1,
-    },
-    brandIcon: {
-        color: '#C5A059',
-        fontSize: 22,
-        marginRight: 5,
-        lineHeight: 22,
-    },
-    brandText: {
-        color: '#C5A059',
-        fontFamily: 'serif',
-        fontSize: 14,
-        fontWeight: '900',
-        letterSpacing: 0.5,
-        lineHeight: 15,
-    },
-    brandSub: {
-        color: '#C5A059',
-        fontSize: 5.5,
-        fontWeight: '900',
-        letterSpacing: 1.1,
-        lineHeight: 7,
-    },
-    currencyPill: {
-        minWidth: 64,
-        height: 31,
-        backgroundColor: '#F2F2F2',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    currencyText: {
-        color: '#111111',
-        fontSize: 10,
-        fontWeight: '800',
-        letterSpacing: 0.5,
     },
     centerBox: {
         flex: 1,

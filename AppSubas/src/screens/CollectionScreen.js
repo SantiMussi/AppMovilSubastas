@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCurrency } from '../context/CurrencyContext';
+import { TopBar } from '../components/TopBar';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 const { width } = Dimensions.get('window');
@@ -70,22 +71,7 @@ export default function CollectionScreen({ session, onMenuPress, onOpenProduct }
 
     return (
         <View style={styles.container}>
-            <View style={styles.headerRow}>
-                <View style={styles.headerLeft}>
-                    <Pressable onPress={onMenuPress} hitSlop={10} style={styles.iconButton} accessibilityLabel="Abrir menú">
-                        <Ionicons name="menu-outline" size={24} color="#111111" />
-                    </Pressable>
-                    <Text style={styles.headerTitle}>Mi Colección</Text>
-                </View>
-                <Pressable
-                    onPress={() => setFilterOpen(true)}
-                    hitSlop={10}
-                    style={styles.iconButton}
-                    accessibilityLabel="Filtrar colección"
-                >
-                    <Ionicons name="filter-outline" size={22} color="#111111" />
-                </Pressable>
-            </View>
+            <TopBar onMenuPress={onMenuPress} />
 
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
@@ -94,6 +80,17 @@ export default function CollectionScreen({ session, onMenuPress, onOpenProduct }
                     <RefreshControl refreshing={refreshing} onRefresh={() => loadCollection({ showRefresh: true })} tintColor="#C5A059" />
                 }
             >
+                <View style={styles.pageHeader}>
+                    <Text style={styles.pageTitle}>Mi Colección</Text>
+                    <Pressable
+                        onPress={() => setFilterOpen(true)}
+                        hitSlop={10}
+                        style={styles.filterBtn}
+                        accessibilityLabel="Filtrar colección"
+                    >
+                        <Ionicons name="filter-outline" size={20} color="#111111" />
+                    </Pressable>
+                </View>
                 <View style={styles.portfolioCard}>
                     <Text style={styles.portfolioLabel}>VALOR DEL PORTFOLIO</Text>
                     <Text style={styles.portfolioValue}>{formatGlobalMoney(collection?.portfolioValue || 0)}</Text>
@@ -169,7 +166,7 @@ function SortModal({ visible, selected, onClose, onSelect }) {
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
             <Pressable style={styles.modalBackdrop} onPress={onClose}>
-                <Pressable style={styles.modalCard}>
+                <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
                     <Text style={styles.modalTitle}>Ordenar colección</Text>
                     {SORT_OPTIONS.map((option) => {
                         const active = selected === option.key;
@@ -243,20 +240,16 @@ function getStatusStyle(status) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#FFFFFF' },
-    headerRow: {
+    pageHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingTop: 18,
-        paddingHorizontal: 18,
-        paddingBottom: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
-        backgroundColor: '#FFFFFF',
+        marginTop: 18,
+        marginBottom: 4,
     },
-    headerLeft: { flexDirection: 'row', alignItems: 'center' },
+    pageTitle: { fontFamily: 'serif', fontSize: 24, fontWeight: '900', color: '#111111' },
+    filterBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F0F0F0', borderRadius: 18 },
     iconButton: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
-    headerTitle: { fontFamily: 'serif', fontSize: 18, fontWeight: '900', color: '#111111', marginLeft: 8 },
     scrollContent: { paddingHorizontal: HORIZONTAL_PADDING, paddingBottom: 34 },
     portfolioCard: {
         marginTop: 30,
