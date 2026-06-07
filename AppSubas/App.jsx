@@ -35,6 +35,7 @@ import CollectionScreen from './src/screens/CollectionScreen';
 import ProductDetailScreen from "./src/screens/ProductDetailScreen";
 import BiddingHistoryScreen from './src/screens/BiddingHistoryScreen';
 import RegistrationStatusScreen from './src/screens/RegistrationStatusScreen';
+import InsurancePolicyScreen from "./src/screens/InsurancePolicyScreen";
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -505,6 +506,17 @@ function RootNavigator() {
               onBack={goBack}
               onNavigate={handleNavigate}
             />
+          );
+        }
+
+        if (screen.startsWith('insurancePolicy:')) {
+          const productId = screen.split(':')[1];
+          return (
+              <InsurancePolicyScreen
+                  session={session}
+                  productId={productId}
+                  onBack={goBack}
+              />
           );
         }
 
