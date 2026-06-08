@@ -266,7 +266,7 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
                         {renderFeedback()}
                         <TouchableOpacity
                             style={styles.btnPoliza}
-                            onPress={() => onNavigate?.('policy', { proposalId })}
+                            onPress={() => onNavigate?.(`insurancePolicy:${proposalId}`)}
                         >
                             <Text style={styles.btnPolizaText}>CONSULTAR PÓLIZA</Text>
                         </TouchableOpacity>
