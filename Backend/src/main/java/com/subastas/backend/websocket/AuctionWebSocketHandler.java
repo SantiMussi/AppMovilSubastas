@@ -2,10 +2,12 @@ package com.subastas.backend.websocket;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.subastas.backend.dto.request.RealizarPujaRequest;
+import com.subastas.backend.dto.response.puja.SubastaCerradaResponse;
 import com.subastas.backend.dto.response.puja.PujaAceptadaResponse;
 import com.subastas.backend.dto.response.puja.PujaRechazadaResponse;
 import com.subastas.backend.dto.response.puja.PujasEnVivoSnapshotResponse;
 import com.subastas.backend.entity.Pujo;
+import com.subastas.backend.event.SubastaCerradaEvent;
 import com.subastas.backend.exception.PujaRechazadaException;
 import com.subastas.backend.service.ItemSubastaService;
 import com.subastas.backend.service.PujaService;
@@ -13,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -94,6 +98,24 @@ public class AuctionWebSocketHandler extends TextWebSocketHandler {
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
         removeSession(session);
         if (session.isOpen()) session.close(CloseStatus.SERVER_ERROR);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void closeAuctionRooms(SubastaCerradaEvent event) {
+        sessions.values().forEach(session -> {
+            try {
+                Integer itemId = auctionItemId(session).orElse(null);
+                if (itemId == null || !event.auctionId().equals(itemSubastaService.obtenerDetalle(itemId).getAuctionId())) return;
+
+                send(session, new SubastaCerradaResponse("auction_closed", Instant.now(), event.auctionId(), itemId,
+                        event.status(), true, false));
+                removeSession(session);
+                if (session.isOpen()) session.close(CloseStatus.NORMAL.withReason("Auction closed"));
+            } catch (Exception exception) {
+                log.debug("Unable to close auction room session {}", session.getId(), exception);
+                removeSession(session);
+            }
+        });
     }
 
     @Scheduled(fixedDelayString = "${app.auction.live-refresh-ms:10000}")

@@ -11,10 +11,12 @@ import com.subastas.backend.dto.response.subasta.CrearSubastaResponse;
 import com.subastas.backend.entity.*;
 import com.subastas.backend.exception.ConflictException;
 import com.subastas.backend.exception.ResourceNotFoundException;
+import com.subastas.backend.event.SubastaCerradaEvent;
 import com.subastas.backend.repository.*;
 import com.subastas.backend.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +45,7 @@ public class AdminServiceImpl implements AdminService {
     private final EmpleadoRepository empleadoRepository;
     private final MultaRepository multaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     @Value("${app.empresa.cliente-id:1}")
@@ -102,6 +105,7 @@ public class AdminServiceImpl implements AdminService {
         // "carrada" porque el profe puso en la BBDD original así en vez de "cerrada"
         subasta.setEstado("carrada");
         subastaRepository.save(subasta);
+        eventPublisher.publishEvent(new SubastaCerradaEvent(subastaId, subasta.getEstado()));
 
         return CerrarSubastaResponse.builder()
                 .mensaje("Subasta cerrada correctamente")

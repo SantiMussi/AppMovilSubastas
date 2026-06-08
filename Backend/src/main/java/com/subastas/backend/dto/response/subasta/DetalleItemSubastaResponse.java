@@ -8,6 +8,10 @@ import java.util.List;
 @Data
 public class DetalleItemSubastaResponse {
     private Integer auctionItemId;
+    private Integer auctionId;
+    private String auctionStatus;
+    private Boolean auctionClosed;
+    private Boolean biddingOpen;
     private Integer productId;
     private String description;
     private String historia;

@@ -7,6 +7,7 @@ import com.subastas.backend.dto.response.puja.TopPujaResponse;
 import com.subastas.backend.dto.response.subasta.DetalleItemSubastaResponse;
 import com.subastas.backend.dto.response.subasta.ResumenDueñoResponse;
 import com.subastas.backend.entity.ItemCatalogo;
+import com.subastas.backend.entity.Subasta;
 import com.subastas.backend.entity.Pujo;
 import com.subastas.backend.exception.ResourceNotFoundException;
 import com.subastas.backend.entity.Categoria;
@@ -52,6 +53,16 @@ public class ItemSubastaServiceImpl implements ItemSubastaService {
         response.setPrecioBase(item.getPrecioBase());
         response.setComision(item.getComision());
         response.setSubastado(esSi(item.getSubastado()));
+        
+        Subasta auction = item.getCatalogo() == null ? null : item.getCatalogo().getSubasta();
+        if (auction != null) {
+            boolean auctionClosed = !"abierta".equalsIgnoreCase(auction.getEstado());
+            response.setAuctionId(auction.getIdentificador());
+            response.setAuctionStatus(auction.getEstado());
+            response.setAuctionClosed(auctionClosed);
+            response.setBiddingOpen(!auctionClosed && !response.getSubastado());
+        }
+
 
         if (item.getProducto() != null) {
             response.setProductId(item.getProducto().getIdentificador());

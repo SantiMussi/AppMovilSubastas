@@ -43,10 +43,13 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
   const [closedEventReceived, setClosedEventReceived] = useState(false);
   const closedRefreshRef = useRef(false);
   const resultCheckedRef = useRef(false);
+  const forceAuctionClosedRef = useRef(false);
   const socketRef = useRef(null);
   const reconnectRef = useRef(null);
   const parentAuctionIdRef = useRef(null);
   const closurePollPendingRef = useRef(false);
+  const closurePollErrorRef = useRef(false);
+  const auctionClosedRef = useRef(false);
   const { formatGlobalMoney } = useCurrency();
   const validAuctionItemId = normalizeAuctionItemId(auctionItemId);
 
@@ -64,12 +67,18 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
   const applySnapshot = useCallback((payload) => {
     const normalized = normalizeSnapshot(payload, Date.now());
     if (normalized.detail.auctionId) parentAuctionIdRef.current = normalized.detail.auctionId;
+    if (forceAuctionClosedRef.current) {
+      normalized.detail.auctionClosed = true;
+      normalized.detail.biddingOpen = false;
+    }
     setSnapshot(normalized);
     setError('');
     setLoading(false);
   }, []);
 
   const applyAuctionClosedEvent = useCallback((payload) => {
+    auctionClosedRef.current = true;
+    forceAuctionClosedRef.current = true;
     setSnapshot((current) => ({
       ...(current || normalizeSnapshot({}, Date.now())),
       detail: {
@@ -87,7 +96,17 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
     setBidPending(false);
     setError('');
     setLoading(false);
-  }, []);
+    resultCheckedRef.current = true;
+    setResultModalVisible(true);
+    (async () => {
+      try {
+        const sale = await loadWinningSale();
+        if (sale) await loadInvoice(sale);
+      } catch (e) {
+        console.warn('[Auction room] could not load winning sale/invoice on close event', e);
+      }
+    })();
+  }, [loadInvoice, loadWinningSale]);
 
   const loadSnapshot = useCallback(async () => {
     if (!validAuctionItemId) {
@@ -202,7 +221,10 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
       const parentAuction = auctions.find((auction) => String(auction?.id || auction?.identificador || auction?.auctionId) === String(parentAuctionId));
       if (parentAuction && isClosedAuctionStatus(parentAuction)) applyAuctionClosedEvent(parentAuction);
     } catch (pollError) {
-      console.warn('[Auction room] Could not check parent auction status', pollError);
+      if (!closurePollErrorRef.current) {
+        closurePollErrorRef.current = true;
+        console.warn('[Auction room] Could not check parent auction status', pollError);
+      }
     } finally {
       closurePollPendingRef.current = false;
     }
@@ -256,6 +278,7 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
       if (!mounted) return;
         setConnection('offline');
 			  setBidPending(false);
+        if (event.code === 1000 || auctionClosedRef.current) return;
         if (event.code === 1008) {
           setError('Esta sesión se cerró porque ingresaste a otra sala de subasta.');
           return;
@@ -285,7 +308,10 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
   useEffect(() => {
     closedRefreshRef.current = false;
     resultCheckedRef.current = false;
+    forceAuctionClosedRef.current = false;
     parentAuctionIdRef.current = null;
+    closurePollErrorRef.current = false;
+    auctionClosedRef.current = false;
     setClosedEventReceived(false);
     setResultModalVisible(false);
     setWinningSale(null);
@@ -914,7 +940,7 @@ const styles = StyleSheet.create({
   empty: { color: '#777', fontSize: 10, paddingVertical: 22, textAlign: 'center' },
   historyButton: { height: 31, borderWidth: 1, borderColor: '#D8CEB8', alignItems: 'center', justifyContent: 'center' },
   historyButtonText: { color: '#7B5D1C', fontSize: 6, letterSpacing: 0.5 },
-modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', padding: 24 },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', padding: 24 },
   historyModalCard: { backgroundColor: '#FFF', padding: 26, maxHeight: '88%', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 24, elevation: 8 },
   modalTitle: { color: '#111', fontFamily: 'serif', fontSize: 21, fontWeight: '700' },
   modalLot: { color: '#8B691B', fontSize: 8, letterSpacing: 1, marginTop: 6, marginBottom: 10 },
