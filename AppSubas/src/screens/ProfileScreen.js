@@ -41,12 +41,27 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
         }
         if (proposalsRes.ok) {
           const proposals = await proposalsRes.json();
-          data.consignaciones = proposals.items?.map(p => ({
-            titulo: p.titulo,
-            subtitulo: `Estado: ${p.status.toUpperCase()}`,
-            ubicacion: 'Depósito Central',
-            valorEstimado: 'A definir'
-          })) || [];
+          const items = proposals.items || [];
+          
+          data.consignaciones = await Promise.all(items.map(async p => {
+            let imagen = null;
+            try {
+              const res = await fetch(`${API_BASE}/api/v1/proposals/${p.proposalId}/photos`, { headers: { Authorization: `Bearer ${session?.accessToken}` } });
+              if (res.ok) {
+                const photos = await res.json();
+                if (Array.isArray(photos) && photos.length > 0) {
+                  imagen = `data:image/jpeg;base64,${photos[0]}`;
+                }
+              }
+            } catch (err) {}
+            return {
+              titulo: p.titulo,
+              subtitulo: `Estado: ${p.status.toUpperCase()}`,
+              ubicacion: 'Depósito Central',
+              valorEstimado: 'A definir',
+              imagen: imagen
+            };
+          }));
         }
 
         setProfile(prev => ({ ...prev, ...data }));
