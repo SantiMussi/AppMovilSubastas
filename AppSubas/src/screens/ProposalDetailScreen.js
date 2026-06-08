@@ -51,17 +51,6 @@ function authHeader(session) {
     return { Authorization: `Bearer ${session?.accessToken}` };
 }
 
-async function readApiError(response, fallback) {
-    const payload = await safeJson(response);
-    if (payload?.message) return payload.message;
-    if (payload?.error) return payload.error;
-
-    const validationMessage = payload && Object.entries(payload)
-        .find(([key, value]) => !['status', 'timestamp', 'path'].includes(key) && typeof value === 'string')?.[1];
-
-    return validationMessage || `${fallback} (${response.status})`;
-}
-
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function ProposalDetailScreen({ proposalId, session, onBack, onMenuPress, onNavigate }) {
