@@ -16,6 +16,7 @@ import { useCurrency } from '../context/CurrencyContext';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=900&auto=format&fit=crop';
+const CLOSED_AUCTION_STATUSES = ['cerrada', 'carrada', 'cerrado', 'closed', 'finalizada', 'finalizado', 'finished'];
 
 export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress }) {
   const [snapshot, setSnapshot] = useState(null);
@@ -39,10 +40,13 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
   const [checkoutMessage, setCheckoutMessage] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState('envio');
   const [shippingAddress, setShippingAddress] = useState('');
+  const [closedEventReceived, setClosedEventReceived] = useState(false);
   const closedRefreshRef = useRef(false);
   const resultCheckedRef = useRef(false);
   const socketRef = useRef(null);
   const reconnectRef = useRef(null);
+  const parentAuctionIdRef = useRef(null);
+  const closurePollPendingRef = useRef(false);
   const { formatGlobalMoney } = useCurrency();
   const validAuctionItemId = normalizeAuctionItemId(auctionItemId);
 
@@ -58,7 +62,29 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
 
 
   const applySnapshot = useCallback((payload) => {
-    setSnapshot(normalizeSnapshot(payload, Date.now()));
+    const normalized = normalizeSnapshot(payload, Date.now());
+    if (normalized.detail.auctionId) parentAuctionIdRef.current = normalized.detail.auctionId;
+    setSnapshot(normalized);
+    setError('');
+    setLoading(false);
+  }, []);
+
+  const applyAuctionClosedEvent = useCallback((payload) => {
+    setSnapshot((current) => ({
+      ...(current || normalizeSnapshot({}, Date.now())),
+      detail: {
+        ...(current?.detail || {}),
+        auctionClosed: true,
+        biddingOpen: false,
+      },
+      topBid: {
+        ...(current?.topBid || {}),
+        currentBid: payload?.winningAmount ?? current?.topBid?.currentBid,
+        bidderNumber: payload?.winningBidderNumber ?? current?.topBid?.bidderNumber,
+      },
+    }));
+    setClosedEventReceived(true);
+    setBidPending(false);
     setError('');
     setLoading(false);
   }, []);
@@ -149,6 +175,44 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
     loadPayments();
   }, [loadPayments]);
 
+  const checkParentAuctionClosed = useCallback(async () => {
+    if (!validAuctionItemId || closedEventReceived || closurePollPendingRef.current) return;
+    closurePollPendingRef.current = true;
+    try {
+      const auctionsResponse = await fetch(`${API_BASE}/api/v1/auctions`, { headers });
+      if (!auctionsResponse.ok) return;
+      const auctions = normalizeCollection(await auctionsResponse.json().catch(() => null));
+      let parentAuctionId = parentAuctionIdRef.current;
+
+      if (!parentAuctionId) {
+        for (const auction of auctions) {
+          const auctionId = auction?.id || auction?.identificador || auction?.auctionId;
+          if (!auctionId) continue;
+          const catalogResponse = await fetch(`${API_BASE}/api/v1/auctions/${auctionId}/catalog`, { headers });
+          if (!catalogResponse.ok) continue;
+          const catalog = await catalogResponse.json().catch(() => null);
+          if (collectionContainsAuctionItem(catalog, validAuctionItemId)) {
+            parentAuctionId = auctionId;
+            parentAuctionIdRef.current = auctionId;
+            break;
+          }
+        }
+      }
+
+      const parentAuction = auctions.find((auction) => String(auction?.id || auction?.identificador || auction?.auctionId) === String(parentAuctionId));
+      if (parentAuction && isClosedAuctionStatus(parentAuction)) applyAuctionClosedEvent(parentAuction);
+    } catch (pollError) {
+      console.warn('[Auction room] Could not check parent auction status', pollError);
+    } finally {
+      closurePollPendingRef.current = false;
+    }
+  }, [applyAuctionClosedEvent, closedEventReceived, headers, validAuctionItemId]);
+
+  useEffect(() => {
+    checkParentAuctionClosed();
+    const timer = setInterval(checkParentAuctionClosed, 5000);
+    return () => clearInterval(timer);
+  }, [checkParentAuctionClosed]);
 
   useEffect(() => {
     let mounted = true;
@@ -169,15 +233,17 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
       socket.onmessage = (event) => {
         try {
           const payload = JSON.parse(event.data);
-          console.log(payload)
-          if (payload.type === 'bid_accepted') {
+          const eventType = normalizeEventType(payload?.type);
+          if (eventType === 'bid_accepted') {
             setBidPending(false);
             setBidMessage('Tu puja fue registrada correctamente.');
             loadSnapshot().catch(() => {});
-          } else if (payload.type === 'bid_rejected') {
-            console.log(payload)
+          } else if (eventType === 'bid_rejected') {
             setBidPending(false);
             setError(payload.message || 'La puja fue rechazada.');
+          } else if (isAuctionClosedPayload(payload, eventType)) {
+            applyAuctionClosedEvent(payload);
+            loadSnapshot().catch(() => {});
           } else {
             applySnapshot(payload);
           }
@@ -203,7 +269,7 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
       clearTimeout(reconnectRef.current);
       socketRef.current?.close();
     };
-  }, [applySnapshot, loadSnapshot, session?.accessToken, validAuctionItemId]);
+  }, [applyAuctionClosedEvent, applySnapshot, loadSnapshot, session?.accessToken, validAuctionItemId]);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -216,9 +282,18 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
     }
   }, [bidAmount, snapshot?.topBid?.nextMinBid]);
 
+  useEffect(() => {
+    closedRefreshRef.current = false;
+    resultCheckedRef.current = false;
+    parentAuctionIdRef.current = null;
+    setClosedEventReceived(false);
+    setResultModalVisible(false);
+    setWinningSale(null);
+    setInvoice(null);
+  }, [validAuctionItemId]);
+
   const serverNow = now + (snapshot?.serverOffsetMs || 0);
-  const auctionClosed = Boolean(snapshot?.detail?.auctionClosed)
-    || (snapshot?.detail?.endsAt && new Date(snapshot.detail.endsAt).getTime() <= serverNow);
+  const auctionClosed = closedEventReceived || Boolean(snapshot?.detail?.auctionClosed) || (snapshot?.detail?.endsAt && new Date(snapshot.detail.endsAt).getTime() <= serverNow);
   const biddingOpen = snapshot?.detail?.biddingOpen !== false && !auctionClosed;
 
   useEffect(() => {
@@ -230,9 +305,9 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
   useEffect(() => {
     if (!auctionClosed || resultCheckedRef.current || !snapshot) return;
     resultCheckedRef.current = true;
+    setResultModalVisible(true);
     (async () => {
       const sale = await loadWinningSale();
-      setResultModalVisible(true);
       if (sale) await loadInvoice(sale);
     })();
   }, [auctionClosed, loadInvoice, loadWinningSale, snapshot]);
@@ -618,6 +693,31 @@ function SummaryRow({ label, value, strong }) {
   );
 }
 
+function normalizeEventType(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function isAuctionClosedPayload(payload, eventType = normalizeEventType(payload?.type)) {
+  if (['lot_closed', 'auction_closed', 'auction_item_closed'].includes(eventType)) return true;
+  const detail = payload?.detail || payload?.item || payload || {};
+  return detail?.auctionClosed === true
+    || detail?.subastado === true
+    || isClosedAuctionStatus(detail);
+}
+
+function isClosedAuctionStatus(detail) {
+  const status = normalizeEventType(
+    detail?.auctionStatus
+    || detail?.status
+    || detail?.estado
+    || detail?.auction?.status
+    || detail?.auction?.estado
+    || detail?.subasta?.status
+    || detail?.subasta?.estado
+  );
+  return CLOSED_AUCTION_STATUSES.includes(status);
+}
+
 function normalizeAuctionItemId(value) {
   const normalized = String(value ?? '').trim();
   return /^[1-9]\d*$/.test(normalized) ? normalized : null;
@@ -630,11 +730,12 @@ function normalizeSnapshot(payload, receivedAt) {
   const images = asArray(detailData?.imagenes ?? detailData?.images);
   const serverTimestamp = payload?.generatedAt || detailData?.serverTime;
   const parsedServerTime = serverTimestamp ? new Date(serverTimestamp).getTime() : NaN;
-  const status = String(detailData?.auctionStatus || detailData?.estado || '').toLowerCase();
-  const isClosedStatus = ['cerrada', 'closed', 'finalizada', 'finished'].includes(status);
+  const status = normalizeEventType(detailData?.auctionStatus || detailData?.status || detailData?.estado);
+  const isClosedStatus = isClosedAuctionStatus(detailData);
   return {
     serverOffsetMs: Number.isFinite(parsedServerTime) ? parsedServerTime - receivedAt : 0,
     detail: {
+      auctionId: detailData?.auctionId || detailData?.subastaId || detailData?.auction?.id || detailData?.subasta?.id,
       title: detailData?.title || detailData?.nombre || detailData?.description || detailData?.descripcion || `Lote #${detailData?.auctionItemId || ''}`,
       lotNumber: detailData?.lotNumber || detailData?.numeroLote || detailData?.auctionItemId || '—',
       basePrice: detailData?.basePrice || detailData?.precioBase,
@@ -661,6 +762,13 @@ function normalizeSnapshot(payload, receivedAt) {
     })),
   };
 }
+
+function collectionContainsAuctionItem(payload, auctionItemId) {
+  const items = normalizeCollection(payload);
+  if (items.some((item) => String(item?.auctionItemId || item?.itemSubastaId || item?.id) === String(auctionItemId))) return true;
+  return items.some((catalog) => collectionContainsAuctionItem(catalog?.items || catalog?.data, auctionItemId));
+}
+
 
 function normalizeCollection(payload) {
   if (Array.isArray(payload)) return payload;
@@ -703,7 +811,7 @@ function resolveImageUri(uri) {
 function toWebSocketUrl(baseUrl, path, token) {
   const base = baseUrl || '';
   const wsBase = base.replace(/^http/i, 'ws').replace(/\/$/, '');
-  return `${wsBase}${path}?token=${encodeURIComponent(token || '')}`;
+  return `${wsBase}${path}?access_token=${encodeURIComponent(token || '')}`;
 }
 
 function formatCountdown(endsAt, now) {
