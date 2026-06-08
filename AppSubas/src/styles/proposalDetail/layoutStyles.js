@@ -31,6 +31,13 @@ export const layoutStyles = {
         textAlign: 'center',
         lineHeight: 20,
     },
+    inlineErrorBox: {
+        marginHorizontal: 20,
+        marginTop: 16,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: palette.danger,
+    },
     retryBtn: {
         backgroundColor: palette.ink,
         paddingHorizontal: 24,

@@ -51,6 +51,17 @@ function authHeader(session) {
     return { Authorization: `Bearer ${session?.accessToken}` };
 }
 
+async function readApiError(response, fallback) {
+    const payload = await safeJson(response);
+    if (payload?.message) return payload.message;
+    if (payload?.error) return payload.error;
+
+    const validationMessage = payload && Object.entries(payload)
+        .find(([key, value]) => !['status', 'timestamp', 'path'].includes(key) && typeof value === 'string')?.[1];
+
+    return validationMessage || `${fallback} (${response.status})`;
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function ProposalDetailScreen({ proposalId, session, onBack, onMenuPress, onNavigate }) {
@@ -101,9 +112,10 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
 
     const respondTerms = useCallback(async (accept) => {
         setSubmitting(true);
+        setError(null);
         try {
             const res = await fetch(`${API}/api/v1/proposals/${proposalId}/terms`, {
-                method:  'POST',
+                method:  'PATCH',
                 headers: { ...authHeader(session), 'Content-Type': 'application/json' },
                 body:    JSON.stringify({ acceptBasePriceAndCommission: accept }),
             });
@@ -421,6 +433,12 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
                 ) : null}
 
                 {renderBottomSection()}
+
+                {error ? (
+                    <View style={styles.inlineErrorBox}>
+                        <Text style={styles.errorText}>{error}</Text>
+                    </View>
+                ) : null}
 
             </ScrollView>
 
