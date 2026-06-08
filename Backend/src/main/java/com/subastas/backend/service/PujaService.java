@@ -7,5 +7,5 @@ import java.math.BigDecimal;
 public interface PujaService {
     void registrarAsistenteSiPuedePujar(Integer auctionItemId, String userEmail);
 
-    Pujo realizarPuja(Integer auctionItemId, String userEmail, BigDecimal amount);
+    Pujo realizarPuja(Integer auctionItemId, String userEmail, BigDecimal amount, Integer paymentMethodId);
 }

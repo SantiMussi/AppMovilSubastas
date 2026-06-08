@@ -11,6 +11,25 @@ import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+@ExceptionHandler(PujaRechazadaException.class)
+    public ResponseEntity<Map<String, String>> handlePujaRechazadaException(PujaRechazadaException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("code", ex.getCode());
+        response.put("message", ex.getMessage());
+        return new ResponseEntity<>(response, bidRejectionStatus(ex.getCode()));
+    }
+
+    private HttpStatus bidRejectionStatus(String code) {
+        return switch (code) {
+            case "AUCTION_ITEM_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+            case "AUCTION_NOT_OPEN", "AUCTION_ITEM_SOLD" -> HttpStatus.CONFLICT;
+            case "INSUFFICIENT_GUARANTEE" -> HttpStatus.UNPROCESSABLE_ENTITY;
+            case "USER_NOT_FOUND", "CLIENT_NOT_FOUND", "CLIENT_NOT_ADMITTED", "OUTSTANDING_FINE",
+                    "PAYMENT_METHOD_REQUIRED", "PAYMENT_METHOD_NOT_FOUND", "PAYMENT_METHOD_NOT_OWNED",
+                    "PAYMENT_METHOD_NOT_VERIFIED", "PAYMENT_CURRENCY_MISMATCH" -> HttpStatus.FORBIDDEN;
+            default -> HttpStatus.BAD_REQUEST;
+        };
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleResourceNotFoundException(ResourceNotFoundException ex) {

@@ -8,4 +8,5 @@ import java.math.BigDecimal;
 public class RealizarPujaRequest {
     private String type;
     private BigDecimal amount;
+    private Integer paymentMethodId;
 }

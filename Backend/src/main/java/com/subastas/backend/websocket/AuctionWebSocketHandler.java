@@ -74,7 +74,7 @@ public class AuctionWebSocketHandler extends TextWebSocketHandler {
             return;
         }
         try {
-            Pujo bid = pujaService.realizarPuja(itemId, email, request.getAmount());
+            Pujo bid = pujaService.realizarPuja(itemId, email, request.getAmount(), request.getPaymentMethodId());
             send(session, new PujaAceptadaResponse("bid_accepted", Instant.now(), bid.getIdentificador(), itemId, bid.getImporte()));
             broadcastSnapshot(itemId);
         } catch (PujaRechazadaException exception) {

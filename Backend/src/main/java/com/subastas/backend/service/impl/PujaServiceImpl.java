@@ -4,6 +4,7 @@ import com.subastas.backend.entity.Asistente;
 import com.subastas.backend.entity.Categoria;
 import com.subastas.backend.entity.Cliente;
 import com.subastas.backend.entity.ItemCatalogo;
+import com.subastas.backend.entity.MedioPago;
 import com.subastas.backend.entity.Pujo;
 import com.subastas.backend.entity.PujoMetadata;
 import com.subastas.backend.entity.Subasta;
@@ -12,6 +13,8 @@ import com.subastas.backend.exception.PujaRechazadaException;
 import com.subastas.backend.repository.AsistenteRepository;
 import com.subastas.backend.repository.ClienteRepository;
 import com.subastas.backend.repository.ItemCatalogoRepository;
+import com.subastas.backend.repository.MedioPagoRepository;
+import com.subastas.backend.repository.MonedaSubastaRepository;
 import com.subastas.backend.repository.MultaRepository;
 import com.subastas.backend.repository.PujoMetadataRepository;
 import com.subastas.backend.repository.PujoRepository;
@@ -42,6 +45,8 @@ public class PujaServiceImpl implements PujaService {
     private final ClienteRepository clienteRepository;
     private final AsistenteRepository asistenteRepository;
     private final MultaRepository multaRepository;
+    private final MedioPagoRepository medioPagoRepository;
+    private final MonedaSubastaRepository monedaSubastaRepository;
 
     @Override
     @Transactional
@@ -52,10 +57,17 @@ public class PujaServiceImpl implements PujaService {
 
     @Override
     @Transactional
-    public Pujo realizarPuja(Integer auctionItemId, String userEmail, BigDecimal amount) {
+    public Pujo realizarPuja(Integer auctionItemId, String userEmail, BigDecimal amount, Integer paymentMethodId) {
+        return realizarPujaInterna(auctionItemId, userEmail, amount, paymentMethodId);
+    }
+
+    private Pujo realizarPujaInterna(
+            Integer auctionItemId,
+            String userEmail,
+            BigDecimal amount,
+            Integer paymentMethodId) {
         validateAmount(amount);
         BidContext context = validateBidContext(auctionItemId, userEmail);
-        Asistente attendee = findOrCreateAttendee(context.client(), context.auction());
 
         BigDecimal normalizedAmount = amount.setScale(2, RoundingMode.UNNECESSARY);
         BigDecimal currentBid = pujoRepository
@@ -64,6 +76,8 @@ public class PujaServiceImpl implements PujaService {
                 .orElse(context.item().getPrecioBase())
                 .setScale(2, RoundingMode.HALF_UP);
         validateRange(normalizedAmount, currentBid, context.item().getPrecioBase(), context.auction().getCategoria());
+        MedioPago paymentMethod = validatePaymentMethod(paymentMethodId, normalizedAmount, context);
+        Asistente attendee = findOrCreateAttendee(context.client(), context.auction());
 
         Pujo bid = new Pujo();
         bid.setAsistente(attendee);
@@ -75,6 +89,8 @@ public class PujaServiceImpl implements PujaService {
         PujoMetadata metadata = new PujoMetadata();
         metadata.setPujo(bid);
         pujoMetadataRepository.save(metadata);
+        paymentMethod.setUsadoEnOperacion(true);
+        medioPagoRepository.save(paymentMethod);
         return bid;
     }
 
@@ -103,6 +119,32 @@ public class PujaServiceImpl implements PujaService {
             throw rejected("OUTSTANDING_FINE", "Debes cancelar tus multas pendientes antes de volver a pujar.");
         }
         return new BidContext(item, auction, client);
+    }
+
+    private MedioPago validatePaymentMethod(Integer paymentMethodId, BigDecimal amount, BidContext context) {
+        if (paymentMethodId == null) {
+            throw rejected("PAYMENT_METHOD_REQUIRED", "Debes seleccionar un medio de pago verificado antes de pujar.");
+        }
+        MedioPago paymentMethod = medioPagoRepository.findById(paymentMethodId)
+                .orElseThrow(() -> rejected("PAYMENT_METHOD_NOT_FOUND", "El medio de pago seleccionado no existe."));
+        Integer ownerId = paymentMethod.getPersona() == null ? null : paymentMethod.getPersona().getIdentificador();
+        if (!context.client().getIdentificador().equals(ownerId)) {
+            throw rejected("PAYMENT_METHOD_NOT_OWNED", "El medio de pago seleccionado no pertenece al usuario autenticado.");
+        }
+        if (!Boolean.TRUE.equals(paymentMethod.getActivo()) || !Boolean.TRUE.equals(paymentMethod.getVerificado())) {
+            throw rejected("PAYMENT_METHOD_NOT_VERIFIED", "El medio de pago seleccionado no está activo y verificado.");
+        }
+        String auctionCurrency = monedaSubastaRepository.findById(context.auction().getIdentificador())
+                .map(moneda -> moneda.getMoneda())
+                .orElse(null);
+        if (auctionCurrency != null && (paymentMethod.getMoneda() == null
+                || !auctionCurrency.equalsIgnoreCase(paymentMethod.getMoneda()))) {
+            throw rejected("PAYMENT_CURRENCY_MISMATCH", "La moneda del medio de pago no coincide con la moneda de la subasta.");
+        }
+        if (paymentMethod.getMontoGarantia() != null && paymentMethod.getMontoGarantia().compareTo(amount) < 0) {
+            throw rejected("INSUFFICIENT_GUARANTEE", "El medio de pago no tiene garantía suficiente para cubrir la puja.");
+        }
+        return paymentMethod;
     }
     
     private Asistente findOrCreateAttendee(Cliente client, Subasta auction) {
