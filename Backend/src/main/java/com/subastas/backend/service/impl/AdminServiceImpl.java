@@ -38,6 +38,7 @@ public class AdminServiceImpl implements AdminService {
     private final MonedaSubastaRepository monedaSubastaRepository;
     private final SubastadorRepository subastadorRepository;
     private final ItemCatalogoRepository itemCatalogoRepository;
+    private final CatalogoRepository catalogoRepository;
     private final PujoRepository pujoRepository;
     private final RegistroDeSubastaRepository registroDeSubastaRepository;
     private final ClienteRepository clienteRepository;
@@ -107,19 +108,64 @@ public class AdminServiceImpl implements AdminService {
             throw new ConflictException("La subasta no está abierta");
         }
 
+        List<RegistroDeSubasta> registrosCreados = adjudicarGanadoresPendientes(subasta);
+
         // "carrada" porque el profe puso en la BBDD original así en vez de "cerrada"
         subasta.setEstado("carrada");
         subastaRepository.save(subasta);
         eventPublisher.publishEvent(new SubastaCerradaEvent(subastaId, subasta.getEstado()));
 
         return CerrarSubastaResponse.builder()
-                .mensaje("Subasta cerrada correctamente")
+                .mensaje(registrosCreados.isEmpty()
+                        ? "Subasta cerrada correctamente"
+                        : "Subasta cerrada correctamente. Ventas registradas: " + registrosCreados.size())
                 .subastaId(subastaId)
                 .estado(subasta.getEstado())
                 .cerradaEn(LocalDateTime.now())
                 .build();
     }
 
+    
+    private List<RegistroDeSubasta> adjudicarGanadoresPendientes(Subasta subasta) {
+        return catalogoRepository.findBySubastaIdentificador(subasta.getIdentificador()).stream()
+                .flatMap(catalogo -> itemCatalogoRepository.findByCatalogoIdentificador(catalogo.getIdentificador()).stream())
+                .filter(item -> !"si".equalsIgnoreCase(item.getSubastado()))
+                .map(item -> adjudicarGanadorSiTienePuja(item, subasta))
+                .flatMap(java.util.Optional::stream)
+                .toList();
+    }
+
+    private java.util.Optional<RegistroDeSubasta> adjudicarGanadorSiTienePuja(ItemCatalogo item, Subasta subasta) {
+        java.util.Optional<RegistroDeSubasta> registroExistente = registroDeSubastaRepository
+                .findByProductoIdentificador(item.getProducto().getIdentificador())
+                .stream()
+                .filter(registro -> registro.getSubasta() != null
+                        && registro.getSubasta().getIdentificador().equals(subasta.getIdentificador()))
+                .findFirst();
+        if (registroExistente.isPresent()) {
+            item.setSubastado("si");
+            itemCatalogoRepository.save(item);
+            return java.util.Optional.empty();
+        }
+
+        return pujoRepository.findFirstByItemIdentificadorOrderByImporteDescIdentificadorDesc(item.getIdentificador())
+                .map(mejorPujo -> {
+                    mejorPujo.setGanador("si");
+                    pujoRepository.save(mejorPujo);
+
+                    RegistroDeSubasta registro = crearRegistro(
+                            subasta,
+                            item.getProducto(),
+                            mejorPujo.getAsistente().getCliente(),
+                            mejorPujo.getImporte(),
+                            item.getComision()
+                    );
+
+                    item.setSubastado("si");
+                    itemCatalogoRepository.save(item);
+                    return registro;
+                });
+    }
     
     @Transactional
     public AdjudicarItemResponse adjudicarItem(Integer empleadoId, Integer itemId, AdjudicarItemRequest req) {
