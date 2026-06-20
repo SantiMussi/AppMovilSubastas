@@ -41,6 +41,9 @@ public class PersonaServiceImpl implements PersonaService {
     @Autowired
     private com.subastas.backend.service.FotoService fotoService;
 
+    @Autowired
+    private com.subastas.backend.repository.ItemCatalogoRepository itemCatalogoRepository;
+
     private Usuario obtenerUsuarioPorEmail(String email) {
         return usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + email));
@@ -186,7 +189,38 @@ public class PersonaServiceImpl implements PersonaService {
             }
         }
         response.setDesgloseInversiones(desglose);
-        
+
+        java.util.List<com.subastas.backend.dto.response.metrics.WinSaleDto> ventas = new java.util.ArrayList<>();
+        for (com.subastas.backend.entity.RegistroDeSubasta win : wins) {
+            java.math.BigDecimal importe = win.getImporte() != null ? win.getImporte() : java.math.BigDecimal.ZERO;
+            java.math.BigDecimal comision = win.getComision() != null ? win.getComision() : java.math.BigDecimal.ZERO;
+            com.subastas.backend.entity.Producto producto = win.getProducto();
+            java.util.List<com.subastas.backend.entity.ItemCatalogo> items = producto == null
+                    ? java.util.Collections.emptyList()
+                    : itemCatalogoRepository.findByProductoIdentificador(producto.getIdentificador());
+            com.subastas.backend.entity.ItemCatalogo item = items.stream()
+                    .filter(candidate -> candidate.getCatalogo() != null
+                            && candidate.getCatalogo().getSubasta() != null
+                            && win.getSubasta() != null
+                            && candidate.getCatalogo().getSubasta().getIdentificador().equals(win.getSubasta().getIdentificador()))
+                    .findFirst()
+                    .orElse(items.isEmpty() ? null : items.get(0));
+
+            ventas.add(new com.subastas.backend.dto.response.metrics.WinSaleDto(
+                    win.getIdentificador(),
+                    win.getIdentificador(),
+                    item != null ? item.getIdentificador() : null,
+                    win.getSubasta() != null ? win.getSubasta().getIdentificador() : null,
+                    producto != null ? producto.getIdentificador() : null,
+                    obtenerNombreProducto(producto),
+                    importe,
+                    comision,
+                    importe.add(comision),
+                    null
+            ));
+        }
+        response.setVentas(ventas);
+
         return response;
     }
 

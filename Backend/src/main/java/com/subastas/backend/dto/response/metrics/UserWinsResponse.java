@@ -7,4 +7,5 @@ import java.util.List;
 public class UserWinsResponse {
     private Double tasaExito;
     private List<InvestmentBreakdownDto> desgloseInversiones;
+    private List<WinSaleDto> ventas;
 }

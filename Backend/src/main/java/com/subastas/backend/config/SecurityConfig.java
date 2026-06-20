@@ -77,6 +77,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/proposals/{proposalId}/terms").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/sales/me/proposals/{proposalId}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/sales/{saleId}/invoice").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/sales/{saleId}/checkout").authenticated()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)

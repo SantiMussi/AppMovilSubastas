@@ -155,7 +155,8 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
       const response = await fetch(`${API_BASE}/api/v1/users/me/wins`, { headers });
       const payload = await response.json().catch(() => null);
       if (!response.ok) return null;
-      const sale = normalizeCollection(payload).find((item) => String(item?.auctionItemId) === String(validAuctionItemId));
+      console.log(payload)
+      const sale = normalizeCollection(payload).find((item) => saleMatchesAuctionItem(item, validAuctionItemId));
       setWinningSale(sale || null);
       return sale || null;
     } catch (loadError) {
@@ -414,8 +415,8 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
   };
 
   const finalizeCheckout = async () => {
-    const sale = winningSale;
-    const saleId = sale?.saleId || sale?.id || invoice?.saleId;
+    const sale = winningSale || await loadWinningSale();
+    const saleId = sale?.saleId || sale?.id || sale?.registroId || invoice?.saleId;
     if (!saleId) {
       setCheckoutMessage('No se encontró la venta asociada a esta adjudicación.');
       return;
@@ -479,7 +480,7 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
   if (images.length === 1) images.push(images[0]);
   const winner = winningSale || getWinnerFallback(snapshot, session?.profile);
   const hasWinner = Boolean(winner);
-  const currentInvoice = invoice || normalizeInvoice(null, winningSale || {});
+  const currentInvoice = invoice || normalizeInvoice(null, winningSale || { montoGanador: topBid.currentBid });
 
   return (
     <View style={styles.screen}>
@@ -800,17 +801,32 @@ function normalizeCollection(payload) {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.items)) return payload.items;
   if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.ventas)) return payload.ventas;
+  if (Array.isArray(payload?.wins)) return payload.wins;
+  if (Array.isArray(payload?.adjudicaciones)) return payload.adjudicaciones;
   return [];
+}
+
+function saleMatchesAuctionItem(sale, auctionItemId) {
+  const candidates = [
+    sale?.auctionItemId,
+    sale?.itemSubastaId,
+    sale?.itemCatalogoId,
+    sale?.auctionItem?.id,
+    sale?.item?.auctionItemId,
+    sale?.item?.id,
+  ];
+  return candidates.some((candidate) => candidate != null && String(candidate) === String(auctionItemId));
 }
 
 function normalizeInvoice(payload, sale = {}) {
   const data = payload?.data || payload || {};
   return {
-    saleId: data.saleId || sale.saleId,
-    montoPujado: data.montoPujado || sale.montoGanador || data.amount,
+    saleId: data.saleId || sale.saleId || sale.registroId || sale.id,
+    montoPujado: data.montoPujado || data.importe || sale.montoGanador || sale.amount || data.amount,
     comision: data.comision || sale.comision,
     costoEnvio: data.costoEnvio,
-    total: data.total || sale.total,
+    total: data.total || sale.total || ((data.montoPujado || data.importe || sale.montoGanador || sale.amount || data.amount || 0) + (data.comision || sale.comision || 0)),
     moneda: data.moneda || sale.moneda,
   };
 }
