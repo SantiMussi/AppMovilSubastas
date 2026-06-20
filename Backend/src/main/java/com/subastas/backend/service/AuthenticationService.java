@@ -57,6 +57,7 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final EmailService emailService;
 
     @Value("${app.auth.registration-verification-code:}")
     private String configuredRegistrationVerificationCode;
@@ -226,6 +227,7 @@ public class AuthenticationService {
         String code = generateResetCode();
         passwordResetCodes.put(email, new PasswordResetCode(code, Instant.now().plus(RESET_CODE_TTL)));
         sendRecoveryPushNotification(email, code);
+        emailService.sendEmail(email, "Código de recuperación de contraseña - VANTAGE", "Tu código de recuperación es: " + code);
 
         return ReseteoContraseñaResponse.builder()
                 .message("Se envió un código de recuperación al email")

@@ -16,4 +16,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     
     @EntityGraph(attributePaths = {"persona"})
     Optional<Usuario> findByEmail(String email);
+
+    @EntityGraph(attributePaths = {"persona"})
+    Optional<Usuario> findByPersonaIdentificador(Integer personaId);
 }
