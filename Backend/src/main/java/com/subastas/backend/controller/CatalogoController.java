@@ -3,17 +3,19 @@ package com.subastas.backend.controller;
 import com.subastas.backend.dto.response.catalogo.ItemCatalogoResponse;
 import com.subastas.backend.dto.response.catalogo.CatalogoResponse;
 import com.subastas.backend.service.CatalogoService;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class CatalogoController {
 
-    @Autowired
-    private CatalogoService catalogoService;
+    private final CatalogoService catalogoService;
 
     @GetMapping("/auctions/{idSubasta}/catalog")
     public ResponseEntity<List<CatalogoResponse>> obtenerCatalogosDeSubasta(@PathVariable Integer idSubasta) {

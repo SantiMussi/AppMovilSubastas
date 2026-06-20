@@ -3,15 +3,17 @@ package com.subastas.backend.service.impl;
 import com.subastas.backend.entity.Subasta;
 import com.subastas.backend.repository.SubastaRepository;
 import com.subastas.backend.service.SubastaService;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class SubastaServiceImpl implements SubastaService {
 
-    @Autowired
-    private SubastaRepository subastaRepository;
+    private final SubastaRepository subastaRepository;
 
     @Override
     public List<Subasta> obtenerTodas() {

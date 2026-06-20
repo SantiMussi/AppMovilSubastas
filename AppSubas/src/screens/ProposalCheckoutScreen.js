@@ -19,6 +19,7 @@ import { TopBar }  from '../components/TopBar';
 import { safeJson } from '../utils/safeJson';
 import { styles as s } from '../styles/proposalCheckoutStyles';
 import { Ionicons } from '@expo/vector-icons';
+import {palette} from '../constants/palette';
 
 const API       = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 const { width } = Dimensions.get('window');
@@ -367,8 +368,8 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
                     <Text style={s.modalBody}>
                         Tu solicitud de envío fue registrada correctamente. Nos contactaremos para coordinar la logística.
                     </Text>
-                    <TouchableOpacity style={s.btnDark} onPress={() => { setSuccessVisible(false); onSuccess?.(); }}>
-                        <Text style={s.btnDarkText}>IR A MIS ARTÍCULOS</Text>
+                    <TouchableOpacity style={s.modalBtn} onPress={() => { setSuccessVisible(false); onSuccess?.(); }}>
+                        <Text style={s.btnDarkText}>IR A MIS PROPUESTAS</Text>
                     </TouchableOpacity>
                 </View>
             </View>

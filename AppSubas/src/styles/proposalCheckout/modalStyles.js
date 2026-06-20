@@ -7,4 +7,5 @@ export const modalStyles = {
     successCheck:  { color: '#fff', fontSize: 26, fontWeight: '900' },
     modalTitle:    { color: palette.ink, fontSize: 18, fontWeight: '900', textAlign: 'center', marginBottom: 10 },
     modalBody:     { color: '#555', fontSize: 13, lineHeight: 19, textAlign: 'center', marginBottom: 24 },
+    modalBtn:      { backgroundColor: '#070d18', paddingVertical: 16, alignItems: 'center', justifyContent: 'center', width: '100%'},
 };

@@ -15,7 +15,8 @@ import com.subastas.backend.service.PersonaService;
 import com.subastas.backend.service.ProductoService;
 import com.subastas.backend.dto.response.metrics.*;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,14 +25,12 @@ import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/v1/users/me")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private PersonaService personaService;
-    @Autowired
-    private MultaService multaService;
-    @Autowired
-    private ProductoService productoService;
+    private final PersonaService personaService;
+    private final MultaService multaService;
+    private final ProductoService productoService;
 
     @GetMapping
     public ResponseEntity<PerfilResponse> getProfile(Principal principal) {

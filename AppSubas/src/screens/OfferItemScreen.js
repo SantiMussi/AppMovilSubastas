@@ -333,7 +333,7 @@ const pickFromGallery = async (remaining) => {
             <Text style={styles.modalBody}>
               Su artículo ha sido enviado correctamente a nuestro comité de curadores para su revisión.
             </Text>
-            <ActionButton label="IR A MIS ARTÍCULOS" wide onPress={() => { setSuccessVisible(false); onGoToMyItems?.(); }} />
+            <ActionButton label="IR A MIS PROPUESTAS" wide onPress={() => { setSuccessVisible(false); onGoToMyItems?.(); }} />
             <Pressable style={styles.cancelLink} onPress={() => { setSuccessVisible(false); resetForm(); }}>
               <Text style={styles.cancelText}>CERRAR</Text>
             </Pressable>

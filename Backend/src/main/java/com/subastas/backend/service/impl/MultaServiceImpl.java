@@ -50,8 +50,8 @@ public class MultaServiceImpl implements MultaService {
     @Override
     public PagoMultaResponse pagarMulta(PagoMultaRequest r, Integer idMulta, String email)
             throws MultaVencidaException {
-        Usuario u = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        //Usuario u = usuarioRepository.findByEmail(email)
+        //        .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         MedioPago mp = medioPagoRepository.findById(r.getMedioPago())
                 .orElseThrow(() -> new ResourceNotFoundException("Medio Pago no encontrado"));
         Multa m = multaRepository.findById(idMulta)

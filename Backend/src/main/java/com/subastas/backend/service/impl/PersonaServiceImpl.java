@@ -5,44 +5,44 @@ import com.subastas.backend.entity.Usuario;
 import com.subastas.backend.dto.request.PerfilRequest;
 import com.subastas.backend.dto.response.PerfilResponse;
 import com.subastas.backend.exception.ResourceNotFoundException;
+import com.subastas.backend.repository.AsistenteRepository;
+import com.subastas.backend.repository.ClienteRepository;
+import com.subastas.backend.repository.ItemCatalogoRepository;
 import com.subastas.backend.repository.PersonaRepository;
+import com.subastas.backend.repository.PujoRepository;
+import com.subastas.backend.repository.RegistroDeSubastaRepository;
 import com.subastas.backend.repository.UsuarioRepository;
+import com.subastas.backend.service.FotoService;
 import com.subastas.backend.service.PersonaService;
 import com.subastas.backend.util.ImageUtils;
 
+import lombok.RequiredArgsConstructor;
+
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class PersonaServiceImpl implements PersonaService {
 
-    @Autowired
-    private PersonaRepository personaRepository;
+    private final PersonaRepository personaRepository;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private com.subastas.backend.repository.ClienteRepository clienteRepository;
+    private final ClienteRepository clienteRepository;
 
-    @Autowired
-    private com.subastas.backend.repository.AsistenteRepository asistenteRepository;
+    private final AsistenteRepository asistenteRepository;
 
-    @Autowired
-    private com.subastas.backend.repository.PujoRepository pujoRepository;
+    private final PujoRepository pujoRepository;
 
-    @Autowired
-    private com.subastas.backend.repository.RegistroDeSubastaRepository registroDeSubastaRepository;
+    private final RegistroDeSubastaRepository registroDeSubastaRepository;
 
-    @Autowired
-    private com.subastas.backend.service.FotoService fotoService;
+    private final FotoService fotoService;
 
-    @Autowired
-    private com.subastas.backend.repository.ItemCatalogoRepository itemCatalogoRepository;
+    private final ItemCatalogoRepository itemCatalogoRepository;
 
     private Usuario obtenerUsuarioPorEmail(String email) {
         return usuarioRepository.findByEmail(email)

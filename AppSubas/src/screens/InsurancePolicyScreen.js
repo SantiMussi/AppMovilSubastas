@@ -15,7 +15,7 @@ import { useCurrency } from '../context/CurrencyContext';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
-export default function InsurancePolicyScreen({ session, productId, onBack }) {
+export default function InsurancePolicyScreen({ session, productId, onBack, onSuccess }) {
     const { currency, formatGlobalMoney } = useCurrency();
     const [product, setProduct] = useState(null);
     const [imageUrl, setImageUrl] = useState(null);
@@ -49,18 +49,18 @@ export default function InsurancePolicyScreen({ session, productId, onBack }) {
         setLoading(true);
         setError('');
         try {
-            const [productPayload, photosPayload, insurancePayload] = await Promise.all([
-                fetchJson(`/api/v1/products/${productId}`),
-                fetchJson(`/api/v1/products/${productId}/photos`).catch(() => null),
-                fetchJson(`/api/v1/users/me/consigned-items/${productId}/insurance`).catch(() => null),
+            const [proposalPayload, photosPayload] = await Promise.all([
+                fetchJson(`/api/v1/proposals/${productId}`),
+                fetchJson(`/api/v1/proposals/${productId}/photos`).catch(() => null),
             ]);
 
-            setProduct(productPayload);
-            setInsurance(insurancePayload?.insurance || productPayload?.insurance || null);
-            const firstPhoto = Array.isArray(photosPayload?.items) ? photosPayload.items[0] : null;
-            setImageUrl(firstPhoto?.url || null);
+            setProduct(proposalPayload);
+            setInsurance(proposalPayload?.insurance || null);
+
+            const photos = Array.isArray(photosPayload) ? photosPayload : [];
+            setImageUrl(photos.length > 0 ? `data:image/jpeg;base64,${photos[0]}` : null);
         } catch (requestError) {
-            setError(requestError.message || 'No se pudo cargar la póliza del producto.');
+            setError(requestError.message || 'No se pudo cargar la póliza.');
         } finally {
             setLoading(false);
         }
@@ -101,7 +101,7 @@ export default function InsurancePolicyScreen({ session, productId, onBack }) {
                                 </View>
                             )}
                             <View style={styles.heroOverlay}>
-                                <Text style={styles.productId}>PRODUCT ID {display.productId}</Text>
+                                <Text style={styles.productId}>PROPUESTA #{display.productId}</Text>
                                 <Text style={styles.productName}>{display.productName}</Text>
                             </View>
                         </View>
@@ -152,7 +152,13 @@ export default function InsurancePolicyScreen({ session, productId, onBack }) {
                             setSuccessVisible(true);
                         }}
                     />
-                    <PolicyRequestModal visible={successVisible} onClose={() => setSuccessVisible(false)} />
+                    <PolicyRequestModal
+                        visible={successVisible}
+                        onClose={() => {
+                            setSuccessVisible(false);
+                            onSuccess?.();
+                        }}
+/>
                 </>
             )}
         </View>
@@ -233,18 +239,17 @@ function StatePanel({ icon, label, loading, onRetry }) {
 
 function buildDisplayData(product, insurance) {
     return {
-        productId: product?.productId || product?.identificador || '—',
-        productName: product?.descripcionCatalogo || product?.descripcion || 'Artículo asegurado',
-        policyNumber: insurance?.nroPoliza || 'No informado',
-        company: insurance?.compania || 'No informado',
+        productId:     product?.proposalId || product?.identificador || '—',
+        productName:   product?.titulo || 'Artículo asegurado',
+        policyNumber:  insurance?.nroPoliza  || 'No informado',
+        company:       insurance?.compania   || 'No informado',
         combinedPolicy: isCombinedPolicy(insurance?.polizaCombinada) ? 'Sí' : 'No',
     };
 }
 
 function resolveInsuredAmount(product, insurance) {
-    return product?.precioBasePropuesto || product?.precioAdjudicado || product?.valorEstimado || insurance?.importe || 0;
+    return insurance?.importe || product?.basePrice || 0;
 }
-
 function isCombinedPolicy(value) {
     const normalized = `${value || ''}`.trim().toLowerCase();
     return ['s', 'si', 'sí', 'y', 'yes', 'true', '1'].includes(normalized);

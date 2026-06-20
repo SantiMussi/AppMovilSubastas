@@ -32,7 +32,7 @@ const STATUS_MAP = {
     aceptada:              'pendiente',
     condiciones_aceptadas: 'aceptado',
     rechazada:             'rechazado_empresa',     // solo empresa
-    condiciones_rechazadas:'rechazado_usuario',     // usuario rechazó precio, sin elegir aún
+    condiciones_rechazadas:'rechazado_empresa',     // usuario rechazó precio, sin elegir aún
     retiro_sucursal:       'rechazado_usuario',     // ya eligió sucursal → misma pestaña
     envio_solicitado:      'rechazado_usuario',     // ya eligió envío → misma pestaña
 };

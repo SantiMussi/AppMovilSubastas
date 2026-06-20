@@ -330,7 +330,7 @@ function RootNavigator() {
           <OfferItemScreen
             onBack={goBack}
             onMenuPress={openDrawer}
-            onGoToMyItems={() => handleNavigate('coleccion')}
+            onGoToMyItems={() => handleNavigate('misArticulos')}
             accessToken={session?.accessToken}
           />
         );
@@ -549,13 +549,14 @@ function RootNavigator() {
         }
 
         if (screen.startsWith('insurancePolicy:')) {
-          const productId = screen.split(':')[1];
+          const proposalId = screen.split(':')[1];
           return (
-              <InsurancePolicyScreen
-                  session={session}
-                  productId={productId}
-                  onBack={goBack}
-              />
+            <InsurancePolicyScreen
+              session={session}
+              productId={proposalId}
+              onBack={goBack}
+              onSuccess={goBack}  // ← agregás esto
+            />
           );
         }
 

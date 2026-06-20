@@ -4,13 +4,10 @@ import com.subastas.backend.entity.Foto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-@Repository
 public interface FotoRepository extends JpaRepository<Foto, Integer> {
 
     @Query("select f.identificador from Foto f where f.producto.identificador = :productoId order by f.identificador asc")

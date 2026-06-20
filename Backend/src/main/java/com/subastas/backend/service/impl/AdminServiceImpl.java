@@ -1,6 +1,5 @@
 package com.subastas.backend.service.impl;
 
-import com.subastas.backend.dto.response.*;
 import com.subastas.backend.dto.request.*;
 import com.subastas.backend.dto.response.MessageResponse;
 import com.subastas.backend.dto.response.admin.AdminUserResponse;
@@ -436,6 +435,7 @@ public class AdminServiceImpl implements AdminService {
             propuesta.setComision(req.getComision());
             propuesta.setMoneda(req.getMoneda());
             propuesta.setSubastaAsignada(subastaAsignada);
+            propuesta.setFeedback(req.getFeedback());
         } else {
             if (req.getFeedback() == null || req.getFeedback().isBlank()) {
                 throw new IllegalArgumentException(
