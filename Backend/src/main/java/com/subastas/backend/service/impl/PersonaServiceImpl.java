@@ -294,19 +294,21 @@ public class PersonaServiceImpl implements PersonaService {
         
         java.util.List<com.subastas.backend.entity.Pujo> userPujos = pujoRepository.findByAsistenteClienteIdentificador(clienteId);
         
-        // Group by ItemCatalogo and find max bid per item
-        java.util.Map<com.subastas.backend.entity.ItemCatalogo, com.subastas.backend.entity.Pujo> maxPujoPerItem = userPujos.stream()
+        // Group by item id and find max bid per item. Avoid using JPA entities as map keys because
+        // Lombok-generated hashCode() walks entity relationships and can recurse indefinitely through
+        // bidirectional links such as Sector <-> Empleado.
+        java.util.Map<Integer, com.subastas.backend.entity.Pujo> maxPujoPerItem = userPujos.stream()
+            .filter(p -> p.getItem() != null && p.getItem().getIdentificador() != null)
             .collect(java.util.stream.Collectors.toMap(
-                com.subastas.backend.entity.Pujo::getItem,
+                p -> p.getItem().getIdentificador(),
                 p -> p,
                 (p1, p2) -> p1.getImporte().compareTo(p2.getImporte()) > 0 ? p1 : p2
             ));
 
         java.util.List<com.subastas.backend.dto.response.metrics.BidItemDto> items = new java.util.ArrayList<>();
         
-        for (java.util.Map.Entry<com.subastas.backend.entity.ItemCatalogo, com.subastas.backend.entity.Pujo> entry : maxPujoPerItem.entrySet()) {
-            com.subastas.backend.entity.ItemCatalogo item = entry.getKey();
-            com.subastas.backend.entity.Pujo maxBid = entry.getValue();
+        for (com.subastas.backend.entity.Pujo maxBid : maxPujoPerItem.values()) {
+            com.subastas.backend.entity.ItemCatalogo item = maxBid.getItem();
             com.subastas.backend.entity.Producto producto = item.getProducto();
             com.subastas.backend.entity.Catalogo catalogo = item.getCatalogo();
             com.subastas.backend.entity.Subasta subasta = catalogo != null ? catalogo.getSubasta() : null;

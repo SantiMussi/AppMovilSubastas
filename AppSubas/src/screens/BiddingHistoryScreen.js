@@ -25,6 +25,8 @@ export default function BiddingHistoryScreen({ session, onMenuPress, onNavigate,
       const response = await fetch(`${API_BASE}/api/v1/users/me/bids/history`, {
         headers: { Authorization: `Bearer ${session?.accessToken}` },
       });
+      console.log(response)
+      console.log(session.accessToken)
       if (response.ok) {
         const data = await response.json();
         if (data.items && data.items.length > 0) {
