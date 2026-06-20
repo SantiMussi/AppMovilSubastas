@@ -17,6 +17,8 @@ public class DetallePropuestaResponse {
     private AssignedAuctionResponse assignedAuction;
     private BigDecimal basePrice;
     private BigDecimal commission;
+    private String tipoDevolucion;
+    private String direccionDevolucion;
 
     @Data
     public static class AssignedAuctionResponse {

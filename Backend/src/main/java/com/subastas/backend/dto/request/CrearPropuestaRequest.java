@@ -22,12 +22,6 @@ public class CrearPropuestaRequest {
     @NotEmpty
     private List<@NotBlank String> fotos;
 
-    @AssertTrue(message = "declaracionPropiedad debe ser true")
-    private boolean declaracionPropiedad;
-
-    @AssertTrue(message = "acuerdoEnvio debe ser true")
-    private boolean acuerdoEnvio;
-
-    @NotBlank
-    private String origenLicitoAdjunto;
+    // opcional — URL de acreditación de origen lícito
+    private String origenLicitoUrl;
 }

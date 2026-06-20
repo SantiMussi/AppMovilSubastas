@@ -4,8 +4,8 @@ export const checkboxStyles = {
   declarationRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 5,
-    marginTop: 20,
+    marginBottom: 0,
+    marginTop: 10,
     gap: 12,
   },
   checkbox: {

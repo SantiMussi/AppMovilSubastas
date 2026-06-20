@@ -20,11 +20,13 @@ const API = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 // ── Estado derivado de la propuesta ──────────────────────────────────────────
 
 const PS = {
-    EN_REVISION:       'EN_REVISION',
-    PENDIENTE:         'PENDIENTE',
-    ACEPTADO_USUARIO:  'ACEPTADO_USUARIO',
-    RECHAZADO_EMPRESA: 'RECHAZADO_EMPRESA',
-    RECHAZADO_USUARIO: 'RECHAZADO_USUARIO',
+    EN_REVISION:        'EN_REVISION',
+    PENDIENTE:          'PENDIENTE',
+    ACEPTADO_USUARIO:   'ACEPTADO_USUARIO',
+    RECHAZADO_EMPRESA:  'RECHAZADO_EMPRESA',
+    RECHAZADO_USUARIO:  'RECHAZADO_USUARIO',
+    RETIRO_SUCURSAL:    'RETIRO_SUCURSAL',
+    ENVIO_SOLICITADO:   'ENVIO_SOLICITADO',
 };
 
 const BADGE_LABEL = {
@@ -33,17 +35,20 @@ const BADGE_LABEL = {
     [PS.ACEPTADO_USUARIO]:  'ACCEPTED',
     [PS.RECHAZADO_EMPRESA]: 'REJECTED',
     [PS.RECHAZADO_USUARIO]: 'PRICE REJECTED',
+    [PS.RETIRO_SUCURSAL]:   'PICKUP REQUESTED',
+    [PS.ENVIO_SOLICITADO]:  'SHIPMENT REQUESTED',
 };
 
 function resolveProposalState(detail) {
     if (!detail) return null;
-    const { status, aceptadoPorUsuario } = detail;
-    if (status === 'en_revision')                                    return PS.EN_REVISION;
-    if (status === 'aceptada')                                       return PS.PENDIENTE;
-    if (status === 'condiciones_aceptadas' || aceptadoPorUsuario)    return PS.ACEPTADO_USUARIO;
-    if (status === 'rechazada') {
-        return (aceptadoPorUsuario === false) ? PS.RECHAZADO_USUARIO : PS.RECHAZADO_EMPRESA;
-    }
+    const { status } = detail;
+    if (status === 'en_revision')            return PS.EN_REVISION;
+    if (status === 'aceptada')               return PS.PENDIENTE;
+    if (status === 'condiciones_aceptadas')  return PS.ACEPTADO_USUARIO;
+    if (status === 'rechazada')              return PS.RECHAZADO_EMPRESA;
+    if (status === 'condiciones_rechazadas') return PS.RECHAZADO_USUARIO;
+    if (status === 'retiro_sucursal')        return PS.RETIRO_SUCURSAL;
+    if (status === 'envio_solicitado')       return PS.ENVIO_SOLICITADO;
     return PS.EN_REVISION;
 }
 
@@ -65,11 +70,6 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
 
     // ── UI ─────────────────────────────────────────────────────────────
     const [showRejectModal,   setShowRejectModal]   = useState(false);
-    const [showLocationModal, setShowLocationModal] = useState(false);
-    const [locationData,      setLocationData]      = useState(null);
-    const [locationLoading,   setLocationLoading]   = useState(false);
-    const [notaAcknowledged,  setNotaAcknowledged]  = useState(false);
-    const [retiroConfirmed,   setRetiroConfirmed]   = useState(false);
     const [submitting,        setSubmitting]        = useState(false);
 
     // ── Fetch propuesta ────────────────────────────────────────────────
@@ -120,6 +120,27 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
             setShowRejectModal(false);
         }
     }, [proposalId, session, fetchDetail]);
+
+    const solicitarDevolucion = useCallback(async (tipo) => {
+    setSubmitting(true);
+    setError(null);
+    try {
+        const res = await fetch(`${API}/api/v1/proposals/${proposalId}/return`, {
+            method:  'PATCH',
+            headers: { ...authHeader(session), 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ tipo }),
+        });
+        if (!res.ok) {
+            const j = await safeJson(res);
+            throw new Error(j?.message ?? 'No se pudo registrar la devolución');
+        }
+        await fetchDetail();
+    } catch (e) {
+        setError(e.message);
+    } finally {
+        setSubmitting(false);
+    }
+}, [proposalId, session, fetchDetail]);
 
     // ── Fetch ubicación de retiro ──────────────────────────────────────
 
@@ -277,40 +298,22 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
                 return (
                     <>
                         {renderFeedback()}
-                        {!notaAcknowledged ? (
-                            <View style={styles.notaDevolucionBox}>
-                                <Text style={styles.notaDevolucionTitle}>
-                                    NOTA SOBRE DEVOLUCIÓN
-                                </Text>
-                                <Text style={styles.notaDevolucionText}>
-                                    Lamentablemente tu artículo no fue seleccionado para nuestra
-                                    colección. Podés retirarlo en nuestra sucursal sin cargo adicional
-                                    o solicitar el envío a domicilio. Los gastos de envío corren por
-                                    cuenta del propietario.
-                                </Text>
-                                <TouchableOpacity
-                                    style={styles.btnEntendido}
-                                    onPress={() => setNotaAcknowledged(true)}
-                                >
-                                    <Text style={styles.btnEntendidoText}>ENTENDIDO</Text>
-                                </TouchableOpacity>
-                            </View>
-                        ) : (
-                            <View style={styles.actionsRow}>
-                                <TouchableOpacity
-                                    style={styles.btnDark}
-                                    onPress={openLocationModal}
-                                >
-                                    <Text style={styles.btnDarkText}>{'RETIRAR EN\nSUCURSAL'}</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.btnOutline}
-                                    onPress={() => onNavigate?.('shipping', { proposalId })}
-                                >
-                                    <Text style={styles.btnOutlineText}>{'SOLICITAR\nENVÍO'}</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
+                        <View style={styles.notaDevolucionBox}>
+                            <Text style={styles.notaDevolucionTitle}>NOTA SOBRE DEVOLUCIÓN</Text>
+                            <Text style={styles.notaDevolucionText}>
+                                Lamentablemente tu artículo no fue seleccionado para nuestra colección.
+                                Podés retirarlo en nuestra sucursal sin cargo adicional o solicitar el
+                                envío a domicilio. Los gastos de envío corren por cuenta del propietario.
+                            </Text>
+                        </View>
+                        <View style={styles.actionsRow}>
+                            <TouchableOpacity style={styles.btnDark} onPress={() => solicitarDevolucion('sucursal')} disabled={submitting}>
+                                <Text style={styles.btnDarkText}>{'RETIRAR EN\nSUCURSAL'}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.btnOutline} onPress={() => onNavigate?.('proposalCheckout', { proposalId })} disabled={submitting}>
+                                <Text style={styles.btnOutlineText}>{'SOLICITAR\nENVÍO'}</Text>
+                            </TouchableOpacity>
+                        </View>
                     </>
                 );
 
@@ -319,28 +322,48 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
                     <>
                         {renderPriceBlock()}
                         {renderFeedback()}
-                        {!retiroConfirmed ? (
-                            <View style={styles.actionsRow}>
-                                <TouchableOpacity
-                                    style={styles.btnDark}
-                                    onPress={openLocationModal}
-                                >
-                                    <Text style={styles.btnDarkText}>{'RETIRAR EN\nSUCURSAL'}</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.btnOutline}
-                                    onPress={() => onNavigate?.('shipping', { proposalId })}
-                                >
-                                    <Text style={styles.btnOutlineText}>{'SOLICITAR\nENVÍO'}</Text>
-                                </TouchableOpacity>
-                            </View>
-                        ) : (
-                            <View style={styles.rejectedBanner}>
-                                <Text style={styles.rejectedBannerText}>
-                                    PRECIO RECHAZADO POR EL USUARIO
+                        <View style={styles.actionsRow}>
+                            <TouchableOpacity style={styles.btnDark} onPress={() => solicitarDevolucion('sucursal')} disabled={submitting}>
+                                <Text style={styles.btnDarkText}>{'RETIRAR EN\nSUCURSAL'}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.btnOutline} onPress={() => onNavigate?.('proposalCheckout', { proposalId })} disabled={submitting}>
+                                <Text style={styles.btnOutlineText}>{'SOLICITAR\nENVÍO'}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </>
+                );
+
+            case PS.RETIRO_SUCURSAL:
+                return (
+                    <>
+                        {renderPriceBlock()}
+                        {renderFeedback()}
+                        <View style={styles.rejectedBanner}>
+                            <Text style={styles.rejectedBannerText}>
+                                ARTÍCULO RECHAZADO · RETIRO EN SUCURSAL SOLICITADO
+                            </Text>
+                            <Text style={styles.rejectedBannerSub}>
+                                Podés pasar a retirarlo por nuestras oficinas. Te contactaremos para coordinar el horario.
+                            </Text>
+                        </View>
+                    </>
+                );
+
+            case PS.ENVIO_SOLICITADO:
+                return (
+                    <>
+                        {renderPriceBlock()}
+                        {renderFeedback()}
+                        <View style={styles.rejectedBanner}>
+                            <Text style={styles.rejectedBannerText}>
+                                ARTÍCULO RECHAZADO · ENVÍO A DOMICILIO SOLICITADO
+                            </Text>
+                            {detail?.direccionDevolucion ? (
+                                <Text style={styles.rejectedBannerSub}>
+                                    Dirección de envío: {detail.direccionDevolucion}
                                 </Text>
-                            </View>
-                        )}
+                            ) : null}
+                        </View>
                     </>
                 );
 
@@ -467,64 +490,6 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
                                 }
                             </TouchableOpacity>
                         </View>
-                    </View>
-                </View>
-            </Modal>
-
-            {/* ── Modal: Ubicación de retiro en sucursal ── */}
-            <Modal
-                visible={showLocationModal}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setShowLocationModal(false)}
-            >
-                <View style={styles.modalBackdrop}>
-                    <View style={styles.modalCard}>
-                        <View style={styles.iconCircle}>
-                            <Text style={styles.iconText}>📍</Text>
-                        </View>
-                        <Text style={styles.modalTitle}>Retiro en sucursal</Text>
-
-                        {locationLoading ? (
-                            <ActivityIndicator
-                                color="#0b1a30"
-                                style={{ marginVertical: 24 }}
-                            />
-                        ) : locationData?.error ? (
-                            <Text style={[styles.modalSubtitle, { color: '#9f0000' }]}>
-                                {locationData.error}
-                            </Text>
-                        ) : (
-                            <>
-                                <View style={styles.locationRow}>
-                                    <Text style={styles.locationRowLabel}>DEPÓSITO</Text>
-                                    <Text style={styles.locationRowValue}>
-                                        {locationData?.deposito ?? '—'}
-                                    </Text>
-                                </View>
-                                <View style={styles.locationRow}>
-                                    <Text style={styles.locationRowLabel}>SECTOR</Text>
-                                    <Text style={styles.locationRowValue}>
-                                        {locationData?.sector ?? '—'}
-                                    </Text>
-                                </View>
-                                {locationData?.ultimaActualizacion ? (
-                                    <Text style={styles.locationUpdated}>
-                                        Actualizado: {locationData.ultimaActualizacion}
-                                    </Text>
-                                ) : null}
-                            </>
-                        )}
-
-                        <TouchableOpacity
-                            style={styles.modalBtnFull}
-                            onPress={() => {
-                                setShowLocationModal(false);
-                                if (!locationData?.error) setRetiroConfirmed(true);
-                            }}
-                        >
-                            <Text style={styles.modalBtnFullText}>ENTENDIDO</Text>
-                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>

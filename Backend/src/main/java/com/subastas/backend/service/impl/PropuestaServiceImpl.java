@@ -1,6 +1,7 @@
 package com.subastas.backend.service.impl;
 
 import com.subastas.backend.dto.request.CrearPropuestaRequest;
+import com.subastas.backend.dto.request.SolicitarDevolucionRequest;
 import com.subastas.backend.dto.request.TerminosPropuestaRequest;
 import com.subastas.backend.dto.response.propuesta.CrearPropuestaResponse;
 import com.subastas.backend.dto.response.propuesta.DetallePropuestaResponse;
@@ -44,9 +45,7 @@ public class PropuestaServiceImpl implements PropuestaService {
         p.setTitulo(request.getTitulo());
         p.setDescripcion(request.getDescripcion());
         p.setHistoria(request.getHistoria());
-        p.setDeclaracionPropiedad(request.isDeclaracionPropiedad());
-        p.setAcuerdoEnvio(request.isAcuerdoEnvio());
-        p.setOrigenLicitoUrl(request.getOrigenLicitoAdjunto());
+        p.setOrigenLicitoUrl(request.getOrigenLicitoUrl()); // puede ser null, está ok
         p.setEstado("en_revision");
 
         request.getFotos().forEach(f -> {
@@ -97,7 +96,7 @@ public class PropuestaServiceImpl implements PropuestaService {
 
         boolean acepta = Boolean.TRUE.equals(request.getAcceptBasePriceAndCommission());
         p.setAceptadoPorUsuario(acepta);
-        p.setEstado(acepta ? "condiciones_aceptadas" : "rechazada");
+        p.setEstado(acepta ? "condiciones_aceptadas" : "condiciones_rechazadas"); // ← antes era "rechazada"
         propuestaRepository.save(p);
         return new TerminosPropuestaResponse("Condiciones respondidas correctamente", p.getEstado());
     }
@@ -127,6 +126,8 @@ public class PropuestaServiceImpl implements PropuestaService {
         r.setAceptadoPorUsuario(p.getAceptadoPorUsuario());
         r.setBasePrice(p.getPrecioBase());
         r.setCommission(p.getComision());
+        r.setTipoDevolucion(p.getTipoDevolucion());
+        r.setDireccionDevolucion(p.getDireccionDevolucion());
         if (p.getSubastaAsignada() != null) {
             DetallePropuestaResponse.AssignedAuctionResponse a = new DetallePropuestaResponse.AssignedAuctionResponse();
             a.setAuctionId(p.getSubastaAsignada().getIdentificador());
@@ -135,6 +136,36 @@ public class PropuestaServiceImpl implements PropuestaService {
             r.setAssignedAuction(a);
         }
         return r;
+    }
+
+    @Override
+    @Transactional
+    public TerminosPropuestaResponse solicitarDevolucion(Integer proposalId,
+                                                        SolicitarDevolucionRequest request,
+                                                        String email) {
+        Cliente cliente = resolveCliente(email);
+        Propuesta p = propuestaRepository
+            .findByIdentificadorAndClienteIdentificador(proposalId, cliente.getIdentificador())
+            .orElseThrow(() -> new ResourceNotFoundException("Propuesta no encontrada"));
+
+        if (!"condiciones_rechazadas".equals(p.getEstado()) && !"rechazada".equals(p.getEstado())) {
+            throw new ConflictException("La propuesta no está en un estado que permita solicitar devolución");
+        }
+
+        String tipo = request.getTipo();
+        if (!"sucursal".equals(tipo) && !"envio".equals(tipo)) {
+            throw new IllegalArgumentException("tipo debe ser 'sucursal' o 'envio'");
+        }
+        if ("envio".equals(tipo) && (request.getDireccion() == null || request.getDireccion().isBlank())) {
+            throw new IllegalArgumentException("Se requiere dirección para solicitar envío");
+        }
+
+        p.setTipoDevolucion(tipo);
+        p.setDireccionDevolucion("envio".equals(tipo) ? request.getDireccion().trim() : null);
+        p.setEstado("envio".equals(tipo) ? "envio_solicitado" : "retiro_sucursal");
+        propuestaRepository.save(p);
+
+        return new TerminosPropuestaResponse("Devolución registrada correctamente", p.getEstado());
     }
 
     private Cliente resolveCliente(String email) {

@@ -64,10 +64,11 @@ const MENU_SECTIONS = [
   },
   {
     items: [
-      { key: 'coleccion',   icon: 'albums-outline',        label: 'Mi Colección' },
-      { key: 'pagos',       icon: 'card-outline',          label: 'Métodos de Pago' },
-      { key: 'historial',   icon: 'time-outline',          label: 'Historial de Pujas' },
-      { key: 'offerItem',   icon: 'pricetag-outline',      label: 'Ofrecer Artículo' },
+      { key: 'coleccion',    icon: 'albums-outline',        label: 'Mi Colección'      },
+      { key: 'pagos',        icon: 'card-outline',          label: 'Métodos de Pago'   },
+      { key: 'historial',    icon: 'time-outline',          label: 'Historial de Pujas'},
+      { key: 'offerItem',    icon: 'pricetag-outline',      label: 'Ofrecer Artículo'  },
+      { key: 'misArticulos', icon: 'document-text-outline', label: 'Mis Propuestas'    },
     ],
   },
   {

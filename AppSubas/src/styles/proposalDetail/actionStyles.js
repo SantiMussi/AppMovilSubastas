@@ -119,4 +119,11 @@ export const actionStyles = {
         letterSpacing: 1,
         textAlign: 'center',
     },
+    rejectedBannerSub: {
+        color: palette.ink,
+        fontSize: 12,
+        marginTop: 6,
+        textAlign: 'center',
+        lineHeight: 18,
+    },
 };
