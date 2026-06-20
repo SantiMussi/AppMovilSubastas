@@ -5,7 +5,7 @@ export const buttonStyles = {
     flexDirection: 'row',
     gap: 14,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
     justifyContent: 'flex-end',
   },
   footerNote: {
@@ -14,6 +14,6 @@ export const buttonStyles = {
     color: palette.muted,
     textAlign: 'center',
     marginBottom: 10,
-    marginTop: 40,
+    marginTop: 10,
   },
 };

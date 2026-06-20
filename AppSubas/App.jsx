@@ -39,6 +39,7 @@ import RegistrationStatusScreen from './src/screens/RegistrationStatusScreen';
 import InsurancePolicyScreen from "./src/screens/InsurancePolicyScreen";
 import MyItemsScreen from './src/screens/MyItemsScreen';
 import ProposalDetailScreen from './src/screens/ProposalDetailScreen';
+import ProposalCheckoutScreen from './src/screens/ProposalCheckoutScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -355,6 +356,17 @@ function RootNavigator() {
             onMenuPress={openDrawer}
             onNavigate={(route) => handleNavigate(route)}
           />
+        );
+      
+      case 'proposalCheckout':
+        return (
+            <ProposalCheckoutScreen
+                proposalId={proposalDetailId}
+                session={session}
+                onBack={goBack}
+                onMenuPress={openDrawer}
+                onSuccess={() => handleNavigate('misArticulos')}
+            />
         );
 
       case 'perfil':

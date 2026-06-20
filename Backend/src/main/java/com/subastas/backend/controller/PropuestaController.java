@@ -1,6 +1,7 @@
 package com.subastas.backend.controller;
 
 import com.subastas.backend.dto.request.CrearPropuestaRequest;
+import com.subastas.backend.dto.request.SolicitarDevolucionRequest;
 import com.subastas.backend.dto.request.TerminosPropuestaRequest;
 import com.subastas.backend.dto.response.propuesta.CrearPropuestaResponse;
 import com.subastas.backend.dto.response.propuesta.DetallePropuestaResponse;
@@ -53,5 +54,12 @@ public class PropuestaController {
     @GetMapping("/proposals/{proposalId}/photos")
     public List<String> photos(@PathVariable Integer proposalId, Principal principal) {
         return proposalService.getPhotos(proposalId, principal.getName());
+    }
+
+    @PatchMapping("/proposals/{proposalId}/return")
+    public ResponseEntity<TerminosPropuestaResponse> solicitarDevolucion(@PathVariable Integer proposalId,
+                                                                        @Valid @RequestBody SolicitarDevolucionRequest request,
+                                                                        Principal principal) {
+        return ResponseEntity.ok(proposalService.solicitarDevolucion(proposalId, request, principal.getName()));
     }
 }

@@ -22,7 +22,7 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 const MIN_PHOTOS = 6;
 const MAX_PHOTOS = 10;
 
-const initialForm = { title: '', description: '', history: '' };
+const initialForm = { title: '', description: '', history: '', origenLicitoUrl: '' };
 const initialErrors = { title: '', description: '', history: '', photos: '', declaration: '' };
 
 export default function OfferItemScreen({ onBack, onMenuPress, onGoToMyItems, accessToken }) {
@@ -70,25 +70,70 @@ export default function OfferItemScreen({ onBack, onMenuPress, onGoToMyItems, ac
     return valid;
   };
 
-  const pickPhoto = async () => {
-    if (photos.length >= MAX_PHOTOS) return;
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Permiso requerido', 'Necesitamos acceso a tu galería para adjuntar fotos.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 0.8,
-      base64: true,
-    });
-    if (result.canceled || result.cancelled) return;
-    const asset = result.assets?.[0] ?? result;
-    if (!asset?.uri) return;
-    setPhotos((prev) => [...prev, { uri: asset.uri, base64: asset.base64 ?? '' }]);
-    setErrors((prev) => ({ ...prev, photos: '' }));
-  };
+  const openPhotoOptions = () => {
+  const remaining = MAX_PHOTOS - photos.length;
+  if (remaining <= 0) return;
+  Alert.alert(
+    'Agregar fotografías',
+    'Elegí el origen de las imágenes',
+    [
+      {
+        text: 'Cámara',
+        onPress: pickFromCamera,
+      },
+      {
+        text: 'Galería',
+        onPress: () => pickFromGallery(remaining),
+      },
+      { text: 'Cancelar', style: 'cancel' },
+    ],
+  );
+};
+
+const pickFromCamera = async () => {
+  const permission = await ImagePicker.requestCameraPermissionsAsync();
+  if (!permission.granted) {
+    Alert.alert('Permiso requerido', 'Necesitamos acceso a la cámara para tomar fotos.');
+    return;
+  }
+  const result = await ImagePicker.launchCameraAsync({
+    allowsEditing: false,
+    cameraType: ImagePicker.CameraType?.back,
+    quality: 0.8,
+    base64: true,
+  });
+  if (result.canceled || result.cancelled) return;
+  const asset = result.assets?.[0] ?? result;
+  if (!asset?.uri) return;
+  setPhotos((prev) => [...prev, { uri: asset.uri, base64: asset.base64 ?? '' }]);
+  setErrors((prev) => ({ ...prev, photos: '' }));
+};
+
+const pickFromGallery = async (remaining) => {
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) {
+    Alert.alert('Permiso requerido', 'Necesitamos acceso a tu galería para adjuntar fotos.');
+    return;
+  }
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: false,
+    allowsMultipleSelection: true,
+    selectionLimit: remaining,
+    quality: 0.8,
+    base64: true,
+  });
+  if (result.canceled || result.cancelled) return;
+  const assets = result.assets ?? (result.uri ? [result] : []);
+  if (!assets.length) return;
+  setPhotos((prev) => {
+    const nuevas = assets
+      .slice(0, MAX_PHOTOS - prev.length)
+      .map((a) => ({ uri: a.uri, base64: a.base64 ?? '' }));
+    return [...prev, ...nuevas];
+  });
+  setErrors((prev) => ({ ...prev, photos: '' }));
+};
 
   const confirmDelete = (index) => setDeleteIndex(index);
 
@@ -107,13 +152,11 @@ export default function OfferItemScreen({ onBack, onMenuPress, onGoToMyItems, ac
     setLoading(true);
     try {
       const payload = {
-        titulo: form.title.trim(),
-        descripcion: form.description.trim(),
-        historia: form.history.trim(),
-        fotos: photos.map((p) => p.base64),
-        declaracionPropiedad: true,
-        acuerdoEnvio: true,
-        origenLicitoAdjunto: 'declaracion_aceptada',
+        titulo:          form.title.trim(),
+        descripcion:     form.description.trim(),
+        historia:        form.history.trim(),
+        fotos:           photos.map((p) => p.base64),
+        origenLicitoUrl: form.origenLicitoUrl.trim() || null,
       };
       const response = await fetch(`${API_BASE}/api/v1/proposals`, {
         method: 'POST',
@@ -179,6 +222,12 @@ export default function OfferItemScreen({ onBack, onMenuPress, onGoToMyItems, ac
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.carousel} contentContainerStyle={styles.carouselContent}>
+            {/* Botón agregar SIEMPRE primero a la izquierda */}
+            {photos.length < MAX_PHOTOS && (
+              <TouchableOpacity style={[styles.photoSlot, styles.photoSlotAdd]} onPress={openPhotoOptions} activeOpacity={0.7}>
+                <Text style={styles.addIcon}>＋</Text>
+              </TouchableOpacity>
+            )}
             {photos.map((photo, index) => (
               <TouchableOpacity
                 key={index}
@@ -196,20 +245,28 @@ export default function OfferItemScreen({ onBack, onMenuPress, onGoToMyItems, ac
                 )}
               </TouchableOpacity>
             ))}
-            {photos.length < MAX_PHOTOS && (
-              <TouchableOpacity style={[styles.photoSlot, styles.photoSlotAdd]} onPress={pickPhoto} activeOpacity={0.7}>
-                <Text style={styles.addIcon}>＋</Text>
-              </TouchableOpacity>
-            )}
           </ScrollView>
 
           {errors.photos ? <Text style={styles.fieldError}>{errors.photos}</Text> : null}
 
+          {/* Campo opcional de origen lícito */}
+          <FormField
+            label="URL DE ACREDITACIÓN DE ORIGEN (OPCIONAL)"
+            placeholder="https://..."
+            value={form.origenLicitoUrl}
+            onChangeText={(v) => update('origenLicitoUrl', v)}
+            keyboardType="url"
+            autoCapitalize="none"
+          />
+
+          {/* Checkbox con texto actualizado */}
           <Pressable style={styles.declarationRow} onPress={handleDeclarationToggle}>
             <View style={[styles.checkbox, declaration && styles.checkboxChecked]}>
               {declaration && <Text style={styles.checkmark}>✓</Text>}
             </View>
-            <Text style={styles.declarationText}>Declaro que el bien me pertenece y es de origen lícito.</Text>
+            <Text style={styles.declarationText}>
+              Declaro que el bien me pertenece, es de origen lícito y que en caso de que la empresa no lo acepte tras la inspección, autorizo que los gastos de devolución sean cargados a mi cuenta.
+            </Text>
           </Pressable>
 
           {errors.declaration ? <Text style={styles.fieldError}>{errors.declaration}</Text> : null}

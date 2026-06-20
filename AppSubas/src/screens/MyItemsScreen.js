@@ -20,17 +20,21 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 // ── Tabs ──────────────────────────────────────────────────────────
 
 const TABS = [
-    { key: 'en_revision', label: 'En Revisión' },
-    { key: 'pendiente',   label: 'Pendiente'   },
-    { key: 'aceptado',    label: 'Aceptado'    },
-    { key: 'rechazado',   label: 'Rechazado'   },
+    { key: 'en_revision',       label: 'En Revisión' },
+    { key: 'pendiente',         label: 'Pendiente'   },
+    { key: 'aceptado',          label: 'Aceptado'    },
+    { key: 'rechazado_empresa', label: 'Rechazado'   }, // antes: 'rechazado'
+    { key: 'rechazado_usuario', label: 'Devuelto'    }, // nuevo
 ];
 
 const STATUS_MAP = {
     en_revision:           'en_revision',
-    aceptada:              'pendiente',     // empresa propuso precio, usuario aún no respondió
-    condiciones_aceptadas: 'aceptado',      // usuario aceptó el precio
-    rechazada:             'rechazado',     // empresa o usuario rechazaron
+    aceptada:              'pendiente',
+    condiciones_aceptadas: 'aceptado',
+    rechazada:             'rechazado_empresa',     // solo empresa
+    condiciones_rechazadas:'rechazado_usuario',     // usuario rechazó precio, sin elegir aún
+    retiro_sucursal:       'rechazado_usuario',     // ya eligió sucursal → misma pestaña
+    envio_solicitado:      'rechazado_usuario',     // ya eligió envío → misma pestaña
 };
 
 const resolveTab = (status) => STATUS_MAP[status] ?? 'en_revision';
@@ -181,10 +185,11 @@ export default function MyItemsScreen({ session, onMenuPress, onProductPress }) 
     const renderEmpty = () => {
         if (loading) return null;
         const messages = {
-            en_revision: 'No tenés artículos en revisión.',
-            pendiente:   'No tenés artículos pendientes de respuesta.',
-            aceptado:    'No tenés artículos aceptados.',
-            rechazado:   'No tenés artículos rechazados.',
+            en_revision:       'No tenés artículos en revisión.',
+            pendiente:         'No tenés artículos pendientes de respuesta.',
+            aceptado:          'No tenés artículos aceptados.',
+            rechazado_empresa: 'No tenés artículos rechazados por la empresa.',
+            rechazado_usuario: 'No tenés artículos devueltos.',
         };
         return (
             <View style={styles.stateBox}>
@@ -200,7 +205,7 @@ export default function MyItemsScreen({ session, onMenuPress, onProductPress }) 
             <TopBar onMenuPress={onMenuPress} />
 
             <View style={styles.stickyHeader}>
-                <Text style={styles.screenTitle}>Mis Artículos</Text>
+                <Text style={styles.screenTitle}>Mis Propuestas</Text>
 
                 <View style={styles.tabsContainer}>
                     {TABS.map((tab) => {

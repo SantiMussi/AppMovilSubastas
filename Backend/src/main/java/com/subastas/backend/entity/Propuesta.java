@@ -30,12 +30,6 @@ public class Propuesta {
     @Column(nullable = false, length = 1000)
     private String historia;
 
-    @Column(nullable = false)
-    private Boolean declaracionPropiedad;
-
-    @Column(nullable = false)
-    private Boolean acuerdoEnvio;
-
     @Column(length = 500)
     private String origenLicitoUrl;
 
@@ -74,6 +68,19 @@ public class Propuesta {
      */
     @Column
     private Boolean aceptadoPorUsuario;
+
+    /**
+    * Tipo de devolución elegido por el usuario cuando rechaza el precio.
+    * null              → todavía no eligió
+    * "sucursal"        → retira en persona
+     * "envio"           → solicita envío a domicilio
+     */
+    @Column(length = 20)
+    private String tipoDevolucion;
+
+    /** Dirección de envío cuando tipoDevolucion = "envio". */
+    @Column(length = 500)
+    private String direccionDevolucion;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "revisor")
