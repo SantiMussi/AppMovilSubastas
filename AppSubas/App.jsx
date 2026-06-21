@@ -40,6 +40,7 @@ import InsurancePolicyScreen from "./src/screens/InsurancePolicyScreen";
 import MyItemsScreen from './src/screens/MyItemsScreen';
 import ProposalDetailScreen from './src/screens/ProposalDetailScreen';
 import ProposalCheckoutScreen from './src/screens/ProposalCheckoutScreen';
+import NotificationsScreen from './src/screens/NotificationsScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -493,11 +494,10 @@ function RootNavigator() {
 
       case 'notificaciones':
         return (
-          <PlaceholderScreen
-            title="Notificaciones"
-            subtitle="Acá vas a recibir alertas sobre subastas, pujas y novedades de Vantage."
-            iconName="notifications-outline"
-            onMenuPress={openDrawer}
+            <NotificationsScreen
+                session={session}
+                onMenuPress={openDrawer}
+                onNavigate={handleNavigate}
           />
         );
 
