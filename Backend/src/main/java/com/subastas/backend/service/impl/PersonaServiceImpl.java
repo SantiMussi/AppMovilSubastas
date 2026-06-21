@@ -95,8 +95,6 @@ public class PersonaServiceImpl implements PersonaService {
         Usuario usuario = obtenerUsuarioPorEmail(email);
         Persona persona = usuario.getPersona();
 
-        // Usamos el utilitario. Si hay un error (archivo vacío, no es imagen), tira la
-        // excepción automáticamente
         persona.setFoto(ImageUtils.procesarImagen(archivo));
 
         personaRepository.save(persona);
@@ -108,7 +106,6 @@ public class PersonaServiceImpl implements PersonaService {
         Usuario usuario = obtenerUsuarioPorEmail(email);
         Persona persona = usuario.getPersona();
         
-        // Anonymize user to allow re-registration with same email/document while preserving referential integrity
         usuario.setEmail("del_" + persona.getIdentificador() + "@deleted.com");
         usuario.setPassword("");
         usuarioRepository.save(usuario);
@@ -130,11 +127,9 @@ public class PersonaServiceImpl implements PersonaService {
         
         com.subastas.backend.dto.response.metrics.UserStatsResponse stats = new com.subastas.backend.dto.response.metrics.UserStatsResponse();
         
-        // Asistencia
         Integer asistencia = asistenteRepository.countByClienteIdentificador(clienteId);
         stats.setAsistencia(asistencia != null ? asistencia : 0);
         
-        // Victorias & Valuacion
         java.util.List<com.subastas.backend.entity.RegistroDeSubasta> wins = registroDeSubastaRepository.findByClienteIdentificador(clienteId);
         stats.setVictorias(wins.size());
         
@@ -146,7 +141,6 @@ public class PersonaServiceImpl implements PersonaService {
         }
         stats.setValuacionPortfolio(valuacion);
         
-        // Promedio Puja
         Double avgPuja = pujoRepository.getAveragePujaByClienteId(clienteId);
         stats.setPromedioPuja(avgPuja != null ? java.math.BigDecimal.valueOf(avgPuja) : java.math.BigDecimal.ZERO);
         
@@ -163,14 +157,12 @@ public class PersonaServiceImpl implements PersonaService {
         
         com.subastas.backend.dto.response.metrics.UserWinsResponse response = new com.subastas.backend.dto.response.metrics.UserWinsResponse();
         
-        // Tasa exito
         if (asistencia != null && asistencia > 0) {
             response.setTasaExito(((double) wins.size() / asistencia) * 100);
         } else {
             response.setTasaExito(0.0);
         }
         
-        // Desglose
         java.util.Map<String, java.math.BigDecimal> categoriasMap = new java.util.HashMap<>();
         java.math.BigDecimal total = java.math.BigDecimal.ZERO;
         for (com.subastas.backend.entity.RegistroDeSubasta w : wins) {
@@ -296,9 +288,6 @@ public class PersonaServiceImpl implements PersonaService {
         java.util.Map<Integer, java.util.List<com.subastas.backend.entity.Pujo>> pujosPerItem = userPujos.stream()
             .filter(p -> p.getItem() != null && p.getItem().getIdentificador() != null)
             .collect(java.util.stream.Collectors.groupingBy(p -> p.getItem().getIdentificador()));
-        // Group by item id and find max bid per item. Avoid using JPA entities as map keys because
-        // Lombok-generated hashCode() walks entity relationships and can recurse indefinitely through
-        // bidirectional links such as Sector <-> Empleado.
         java.util.Map<Integer, com.subastas.backend.entity.Pujo> maxPujoPerItem = userPujos.stream()
             .filter(p -> p.getItem() != null && p.getItem().getIdentificador() != null)
             .collect(java.util.stream.Collectors.toMap(
@@ -373,7 +362,6 @@ public class PersonaServiceImpl implements PersonaService {
             items.add(dto);
         }
         
-        // Sort items by auctionDate or ID descending
         items.sort((a, b) -> b.getId().compareTo(a.getId()));
 
         com.subastas.backend.dto.response.metrics.UserBidsResponse response = new com.subastas.backend.dto.response.metrics.UserBidsResponse();

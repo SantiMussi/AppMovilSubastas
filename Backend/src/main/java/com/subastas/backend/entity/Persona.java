@@ -31,7 +31,7 @@ public class Persona {
     private String direccion;
 
     @Column(name = "estado", length = 15)
-    private String estado; // 'activo', 'incativo' (según SQL original)
+    private String estado;
 
     @Lob
     @Column(name = "foto", columnDefinition = "LONGBLOB")

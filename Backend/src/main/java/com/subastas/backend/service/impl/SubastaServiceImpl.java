@@ -22,7 +22,6 @@ public class SubastaServiceImpl implements SubastaService {
 
     @Override
     public List<Subasta> obtenerActivas() {
-        // En tu SQL, el estado de las subastas activas está definido como 'abierta'
         return subastaRepository.findByEstado("abierta");
     }
 

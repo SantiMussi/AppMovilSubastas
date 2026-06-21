@@ -9,7 +9,7 @@ import com.subastas.backend.entity.Categoria;
 public class SubastaRequest {
     private LocalDate fecha;
     private LocalTime hora;
-    private String estado; // "abierta", "carrada", "proxima"
+    private String estado;
     private String ubicacion;
     private Categoria categoria;
 }

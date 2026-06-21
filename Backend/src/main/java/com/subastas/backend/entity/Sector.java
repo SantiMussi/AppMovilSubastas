@@ -18,7 +18,6 @@ public class Sector {
     @Column(length = 10)
     private String codigoSector;
 
-    // Relación con Empleado (un sector tiene un empleado responsable)
     @ManyToOne
     @JoinColumn(name = "responsableSector")
     private Empleado responsableSector;

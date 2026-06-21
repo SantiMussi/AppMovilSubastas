@@ -36,7 +36,6 @@ public class Propuesta {
     @Column(nullable = false, length = 30)
     private String estado;
 
-    // ── Campos que completa el admin ──────────────────────────────────
 
     @Column(precision = 15, scale = 2)
     private BigDecimal precioBase;
@@ -44,7 +43,6 @@ public class Propuesta {
     @Column(precision = 15, scale = 2)
     private BigDecimal comision;
 
-    /** Moneda propuesta por el admin al aprobar (ARS | USD). */
     @Column(length = 3)
     private String moneda;
 
@@ -52,33 +50,15 @@ public class Propuesta {
     @JoinColumn(name = "subastaAsignada")
     private Subasta subastaAsignada;
 
-    /**
-     * Feedback del admin (antes motivoRechazo).
-     * Se mapea a la columna existente para no alterar la tabla.
-     * Se usa tanto en rechazos como en revisiones con notas.
-     */
     @Column(length = 1000)
     private String feedback;
 
-    /**
-     * Decisión del usuario sobre los términos propuestos por el admin.
-     * null  → la empresa rechazó el artículo (el usuario nunca respondió)
-     * false → el usuario rechazó el precio propuesto
-     * true  → el usuario aceptó el precio propuesto
-     */
     @Column
     private Boolean aceptadoPorUsuario;
 
-    /**
-    * Tipo de devolución elegido por el usuario cuando rechaza el precio.
-    * null              → todavía no eligió
-    * "sucursal"        → retira en persona
-     * "envio"           → solicita envío a domicilio
-     */
     @Column(length = 20)
     private String tipoDevolucion;
 
-    /** Dirección de envío cuando tipoDevolucion = "envio". */
     @Column(length = 500)
     private String direccionDevolucion;
 

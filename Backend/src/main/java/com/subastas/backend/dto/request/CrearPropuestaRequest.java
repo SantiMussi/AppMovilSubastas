@@ -21,6 +21,5 @@ public class CrearPropuestaRequest {
     @NotEmpty
     private List<@NotBlank String> fotos;
 
-    // opcional — URL de acreditación de origen lícito
     private String origenLicitoUrl;
 }

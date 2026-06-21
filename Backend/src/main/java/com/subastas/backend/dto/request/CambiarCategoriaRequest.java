@@ -9,7 +9,4 @@ public class CambiarCategoriaRequest {
 
     @NotNull(message = "La nueva categoría es obligatoria")
     private Categoria nuevaCategoria;
-
-    //DECIDIR SI AGREGAR MOTIVO O NO
-    //private String motivo;
 }
