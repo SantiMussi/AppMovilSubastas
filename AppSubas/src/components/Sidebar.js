@@ -60,6 +60,7 @@ const MENU_SECTIONS = [
     items: [
       { key: 'perfil',      icon: 'person-outline',        label: 'Perfil' },
       { key: 'auctions',    icon: 'podium-outline',        label: 'Subastas' },
+      { key: 'notificaciones', icon: 'notifications-outline', label: 'Notificaciones' },
     ],
   },
   {
