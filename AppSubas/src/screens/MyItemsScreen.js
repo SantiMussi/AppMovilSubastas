@@ -17,7 +17,7 @@ import { safeJson }  from '../utils/safeJson';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
-// ── Tabs ──────────────────────────────────────────────────────────
+// Tabs
 
 const TABS = [
     { key: 'en_revision',       label: 'En Revisión' },
@@ -45,7 +45,7 @@ const formatDate = (iso) => {
     return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
-// ── Screen ────────────────────────────────────────────────────────
+// Screen
 
 export default function MyItemsScreen({ session, onMenuPress, onProductPress }) {
     const [activeTab,  setActiveTab]  = useState('en_revision');
@@ -99,7 +99,7 @@ export default function MyItemsScreen({ session, onMenuPress, onProductPress }) 
 
     const filteredItems = items.filter((item) => resolveTab(item.status) === activeTab);
 
-    // ── Carrusel de imágenes por tarjeta ─────────────────────────
+    // Carrusel de imágenes por tarjeta
 
     const getIndex = (proposalId) => imageIndexes[proposalId] ?? 0;
 
@@ -117,7 +117,7 @@ export default function MyItemsScreen({ session, onMenuPress, onProductPress }) 
         }));
     };
 
-    // ── Render tarjeta ────────────────────────────────────────────
+    // Render tarjeta
 
     const renderItem = ({ item }) => {
         const images       = (photosByProposal[item.proposalId] ?? []).map(b64 => `data:image/jpeg;base64,${b64}`);
@@ -127,7 +127,6 @@ export default function MyItemsScreen({ session, onMenuPress, onProductPress }) 
 
         return (
             <View style={styles.card}>
-                {/* ── Bloque imagen ── */}
                 <View style={styles.imageWrap}>
                     {hasImages && currentImage ? (
                         <Image source={{ uri: currentImage }} style={styles.image} resizeMode="cover" />
@@ -164,7 +163,6 @@ export default function MyItemsScreen({ session, onMenuPress, onProductPress }) 
                     )}
                 </View>
 
-                {/* ── Bloque info (tappable → detalle) ── */}
                 <Pressable
                     style={({ pressed }) => [styles.info, pressed && { opacity: 0.7 }]}
                     onPress={() => onProductPress?.(item)}
@@ -180,7 +178,7 @@ export default function MyItemsScreen({ session, onMenuPress, onProductPress }) 
         );
     };
 
-    // ── Render vacío ─────────────────────────────────────────────
+    // Render vacío
 
     const renderEmpty = () => {
         if (loading) return null;
@@ -198,7 +196,7 @@ export default function MyItemsScreen({ session, onMenuPress, onProductPress }) 
         );
     };
 
-    // ── Layout ────────────────────────────────────────────────────
+    // Layout
 
     return (
         <View style={styles.stage}>

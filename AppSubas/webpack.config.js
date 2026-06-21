@@ -3,7 +3,7 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-    entry: path.join(__dirname, 'index.web.js'), // Ahora creamos este archivo
+    entry: path.join(__dirname, 'index.web.js'),
     module: {
         rules: [
             {
@@ -25,7 +25,7 @@ module.exports = {
     resolve: {
         alias: {
             'react-native$': 'react-native-web',
-            'react-native-linear-gradient': 'react-native-web-linear-gradient', // Hack para el gradiente
+            'react-native-linear-gradient': 'react-native-web-linear-gradient',
         },
         extensions: ['.web.js', '.js', '.jsx', '.ts', '.tsx'],
     },

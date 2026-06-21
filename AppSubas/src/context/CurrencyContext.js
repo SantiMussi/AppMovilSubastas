@@ -45,7 +45,6 @@ export function CurrencyProvider({ children }) {
       });
     }
 
-    // Default formatting for USD
     return numericalValue.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',

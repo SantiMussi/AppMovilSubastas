@@ -51,7 +51,6 @@ export default function FinePaymentScreen({ session, fineId, onBack, onPaymentSu
 
   const fetchData = useCallback(async () => {
     try {
-      // Fetch fine detail
       const fineResponse = await fetch(`${API_BASE}/api/v1/users/me/fines/${fineId}`, {
         headers: { Authorization: `Bearer ${session?.accessToken}` },
       });
@@ -63,7 +62,6 @@ export default function FinePaymentScreen({ session, fineId, onBack, onPaymentSu
       const fineData = await fineResponse.json();
       setFine(fineData);
 
-      // Fetch payment methods
       const paymentsResponse = await fetch(`${API_BASE}/api/v1/users/me/payments`, {
         headers: { Authorization: `Bearer ${session?.accessToken}` },
       });
@@ -72,7 +70,7 @@ export default function FinePaymentScreen({ session, fineId, onBack, onPaymentSu
         const items = data.items || [];
         setPayments(items);
         if (items.length > 0) {
-          setSelectedPaymentId(items[0].id); // Auto-select first method
+          setSelectedPaymentId(items[0].id);
         }
       } else {
         setError('No se pudieron cargar los medios de pago.');
@@ -199,7 +197,6 @@ export default function FinePaymentScreen({ session, fineId, onBack, onPaymentSu
       );
     }
 
-    // Cheque (rarely used for fines but just in case)
     return (
       <Pressable
         key={item.id}
@@ -242,7 +239,6 @@ export default function FinePaymentScreen({ session, fineId, onBack, onPaymentSu
 
       <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
 
-        {/* Header content */}
         <View style={styles.titleSection}>
           <View style={styles.warningIconContainer}>
             <Ionicons name="warning-outline" size={28} color="#B22222" />
@@ -253,7 +249,6 @@ export default function FinePaymentScreen({ session, fineId, onBack, onPaymentSu
           </Text>
         </View>
 
-        {/* Lote card */}
         <View style={styles.loteCard}>
           <View style={styles.loteInfo}>
             <Text style={styles.loteLabel}>LOTE INCUMPLIDO</Text>
@@ -264,7 +259,6 @@ export default function FinePaymentScreen({ session, fineId, onBack, onPaymentSu
           </View>
         </View>
 
-        {/* Payment Methods Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>MÉTODO DE PAGO</Text>
 
@@ -297,7 +291,6 @@ export default function FinePaymentScreen({ session, fineId, onBack, onPaymentSu
 
       </ScrollView>
 
-      {/* Footer / CTA */}
       <View style={styles.footer}>
         <Pressable
           style={[
@@ -391,7 +384,7 @@ const styles = StyleSheet.create({
   decorCircle2: { width: 100, height: 100, bottom: -20, left: -20 },
 
   selectedDotContainer: { position: 'absolute', bottom: 16, right: 16, width: 24, height: 24, justifyContent: 'center', alignItems: 'center' },
-  selectedDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#f7b600' }, // using yellow/orange for highlight
+  selectedDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#f7b600' },
 
   bankCard: { backgroundColor: '#FFF', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#F0F0F0', minHeight: 160 },
   bankCardRow: { flexDirection: 'row', alignItems: 'center' },

@@ -26,7 +26,7 @@ const { width } = Dimensions.get('window');
 const CARD_W    = width * 0.72;
 const CARD_GAP  = 12;
 
-// ── Helpers ───────────────────────────────────────────────────────
+// Helpers
 function authHeader(session) {
     return { Authorization: `Bearer ${session?.accessToken}` };
 }
@@ -55,7 +55,7 @@ function formatPaymentLabel(p) {
     return `${entity}${last ? ` · •••• ${last}` : ''}`;
 }
 
-// ── Shipping options ──────────────────────────────────────────────
+// Shipping options
 const SHIPPING_OPTIONS = [
     {
         key:   'estandar',
@@ -72,7 +72,7 @@ const SHIPPING_OPTIONS = [
     },
 ];
 
-// ── Screen ────────────────────────────────────────────────────────
+// Screen
 export default function ProposalCheckoutScreen({ proposalId, session, onBack, onMenuPress, onSuccess }) {
     const [step, setStep] = useState('shipping'); // 'shipping' | 'payment'
 
@@ -88,7 +88,6 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
     const [shippingOption, setShippingOption] = useState('estandar');
     const [formErrors,     setFormErrors]     = useState({});
 
-    // Sección 2 — pago
     const [payments,          setPayments]          = useState([]);
     const [loadingPayments,   setLoadingPayments]   = useState(true);
     const [selectedPaymentId, setSelectedPaymentId] = useState(null);
@@ -100,7 +99,7 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
         if (formErrors[key]) setFormErrors(prev => ({ ...prev, [key]: '' }));
     };
 
-    // ── Fetch métodos de pago ──────────────────────────────────────
+    // Fetch métodos de pago
     const fetchPayments = useCallback(async () => {
         setLoadingPayments(true);
         try {
@@ -118,7 +117,6 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
 
     useEffect(() => { fetchPayments(); }, [fetchPayments]);
 
-    // ── Validación sección 1 ───────────────────────────────────────
     const validateShipping = () => {
         const required = { telefono: 'Teléfono', calle: 'Dirección', ciudad: 'Ciudad', provincia: 'Estado / Provincia', codigoPostal: 'Código postal' };
         const next = {};
@@ -130,7 +128,6 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
         return valid;
     };
 
-    // ── Confirmar envío ────────────────────────────────────────────
     const confirmShipment = useCallback(async () => {
         if (!selectedPaymentId) {
             Alert.alert('Medio de pago', 'Seleccioná un medio de pago antes de continuar.');
@@ -164,7 +161,6 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
         }
     }, [proposalId, session, form, shippingOption, selectedPaymentId]);
 
-    // ── Render carrusel de tarjetas ────────────────────────────────
     const renderPaymentCard = ({ item }) => {
     const selected = String(selectedPaymentId) === String(item.id);
     const brand    = getBrandStyle(item.entidad);
@@ -232,7 +228,6 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
         );
     }
 
-    // Cheque certificado
     return (
         <Pressable onPress={() => setSelectedPaymentId(item.id)} style={[s.chequeCardOuter, selected && s.cardSelected]}>
             <View style={s.chequeCard}>
@@ -248,7 +243,7 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
     );
 };
 
-    // ── Sección 1: Datos de envío ──────────────────────────────────
+    // Datos de envío
     const renderShipping = () => (
         <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <Text style={s.eyebrow}>DEVOLUCIÓN DE ARTÍCULO</Text>
@@ -291,7 +286,7 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
         </ScrollView>
     );
 
-    // ── Sección 2: Pago ────────────────────────────────────────────
+    // Pago
     const selected      = SHIPPING_OPTIONS.find(o => o.key === shippingOption);
     const shippingPrice = selected?.price ?? 0;
 
@@ -300,7 +295,6 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
             <Text style={s.eyebrow}>DEVOLUCIÓN DE ARTÍCULO</Text>
             <Text style={s.screenTitle}>Confirmar Pago</Text>
 
-            {/* Método de pago */}
             <Text style={s.sectionLabel}>SELECCIONAR MÉTODO DE PAGO</Text>
             {loadingPayments ? (
                 <ActivityIndicator color="#0b1a30" style={{ marginVertical: 20 }} />
@@ -322,7 +316,6 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
                 />
             )}
 
-            {/* Dirección de envío */}
             <Text style={s.sectionLabel}>DIRECCIÓN DE ENVÍO</Text>
             <View style={s.addressBox}>
                 <Text style={s.addressText}>
@@ -330,7 +323,6 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
                 </Text>
             </View>
 
-            {/* Resumen */}
             <Text style={s.sectionLabel}>RESUMEN DE ORDEN</Text>
             <View style={s.summaryBox}>
                 <View style={s.summaryRow}>
@@ -358,7 +350,7 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
         </ScrollView>
     );
 
-    // ── Modal de éxito ─────────────────────────────────────────────
+    // Modal de éxito
     const renderSuccessModal = () => (
         <Modal visible={successVisible} transparent animationType="fade" onRequestClose={() => {}}>
             <View style={s.modalBackdrop}>
@@ -386,7 +378,6 @@ export default function ProposalCheckoutScreen({ proposalId, session, onBack, on
     );
 }
 
-// ── Campo de formulario ───────────────────────────────────────────
 function Field({ label, error, ...inputProps }) {
     return (
         <View style={s.inputGroup}>

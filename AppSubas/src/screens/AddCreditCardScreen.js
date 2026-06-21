@@ -19,7 +19,6 @@ import { Colors } from '../themes/colors';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
-/* ── Brand detection from first digit ── */
 const detectBrand = (number) => {
   const clean = number.replace(/\s/g, '');
   if (!clean) return '';
@@ -30,14 +29,12 @@ const detectBrand = (number) => {
   return '';
 };
 
-/* ── Format card number with spaces every 4 digits ── */
 const formatCardNumber = (text) => {
   const clean = text.replace(/\D/g, '').slice(0, 16);
   const groups = clean.match(/.{1,4}/g);
   return groups ? groups.join(' ') : '';
 };
 
-/* ── Format expiry as MM/AA ── */
 const formatExpiry = (text) => {
   const clean = text.replace(/\D/g, '').slice(0, 4);
   if (clean.length > 2) {
@@ -46,7 +43,6 @@ const formatExpiry = (text) => {
   return clean;
 };
 
-/* ── Display dots for card preview ── */
 const getCardNumberDisplay = (number) => {
   const clean = number.replace(/\s/g, '');
   if (!clean) return '•••• •••• •••• ••••';
@@ -54,7 +50,6 @@ const getCardNumberDisplay = (number) => {
   return padded.slice(0, 4) + ' ' + padded.slice(4, 8) + ' ' + padded.slice(8, 12) + ' ' + padded.slice(12, 16);
 };
 
-/* ── Validate Luhn Algorithm ── */
 const validateLuhn = (number) => {
   const clean = number.replace(/\D/g, '');
   if (!clean) return false;
@@ -72,7 +67,6 @@ const validateLuhn = (number) => {
   return sum % 10 === 0;
 };
 
-/* ── Validate Expiry Date (MM/AA) not in past ── */
 const validateExpiry = (text) => {
   if (text.length < 5) return false;
   const [month, yearStr] = text.split('/');
@@ -129,7 +123,6 @@ export default function AddCreditCardScreen({ session, onMenuPress, onBack, onNa
   };
 
   const handleExpiryChange = (text) => {
-    // Allow backspace to delete the slash
     if (text.length < vencimiento.length) {
       const clean = text.replace(/\D/g, '');
       setVencimiento(formatExpiry(clean));
@@ -204,23 +197,18 @@ export default function AddCreditCardScreen({ session, onMenuPress, onBack, onNa
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* ── Live Card Preview ── */}
           <View style={styles.cardPreviewWrapper}>
             <View style={styles.cardFlipContainer}>
-              {/* FRONT OF CARD */}
               <Animated.View style={[styles.cardPreview, frontAnimatedStyle]}>
-                {/* Top row: chip + brand */}
                 <View style={styles.cardTopRow}>
                   <View style={styles.cardChip} />
                   <Text style={styles.cardBrandText}>VANTAGE</Text>
                 </View>
 
-                {/* Card number */}
                 <Text style={styles.cardNumberText}>
                   {getCardNumberDisplay(numero)}
                 </Text>
 
-                {/* Bottom row: name + expiry */}
                 <View style={styles.cardBottomRow}>
                   <View style={styles.cardBottomLeft}>
                     <Text style={styles.cardLabel}>NOMBRE DEL TITULAR</Text>
@@ -237,7 +225,6 @@ export default function AddCreditCardScreen({ session, onMenuPress, onBack, onNa
                 </View>
               </Animated.View>
 
-              {/* BACK OF CARD */}
               <Animated.View style={[styles.cardPreview, styles.cardPreviewBack, backAnimatedStyle]}>
                 <View style={styles.magneticStripe} />
                 <View style={styles.cvvStrip}>
@@ -250,9 +237,7 @@ export default function AddCreditCardScreen({ session, onMenuPress, onBack, onNa
             </View>
           </View>
 
-          {/* ── Form ── */}
           <View style={styles.formContainer}>
-            {/* Nombre del titular */}
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>NOMBRE DEL TITULAR</Text>
               <TextInput
@@ -266,7 +251,6 @@ export default function AddCreditCardScreen({ session, onMenuPress, onBack, onNa
               />
             </View>
 
-            {/* Número de tarjeta */}
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>NÚMERO DE TARJETA</Text>
               <View style={styles.fieldInputRow}>
@@ -289,7 +273,6 @@ export default function AddCreditCardScreen({ session, onMenuPress, onBack, onNa
               </View>
             </View>
 
-            {/* Row: Vencimiento + Código de seguridad */}
             <View style={styles.rowFields}>
               <View style={[styles.fieldGroup, styles.halfField]}>
                 <Text style={styles.fieldLabel}>VENCIMIENTO</Text>
@@ -323,7 +306,6 @@ export default function AddCreditCardScreen({ session, onMenuPress, onBack, onNa
               </View>
             </View>
 
-            {/* ── Moneda toggle ── */}
             <View style={styles.toggleRow}>
               <View style={styles.toggleTextWrap}>
                 <Text style={styles.toggleTitle}>Moneda de la Tarjeta</Text>
@@ -343,7 +325,6 @@ export default function AddCreditCardScreen({ session, onMenuPress, onBack, onNa
 
           </View>
 
-          {/* ── Submit Button ── */}
           <Pressable
             style={({ pressed }) => [
               styles.submitBtn,
@@ -360,7 +341,6 @@ export default function AddCreditCardScreen({ session, onMenuPress, onBack, onNa
             )}
           </Pressable>
 
-          {/* ── Cancel Link ── */}
           <Pressable style={styles.cancelBtn} onPress={onBack}>
             <Text style={styles.cancelBtnText}>CANCELAR Y VOLVER</Text>
           </Pressable>
@@ -372,8 +352,6 @@ export default function AddCreditCardScreen({ session, onMenuPress, onBack, onNa
   );
 }
 
-/* ─────────────────────── styles ─────────────────────── */
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -383,7 +361,6 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
 
-  /* ── Card Preview ── */
   cardPreviewWrapper: {
     paddingHorizontal: 24,
     paddingTop: 28,
@@ -547,7 +524,6 @@ const styles = StyleSheet.create({
     width: 20,
   },
 
-  /* ── Buttons ── */
   submitBtn: {
     marginHorizontal: 24,
     height: 50,
@@ -577,7 +553,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
   },
-  /* ── Toggle row ── */
   toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',

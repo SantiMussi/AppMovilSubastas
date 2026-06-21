@@ -30,7 +30,6 @@ const PaymentSuccessScreen = ({ session, onMenuPress, onNavigate }) => {
         </View>
       </View>
 
-      {/* Main Content */}
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <Ionicons
@@ -43,7 +42,6 @@ const PaymentSuccessScreen = ({ session, onMenuPress, onNavigate }) => {
         <Text style={styles.title}>{'Método Agregado\ncon Éxito'}</Text>
       </View>
 
-      {/* Bottom Section */}
       <View style={styles.bottomSection}>
         <TouchableOpacity
           style={styles.volverButton}

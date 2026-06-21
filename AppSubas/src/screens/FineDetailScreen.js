@@ -125,12 +125,6 @@ export default function FineDetailScreen({ session, fineId, onBack, onNavigate }
             <Text style={styles.breakdownValue}>{formatGlobalMoney(amount)}</Text>
           </View>
 
-          {/* Commented out operation fee to keep the total perfectly aligned with the backend's 'monto' */}
-          {/* <View style={styles.breakdownRow}>
-            <Text style={styles.breakdownLabel}>Gastos de Operación Notarial</Text>
-            <Text style={styles.breakdownValue}>{formatGlobalMoney(1250)}</Text>
-          </View> */}
-
           <View style={styles.divider} />
 
           <View style={styles.totalRow}>
@@ -313,7 +307,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
-    // shadow applied to top
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.05,

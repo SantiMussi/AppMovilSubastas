@@ -18,7 +18,6 @@ export const cardStyles = {
         elevation: 3,
     },
 
-    // ── Imagen ────────────────────────────────────────────────────
     imageWrap: {
         width: '100%',
         height: CARD_WIDTH * 0.72,
@@ -41,7 +40,6 @@ export const cardStyles = {
         color: palette.line,
     },
 
-    // Flechas de imagen
     arrowBtn: {
         position: 'absolute',
         top: '50%',
@@ -76,7 +74,6 @@ export const cardStyles = {
         fontWeight: '600',
     },
 
-    // ── Info (tappable) ───────────────────────────────────────────
     info: {
         padding: 16,
         flexDirection: 'row',

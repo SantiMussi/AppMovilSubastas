@@ -23,7 +23,6 @@ const CARD_GAP = 12;
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
-/* ── Brand colour map for credit-card visual ── */
 const BRAND_COLORS = {
   visa: {
     bg: ['#1a1f71', '#2d338b'],
@@ -71,7 +70,6 @@ const getBrandStyle = (entidad) => {
   return { ...BRAND_COLORS.default, label: entidad.toUpperCase() };
 };
 
-/* ── Bank icon colour map ── */
 const BANK_COLORS = {
   default: { bg: '#F0EDE8', icon: '#8B7355' },
 };
@@ -156,19 +154,16 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
     }
   };
 
-  /* ── group payments by tipo ── */
   const tarjetas = payments.filter((p) => p.tipo === 'tarjeta_credito');
   const cuentas = payments.filter((p) => p.tipo === 'cuenta_bancaria');
   const cheques = payments.filter((p) => p.tipo === 'cheque_certificado');
 
-  /* ── Credit Card Visual ── */
   const renderCreditCard = (item) => {
     const brand = getBrandStyle(item.entidad);
     const isDeleting = deletingId === item.id;
 
     return (
       <View key={item.id} style={[styles.creditCardOuter, { marginRight: CARD_GAP }]}>
-        {/* Delete action label */}
         <Pressable
           style={styles.cardActionBtn}
           onPress={() => handleDelete(item.id, item.tipo)}
@@ -178,7 +173,6 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
         </Pressable>
 
         <View style={[styles.creditCard, { backgroundColor: brand.gradient }]}>
-          {/* Card chip icon */}
           <View style={styles.creditCardTopRow}>
             <Text style={[styles.creditCardBrand, { color: brand.accent }]}>
               {brand.label || item.entidad?.toUpperCase()}
@@ -186,12 +180,10 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
             <Ionicons name="card" size={28} color={brand.accent} />
           </View>
 
-          {/* Number */}
           <Text style={[styles.creditCardNumber, { color: brand.text }]}>
             {item.numeroIdentificacion || '•••• •••• •••• ••••'}
           </Text>
 
-          {/* Bottom row */}
           <View style={styles.creditCardBottomRow}>
             <View>
               <Text style={[styles.creditCardLabel, { color: `${brand.text}99` }]}>ENTIDAD</Text>
@@ -207,7 +199,6 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
             </View>
           </View>
 
-          {/* Decorative circles */}
           <View style={[styles.decorCircle, styles.decorCircle1, { backgroundColor: `${brand.accent}15` }]} />
           <View style={[styles.decorCircle, styles.decorCircle2, { backgroundColor: `${brand.accent}10` }]} />
         </View>
@@ -221,7 +212,6 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
     );
   };
 
-  /* ── Bank Account Card ── */
   const renderBankAccount = (item) => {
     const isDeleting = deletingId === item.id;
 
@@ -262,7 +252,6 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
     );
   };
 
-  /* ── Cheque Card ── */
   const renderCheque = (item) => {
     return (
       <View key={item.id} style={[styles.chequeCardOuter, { marginRight: CARD_GAP }]}>
@@ -286,7 +275,6 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
     );
   };
 
-  /* ── Section with horizontal scroll ── */
   const renderSection = (title, items, renderItem, actionLabel, onAction) => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
@@ -346,10 +334,8 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
             />
           }
         >
-          {/* ── Page Title ── */}
           <Text style={styles.pageTitle}>Medios de Pago</Text>
 
-          {/* ── Warning Box ── */}
           <View style={styles.warningBox}>
             <View style={styles.warningIconWrap}>
               <Ionicons name="warning" size={20} color="#B22222" />
@@ -362,20 +348,16 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
             </View>
           </View>
 
-          {/* ── Tarjetas de Crédito ── */}
           {renderSection('Tarjetas de Crédito', tarjetas, renderCreditCard, 'AGREGAR', () => onNavigate('addCreditCard'))}
 
-          {/* ── Cuentas Vinculadas ── */}
           {renderSection('Cuentas Vinculadas', cuentas, renderBankAccount, 'VINCULAR', () => onNavigate('linkBankAccount'))}
 
-          {/* ── Cheques Certificados ── */}
           {renderSection('Cheques Certificados', cheques, renderCheque, 'CARGAR', () => onNavigate('addCheque'))}
 
           <View style={{ height: 40 }} />
         </ScrollView>
       )}
 
-      {/* Delete Modal */}
       <Modal
         visible={isDeleteModalVisible}
         transparent={true}
@@ -407,7 +389,6 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
         </View>
       </Modal>
 
-      {/* Toast Notification */}
       {toastMessage ? (
         <Animated.View style={[styles.toastContainer, { opacity: toastOpacity }]}>
           <Ionicons name="checkmark-circle" size={24} color="#FFF" style={{ marginRight: 8 }} />
@@ -420,7 +401,6 @@ export default function PaymentMethodsScreen({ session, onMenuPress, onNavigate 
 
 }
 
-/* ─────────────────────── styles ─────────────────────── */
 
 const styles = StyleSheet.create({
   container: {
@@ -452,7 +432,6 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
 
-  /* ── Page title ── */
   pageTitle: {
     fontFamily: 'serif',
     fontSize: 28,
@@ -463,7 +442,6 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
 
-  /* ── Warning Box ── */
   warningBox: {
     flexDirection: 'row',
     backgroundColor: '#FFF8F0',
@@ -500,7 +478,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  /* ── Section ── */
   section: {
     marginBottom: 28,
   },
@@ -548,7 +525,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 
-  /* ── Credit Card ── */
   creditCardOuter: {
     width: CARD_WIDTH,
   },
@@ -640,7 +616,6 @@ const styles = StyleSheet.create({
     top: 22,
   },
 
-  /* ── Bank Account Card ── */
   bankCardOuter: {
     width: CARD_WIDTH,
   },
@@ -711,7 +686,6 @@ const styles = StyleSheet.create({
     top: 22,
   },
 
-  /* ── Cheque Card ── */
   chequeCardOuter: {
     width: CARD_WIDTH * 0.55,
   },
@@ -762,7 +736,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  /* ── Modal ── */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -832,7 +805,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  /* ── Toast ── */
   toastContainer: {
     position: 'absolute',
     bottom: 40,

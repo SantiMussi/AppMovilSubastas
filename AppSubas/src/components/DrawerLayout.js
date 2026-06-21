@@ -21,12 +21,10 @@ export function DrawerLayout({ isOpen, onClose, renderSidebar, children }) {
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const fadeAnim  = useRef(new Animated.Value(0)).current;
 
-  // Keep the overlay mounted during the close animation so it can fade out.
   const [overlayVisible, setOverlayVisible] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      // Show overlay immediately, then animate in
       setOverlayVisible(true);
       Animated.parallel([
         Animated.timing(slideAnim, {
@@ -41,7 +39,6 @@ export function DrawerLayout({ isOpen, onClose, renderSidebar, children }) {
         }),
       ]).start();
     } else {
-      // Animate out, then hide overlay
       Animated.parallel([
         Animated.timing(slideAnim, {
           toValue: -SIDEBAR_WIDTH,
@@ -61,10 +58,8 @@ export function DrawerLayout({ isOpen, onClose, renderSidebar, children }) {
 
   return (
     <View style={styles.root}>
-      {/* main content */}
       {children}
 
-      {/* backdrop overlay */}
       {overlayVisible && (
         <View style={styles.backdropLayer}>
           <Animated.View style={[styles.backdropFill, { opacity: fadeAnim }]} />
@@ -76,7 +71,6 @@ export function DrawerLayout({ isOpen, onClose, renderSidebar, children }) {
         </View>
       )}
 
-      {/* sliding sidebar panel */}
       {overlayVisible && (
         <Animated.View
           style={[

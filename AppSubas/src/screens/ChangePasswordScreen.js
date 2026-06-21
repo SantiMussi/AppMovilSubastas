@@ -53,7 +53,6 @@ export default function ChangePasswordScreen({ session, onBack }) {
     setMessage('');
 
     try {
-      // Step 1: Request the code
       await request('/forgot', { email: normalizedEmail });
       setStep('code');
     } catch (error) {
@@ -86,7 +85,6 @@ export default function ChangePasswordScreen({ session, onBack }) {
     setMessage('');
 
     try {
-      // Validating code and setting new password in one go
       const payload = await request('/reset', { email: normalizedEmail, code, newPassword: password });
       Alert.alert('Éxito', payload?.message || 'Contraseña actualizada correctamente', [
         { text: 'OK', onPress: onBack }
@@ -321,7 +319,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 9,
-    color: '#A8925A', // slightly golden matching screenshot
+    color: '#A8925A',
     letterSpacing: 1,
     marginBottom: 8,
     textTransform: 'uppercase',
@@ -405,7 +403,7 @@ const styles = StyleSheet.create({
   },
   resendLinkDark: {
     fontSize: 11,
-    color: '#A8925A', // Gold
+    color: '#A8925A',
     fontWeight: 'bold',
     textDecorationLine: 'underline',
   },

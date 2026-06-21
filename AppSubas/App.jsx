@@ -15,7 +15,6 @@ import LoginScreen from './src/screens/LoginScreen';
 import PasswordRecoveryScreen from './src/screens/PasswordRecoveryScreen';
 import UserDataScreen from './src/screens/UserDataScreen';
 import OfferItemScreen from './src/screens/OfferItemScreen';
-import PlaceholderScreen from './src/screens/PlaceholderScreen';
 import MembershipCategoriesScreen from './src/screens/MembershipCategoriesScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import FinesScreen from './src/screens/FinesScreen';

@@ -32,8 +32,7 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
           data.subastasVisitadas = stats.asistencia || 0;
           data.victorias = stats.victorias || 0;
           data.valorTotalEstimado = stats.valuacionPortfolio || 0;
-          // As a fallback for pujasRealizadas, we can show asistencia since we don't have a specific endpoint count yet
-          data.pujasRealizadas = stats.asistencia ? stats.asistencia + 1 : 0; 
+          data.pujasRealizadas = stats.asistencia ? stats.asistencia + 1 : 0;
         }
         if (winsRes.ok) {
           const wins = await winsRes.json();
@@ -103,7 +102,6 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Header / Member Info */}
           <View style={styles.header}>
             <View style={styles.memberBadge}>
               <Ionicons name="card" size={12} color="#000" />
@@ -128,7 +126,6 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
             </Pressable>
           </View>
 
-          {/* Resumen de Actividad */}
           <View style={styles.activityCard}>
             <Text style={styles.activityTitle}>RESUMEN DE ACTIVIDAD</Text>
 
@@ -148,7 +145,6 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
             </View>
           </View>
 
-          {/* Inversión por Categoría */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Inversión por Categoría</Text>
 
@@ -181,7 +177,6 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
             </View>
           </View>
 
-          {/* Gestionar Fondos */}
           <View style={styles.manageFundsCard}>
             <View style={styles.manageFundsHeader}>
               <Ionicons name="wallet-outline" size={20} color="#000" />
@@ -195,7 +190,6 @@ export default function ProfileScreen({ session, onMenuPress, onNavigate }) {
             </Pressable>
           </View>
 
-          {/* Artículos en Consignación */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Artículos en{'\n'}Consignación</Text>
@@ -323,7 +317,7 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   redButton: {
-    backgroundColor: '#B22222', // Dark red
+    backgroundColor: '#B22222',
     paddingVertical: 14,
     alignItems: 'center',
   },
