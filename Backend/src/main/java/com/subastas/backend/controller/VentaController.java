@@ -25,6 +25,7 @@ public class VentaController {
 
     private final RegistroDeSubastaRepository registroDeSubastaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final com.subastas.backend.service.EmailService emailService;
 
     @GetMapping("/{saleId}/invoice")
     public ResponseEntity<Map<String, Object>> getInvoice(@PathVariable Integer saleId, Principal principal) {
@@ -41,6 +42,9 @@ public class VentaController {
         Map<String, Object> invoice = buildInvoice(sale);
         invoice.put("message", "Compra finalizada correctamente");
         invoice.put("invoiceNumber", "FAC-" + sale.getIdentificador());
+        
+        emailService.sendInvoiceEmail(principal.getName(), invoice, sale);
+        
         return ResponseEntity.ok(invoice);
     }
 
