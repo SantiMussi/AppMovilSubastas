@@ -20,6 +20,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(auctionWebSocketHandler, "/ws/auction-items/{auctionItemId}")
                 .addInterceptors(auctionWebSocketAuthInterceptor)
-                .setAllowedOriginPatterns("*");
+                .setAllowedOriginPatterns("*")
+                .setAllowedOrigins("*");
     }
 }
