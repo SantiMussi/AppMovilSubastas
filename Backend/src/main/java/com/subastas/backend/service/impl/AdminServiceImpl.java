@@ -14,6 +14,7 @@ import com.subastas.backend.event.LoteCerradoEvent;
 import com.subastas.backend.event.SubastaCerradaEvent;
 import com.subastas.backend.repository.*;
 import com.subastas.backend.service.AdminService;
+import com.subastas.backend.service.AuthenticationService;
 import com.subastas.backend.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,13 +50,11 @@ public class AdminServiceImpl implements AdminService {
     private final UsuarioRepository usuarioRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final EmailService emailService;
+    private final AuthenticationService authenticationService;
 
 
     @Value("${app.empresa.cliente-id:1}")
     private Integer empresaClienteId;
-
-    @Value("${app.auth.registration-verification-code:}")
-    private String registrationVerificationCode;
 
 
     @Transactional
@@ -372,15 +371,12 @@ public class AdminServiceImpl implements AdminService {
         Usuario usuario = usuarioRepository.findByPersonaIdentificador(cliente.getIdentificador())
                 .orElse(null);
         if (usuario != null) {
+            String code = authenticationService.generateAndStoreRegistrationCode(usuario.getEmail());
             String subject = "Tu registro ha sido aprobado - VANTAGE";
             String body = "Hola " + (usuario.getPersona() != null ? usuario.getPersona().getNombre() : "") + ",\n\n" +
-                    "Te informamos que tu registro en VANTAGE ha sido aprobado por nuestro equipo.\n";
-            if (registrationVerificationCode != null && !registrationVerificationCode.isBlank()) {
-                body += "Para completar tu registro y establecer tu contraseña, ingresa en la app con tu email y el siguiente código de verificación: " + registrationVerificationCode.trim() + "\n";
-            } else {
-                body += "Ya puedes ingresar a la aplicación y completar tu perfil.\n";
-            }
-            body += "\nSaludos,\nEl equipo de VANTAGE.";
+                    "Te informamos que tu registro en VANTAGE ha sido aprobado por nuestro equipo.\n" +
+                    "Para completar tu registro y establecer tu contraseña, ingresa en la app con tu email y el siguiente código de verificación: " + code + "\n\n" +
+                    "Saludos,\nEl equipo de VANTAGE.";
             emailService.sendEmail(usuario.getEmail(), subject, body);
         }
 

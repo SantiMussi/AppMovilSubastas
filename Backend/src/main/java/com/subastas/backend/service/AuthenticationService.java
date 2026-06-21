@@ -47,6 +47,7 @@ public class AuthenticationService {
     private static final Duration RESET_CODE_TTL = Duration.ofMinutes(15);
 
     private final Map<String, PasswordResetCode> passwordResetCodes = new ConcurrentHashMap<>();
+    private final Map<String, RegistrationCode> registrationCodes = new ConcurrentHashMap<>();
 
 
     private final PersonaRepository personaRepository;
@@ -58,9 +59,6 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
-
-    @Value("${app.auth.registration-verification-code:}")
-    private String configuredRegistrationVerificationCode;
 
     @Transactional
     public RegistroInicialResponse register(RegisterRequest request) {
@@ -174,9 +172,9 @@ public class AuthenticationService {
 
     @Transactional
     public CompletarRegistroResponse completeRegistration(CompletarRegistroRequest request) {
-        validateRegistrationCode(request.getVerificationCode());
-
         String email = normalizeEmail(request.getEmail());
+        validateRegistrationCode(email, request.getVerificationCode());
+
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("Credenciales inválidas"));
         Cliente cliente = getCliente(usuario);
@@ -287,15 +285,25 @@ public class AuthenticationService {
     }
 
     private record PasswordResetCode(String code, Instant expiresAt) {}
+    private record RegistrationCode(String code, Instant expiresAt) {}
 
-    private void validateRegistrationCode(String verificationCode) {
+    public String generateAndStoreRegistrationCode(String email) {
+        String code = String.format("%06d", RESET_CODE_RANDOM.nextInt(1_000_000));
+        registrationCodes.put(normalizeEmail(email), new RegistrationCode(code, Instant.now().plus(Duration.ofHours(24))));
+        return code;
+    }
+
+    private void validateRegistrationCode(String email, String verificationCode) {
         String normalizedCode = verificationCode.trim();
-        if (configuredRegistrationVerificationCode == null || configuredRegistrationVerificationCode.isBlank()) {
-            return;
+        RegistrationCode regCode = registrationCodes.get(email);
+        if (regCode == null || regCode.expiresAt().isBefore(Instant.now())) {
+            registrationCodes.remove(email);
+            throw new BadCredentialsException("Código de verificación inválido o expirado");
         }
-        if (!configuredRegistrationVerificationCode.trim().equals(normalizedCode)) {
-            throw new BadCredentialsException("Código de verificación inválido");
+        if (!regCode.code().equals(normalizedCode)) {
+            throw new BadCredentialsException("Código de verificación inválido o expirado");
         }
+        registrationCodes.remove(email);
     }
 
     private Cliente getCliente(Usuario usuario) {
