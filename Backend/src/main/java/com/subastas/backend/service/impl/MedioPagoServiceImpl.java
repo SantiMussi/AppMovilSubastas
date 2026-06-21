@@ -89,7 +89,6 @@ public class MedioPagoServiceImpl implements MedioPagoService {
     @Transactional
     public void darDeBajaMedio(String email, Integer paymentId) {
         MedioPago medioPago = obtenerMedioDelUsuario(email, paymentId);
-        validarNoUsadoEnOperacion(medioPago);
         medioPago.setActivo(false);
         medioPagoRepository.save(medioPago);
     }
