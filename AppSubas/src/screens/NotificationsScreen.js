@@ -59,6 +59,13 @@ const TYPE_STYLES = {
         iconBg: '#FEF0C7',
         action: 'VER MULTA',
     },
+    paymentAccepted: {
+        label: 'MEDIO DE PAGO ACEPTADO',
+        icon: 'card-outline',
+        accent: '#15803D',
+        iconBg: '#DCFCE7',
+        action: 'VER MEDIOS',
+    },
 };
 
 export default function NotificationsScreen({ session, onMenuPress, onNavigate }) {
@@ -95,11 +102,12 @@ export default function NotificationsScreen({ session, onMenuPress, onNavigate }
         setError('');
 
         try {
-            const [bidsPayload, winsPayload, proposalsPayload, finesPayload] = await Promise.all([
+            const [bidsPayload, winsPayload, proposalsPayload, finesPayload, paymentsPayload] = await Promise.all([
                 fetchJson('/api/v1/users/me/bids/history').catch(() => ({ items: [] })),
                 fetchJson('/api/v1/users/me/wins').catch(() => ({ ventas: [] })),
                 fetchJson('/api/v1/users/me/proposals').catch(() => ({ items: [] })),
                 fetchJson('/api/v1/users/me/fines').catch(() => ({ multas: [] })),
+                fetchJson('/api/v1/users/me/payments').catch(() => ({ items: [] })),
             ]);
 
             const bids = bidsPayload?.items || [];
@@ -109,6 +117,7 @@ export default function NotificationsScreen({ session, onMenuPress, onNavigate }
                 ...buildWinNotifications(winsPayload?.ventas || [], currency),
                 ...buildProposalNotifications(proposalsPayload?.items || []),
                 ...buildFineNotifications(finesPayload?.multas || [], currency),
+                ...buildPaymentAcceptedNotifications(getPayloadCollection(paymentsPayload)),
             ].sort((a, b) => getTimeValue(b.createdAt) - getTimeValue(a.createdAt));
 
             setNotifications(dynamicNotifications);
@@ -178,8 +187,7 @@ export default function NotificationsScreen({ session, onMenuPress, onNavigate }
 }
 
 function NotificationCard({ item, onActionPress }) {
-    const visual = TYPE_STYLES[item.kind];
-
+    const visual = TYPE_STYLES[item.kind] || TYPE_STYLES.ending;
     return (
         <View style={styles.card}>
             <View style={styles.iconColumn}>
@@ -313,6 +321,36 @@ function buildFineNotifications(fines, currency) {
                 message: `Recibiste una multa de ${formatMoneyForCurrency(fine.monto || 0, currency)} por no pagar la subasta ganada de “${title}”. Regularizala antes del vencimiento.`,
             };
         });
+}
+
+function buildPaymentAcceptedNotifications(payments) {
+    return payments
+        .filter((payment) => payment?.activo !== false && payment?.verificado === true)
+        .map((payment) => {
+            const label = formatPaymentLabel(payment);
+            return {
+                id: `payment-accepted-${payment.id || label}`,
+                kind: 'paymentAccepted',
+                createdAt: payment.updatedAt || payment.fechaVerificacion || payment.createdAt || new Date().toISOString(),
+                route: 'pagos',
+                message: `Tu medio de pago ${label} fue aceptado y ya está habilitado para pujar o finalizar compras.`,
+            };
+        });
+}
+
+function getPayloadCollection(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.items)) return payload.items;
+    if (Array.isArray(payload?.paymentMethods)) return payload.paymentMethods;
+    if (Array.isArray(payload?.mediosPago)) return payload.mediosPago;
+    return [];
+}
+
+function formatPaymentLabel(payment) {
+    const entity = payment?.entidad || payment?.tipo || 'registrado';
+    const number = payment?.numeroIdentificacion || payment?.number || '';
+    const lastDigits = String(number).replace(/\D/g, '').slice(-4);
+    return lastDigits ? `${entity} terminada en ${lastDigits}` : entity;
 }
 
 
