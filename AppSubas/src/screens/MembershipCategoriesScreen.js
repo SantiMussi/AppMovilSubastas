@@ -107,6 +107,7 @@ export default function MembershipCategoriesScreen({ onMenuPress }) {
       <TopBar onMenuPress={onMenuPress} />
       <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
+        {/* Horizontal Cards Slider */}
         <View style={styles.sliderSection}>
           <FlatList
             data={LEVELS}
@@ -120,6 +121,7 @@ export default function MembershipCategoriesScreen({ onMenuPress }) {
           />
         </View>
 
+        {/* How to level up Section */}
         <View style={styles.accordionSection}>
           <Text style={styles.sectionTitle}>Cómo subir de nivel</Text>
 
@@ -278,7 +280,7 @@ const styles = StyleSheet.create({
   accordionContent: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-    paddingLeft: 34,
+    paddingLeft: 34, // Align with text
   },
   accordionText: {
     fontSize: 13,

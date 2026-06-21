@@ -5,7 +5,7 @@ const { width, height } = Dimensions.get('window');
 const serifFont = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
 
 export const headerStyles = {
-    // Imagen
+    // ── Imagen ────────────────────────────────────────────────────────
     imageWrap: {
         width: '100%',
         height: height * 0.46,
@@ -59,7 +59,7 @@ export const headerStyles = {
         lineHeight: 26,
     },
 
-    // Encabezado textual
+    // ── Encabezado textual ────────────────────────────────────────────
     headerSection: {
         paddingHorizontal: 20,
         paddingTop: 20,
@@ -79,7 +79,7 @@ export const headerStyles = {
         color: palette.ink,
     },
 
-    // Secciones de texto (Descripción / Procedencia)
+    // ── Secciones de texto (Descripción / Procedencia) ────────────────
     section: {
         paddingHorizontal: 20,
         paddingTop: 16,

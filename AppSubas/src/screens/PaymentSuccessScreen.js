@@ -15,6 +15,7 @@ const PaymentSuccessScreen = ({ session, onMenuPress, onNavigate }) => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
 
+      {/* Custom Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onMenuPress} style={styles.menuButton}>
           <View style={styles.menuBar} />
@@ -29,6 +30,7 @@ const PaymentSuccessScreen = ({ session, onMenuPress, onNavigate }) => {
         </View>
       </View>
 
+      {/* Main Content */}
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <Ionicons
@@ -41,6 +43,7 @@ const PaymentSuccessScreen = ({ session, onMenuPress, onNavigate }) => {
         <Text style={styles.title}>{'Método Agregado\ncon Éxito'}</Text>
       </View>
 
+      {/* Bottom Section */}
       <View style={styles.bottomSection}>
         <TouchableOpacity
           style={styles.volverButton}

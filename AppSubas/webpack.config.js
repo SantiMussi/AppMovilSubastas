@@ -3,7 +3,7 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-    entry: path.join(__dirname, 'index.web.js'),
+    entry: path.join(__dirname, 'index.web.js'), // Ahora creamos este archivo
     module: {
         rules: [
             {

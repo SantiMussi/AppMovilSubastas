@@ -222,6 +222,7 @@ const pickFromGallery = async (remaining) => {
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.carousel} contentContainerStyle={styles.carouselContent}>
+            {/* Botón agregar SIEMPRE primero a la izquierda */}
             {photos.length < MAX_PHOTOS && (
               <TouchableOpacity style={[styles.photoSlot, styles.photoSlotAdd]} onPress={openPhotoOptions} activeOpacity={0.7}>
                 <Text style={styles.addIcon}>＋</Text>
@@ -248,6 +249,7 @@ const pickFromGallery = async (remaining) => {
 
           {errors.photos ? <Text style={styles.fieldError}>{errors.photos}</Text> : null}
 
+          {/* Campo opcional de origen lícito */}
           <FormField
             label="URL DE ACREDITACIÓN DE ORIGEN (OPCIONAL)"
             placeholder="https://..."
@@ -257,6 +259,7 @@ const pickFromGallery = async (remaining) => {
             autoCapitalize="none"
           />
 
+          {/* Checkbox con texto actualizado */}
           <Pressable style={styles.declarationRow} onPress={handleDeclarationToggle}>
             <View style={[styles.checkbox, declaration && styles.checkboxChecked]}>
               {declaration && <Text style={styles.checkmark}>✓</Text>}

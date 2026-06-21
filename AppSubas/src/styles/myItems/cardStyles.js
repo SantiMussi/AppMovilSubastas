@@ -2,7 +2,7 @@ import { Dimensions, Platform } from 'react-native';
 import { palette } from '../../constants/palette';
 
 const serifFont = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
-const CARD_WIDTH = Dimensions.get('window').width - 44;
+const CARD_WIDTH = Dimensions.get('window').width - 44; // pantalla - padding horizontal
 
 export const cardStyles = {
     card: {

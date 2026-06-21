@@ -17,23 +17,24 @@ import { safeJson }  from '../utils/safeJson';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
+// ── Tabs ──────────────────────────────────────────────────────────
 
 const TABS = [
     { key: 'en_revision',       label: 'En Revisión' },
     { key: 'pendiente',         label: 'Pendiente'   },
     { key: 'aceptado',          label: 'Aceptado'    },
-    { key: 'rechazado_empresa', label: 'Rechazado'   },
-    { key: 'rechazado_usuario', label: 'Devuelto'    },
+    { key: 'rechazado_empresa', label: 'Rechazado'   }, // antes: 'rechazado'
+    { key: 'rechazado_usuario', label: 'Devuelto'    }, // nuevo
 ];
 
 const STATUS_MAP = {
     en_revision:           'en_revision',
     aceptada:              'pendiente',
     condiciones_aceptadas: 'aceptado',
-    rechazada:             'rechazado_empresa',
-    condiciones_rechazadas:'rechazado_empresa',
-    retiro_sucursal:       'rechazado_usuario',
-    envio_solicitado:      'rechazado_usuario',
+    rechazada:             'rechazado_empresa',     // solo empresa
+    condiciones_rechazadas:'rechazado_empresa',     // usuario rechazó precio, sin elegir aún
+    retiro_sucursal:       'rechazado_usuario',     // ya eligió sucursal → misma pestaña
+    envio_solicitado:      'rechazado_usuario',     // ya eligió envío → misma pestaña
 };
 
 const resolveTab = (status) => STATUS_MAP[status] ?? 'en_revision';
@@ -43,6 +44,8 @@ const formatDate = (iso) => {
     const d = new Date(iso);
     return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' });
 };
+
+// ── Screen ────────────────────────────────────────────────────────
 
 export default function MyItemsScreen({ session, onMenuPress, onProductPress }) {
     const [activeTab,  setActiveTab]  = useState('en_revision');
@@ -96,6 +99,7 @@ export default function MyItemsScreen({ session, onMenuPress, onProductPress }) 
 
     const filteredItems = items.filter((item) => resolveTab(item.status) === activeTab);
 
+    // ── Carrusel de imágenes por tarjeta ─────────────────────────
 
     const getIndex = (proposalId) => imageIndexes[proposalId] ?? 0;
 
@@ -112,6 +116,8 @@ export default function MyItemsScreen({ session, onMenuPress, onProductPress }) 
             [proposalId]: Math.min(total - 1, (prev[proposalId] ?? 0) + 1),
         }));
     };
+
+    // ── Render tarjeta ────────────────────────────────────────────
 
     const renderItem = ({ item }) => {
         const images       = (photosByProposal[item.proposalId] ?? []).map(b64 => `data:image/jpeg;base64,${b64}`);
@@ -158,6 +164,7 @@ export default function MyItemsScreen({ session, onMenuPress, onProductPress }) 
                     )}
                 </View>
 
+                {/* ── Bloque info (tappable → detalle) ── */}
                 <Pressable
                     style={({ pressed }) => [styles.info, pressed && { opacity: 0.7 }]}
                     onPress={() => onProductPress?.(item)}
@@ -172,6 +179,8 @@ export default function MyItemsScreen({ session, onMenuPress, onProductPress }) 
             </View>
         );
     };
+
+    // ── Render vacío ─────────────────────────────────────────────
 
     const renderEmpty = () => {
         if (loading) return null;
@@ -188,6 +197,8 @@ export default function MyItemsScreen({ session, onMenuPress, onProductPress }) 
             </View>
         );
     };
+
+    // ── Layout ────────────────────────────────────────────────────
 
     return (
         <View style={styles.stage}>

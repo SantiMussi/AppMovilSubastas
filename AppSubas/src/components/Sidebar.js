@@ -11,6 +11,18 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+/**
+ * Sidebar / drawer menu for the Vantage auction app.
+ *
+ * Props:
+ * - profile       : user profile object (nombre, apellido, categoria, foto)
+ * - currentScreen : string key of the currently active screen
+ * - onNavigate    : (screenKey) => void — fires when a menu item is tapped
+ * - onClose       : () => void — fires when the user wants to close the sidebar
+ * - onLogout      : () => void — fires when the user taps "Cerrar Sesión"
+ */
+
+/* ─── colour tokens ─────────────────────────────────────────────── */
 const C = {
   bg:           '#0A1628',
   bgLight:      '#0F1F38',
@@ -24,6 +36,7 @@ const C = {
   danger:       '#D94444',
 };
 
+/* ─── badge colours per membership category ─────────────────────── */
 const BADGE_STYLES = {
   PLATINO:  { bg: '#D4DEF2', text: '#0A1628', label: 'PLATINO'  },
   PLATINUM: { bg: '#D4DEF2', text: '#0A1628', label: 'PLATINO'  },
@@ -41,6 +54,7 @@ const getBadge = (category) => {
   return BADGE_STYLES[key] || BADGE_STYLES.DEFAULT;
 };
 
+/* ─── menu structure ────────────────────────────────────────────── */
 const MENU_SECTIONS = [
   {
     items: [
@@ -72,6 +86,7 @@ export function Sidebar({ profile, currentScreen, onNavigate, onClose, onLogout 
 
   return (
     <View style={styles.container}>
+      {/* ── header: logo + close ── */}
       <View style={styles.header}>
         <Text style={styles.brandText}>Vantage</Text>
         <View style={styles.headerRight}>
@@ -94,6 +109,7 @@ export function Sidebar({ profile, currentScreen, onNavigate, onClose, onLogout 
         </View>
       </View>
 
+      {/* ── user profile section ── */}
       <View style={styles.profileSection}>
         <View style={styles.avatarWrap}>
           {avatarUri ? (
@@ -105,6 +121,7 @@ export function Sidebar({ profile, currentScreen, onNavigate, onClose, onLogout 
               </Text>
             </View>
           )}
+          {/* Online indicator dot */}
           {profile && <View style={styles.onlineDot} />}
         </View>
 
@@ -121,12 +138,14 @@ export function Sidebar({ profile, currentScreen, onNavigate, onClose, onLogout 
         )}
       </View>
 
+      {/* ── scrollable menu ── */}
       <ScrollView
         style={styles.menuScroll}
         contentContainerStyle={styles.menuContent}
         showsVerticalScrollIndicator={false}
       >
         {MENU_SECTIONS.map((section, sectionIdx) => {
+          // If no profile, only allow auctions
           const visibleItems = section.items.filter(item => profile || item.key === 'auctions');
           if (visibleItems.length === 0) return null;
 
@@ -169,6 +188,7 @@ export function Sidebar({ profile, currentScreen, onNavigate, onClose, onLogout 
         })}
       </ScrollView>
 
+      {/* ── bottom: logout or login ── */}
       <View style={styles.bottomSection}>
         <View style={styles.separator} />
         {profile ? (
@@ -197,6 +217,7 @@ export function Sidebar({ profile, currentScreen, onNavigate, onClose, onLogout 
   );
 }
 
+/* ─── styles ────────────────────────────────────────────────────── */
 const SIDEBAR_WIDTH = 280;
 
 const styles = StyleSheet.create({

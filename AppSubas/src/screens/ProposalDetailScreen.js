@@ -17,6 +17,7 @@ import { safeJson } from '../utils/safeJson';
 
 const API = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 
+// ── Estado derivado de la propuesta ──────────────────────────────────────────
 
 const PS = {
     EN_REVISION:        'EN_REVISION',
@@ -55,17 +56,23 @@ function authHeader(session) {
     return { Authorization: `Bearer ${session?.accessToken}` };
 }
 
+// ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function ProposalDetailScreen({ proposalId, session, onBack, onMenuPress, onNavigate }) {
+    // ── Data ───────────────────────────────────────────────────────────
     const [detail,  setDetail]  = useState(null);
     const [photos,  setPhotos]  = useState([]);
     const [loading, setLoading] = useState(true);
     const [error,   setError]   = useState(null);
 
+    // ── Carrusel ───────────────────────────────────────────────────────
     const [photoIndex, setPhotoIndex] = useState(0);
 
+    // ── UI ─────────────────────────────────────────────────────────────
     const [showRejectModal,   setShowRejectModal]   = useState(false);
     const [submitting,        setSubmitting]        = useState(false);
+
+    // ── Fetch propuesta ────────────────────────────────────────────────
 
     const fetchDetail = useCallback(async () => {
         setLoading(true);
@@ -89,6 +96,8 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
     }, [proposalId, session]);
 
     useEffect(() => { fetchDetail(); }, [fetchDetail]);
+
+    // ── Responder términos ─────────────────────────────────────────────
 
     const respondTerms = useCallback(async (accept) => {
         setSubmitting(true);
@@ -133,11 +142,15 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
     }
 }, [proposalId, session, fetchDetail]);
 
+    // ── Fetch ubicación de retiro ──────────────────────────────────────
+
     const openLocationModal = useCallback(async () => {
         setShowLocationModal(true);
         setLocationLoading(true);
         setLocationData(null);
         try {
+            // Nota: el endpoint espera productId. Aquí se usa proposalId como proxy
+            // hasta que la propuesta tenga referencia directa al producto generado.
             const res = await fetch(
                 `${API}/api/v1/users/me/consigned-items/${proposalId}/location`,
                 { headers: authHeader(session) }
@@ -152,12 +165,15 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
         }
     }, [proposalId, session]);
 
+    // ── Derivados ──────────────────────────────────────────────────────
 
     const ps         = resolveProposalState(detail);
     const badgeLabel = ps ? BADGE_LABEL[ps] : '';
     const imageUri   = photos[photoIndex]
         ? `data:image/jpeg;base64,${photos[photoIndex]}`
         : null;
+
+    // ── Loading / Error sin datos ──────────────────────────────────────
 
     if (loading) {
         return (
@@ -188,6 +204,8 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
             </SafeAreaView>
         );
     }
+
+    // ── Bloques reutilizables ──────────────────────────────────────────
 
     const renderPriceBlock = () => {
         if (!detail?.basePrice) return null;
@@ -228,6 +246,8 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
             </View>
         );
     };
+
+    // ── Sección dinámica por estado ────────────────────────────────────
 
     const renderBottomSection = () => {
         switch (ps) {
@@ -352,8 +372,11 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
         }
     };
 
+    // ── Render ─────────────────────────────────────────────────────────
+
     return (
         <SafeAreaView style={styles.stage}>
+            {/* <StatusBar barStyle="dark-content" /> */}
 
             <TopBar onMenuPress={onMenuPress} />
 
@@ -365,6 +388,7 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
 
+                {/* ── Imagen con badge y carrusel ── */}
                 <View style={styles.imageWrap}>
                     {imageUri ? (
                         <Image
@@ -400,6 +424,7 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
                     )}
                 </View>
 
+                {/* ── Encabezado textual ── */}
                 <View style={styles.headerSection}>
                     <Text style={styles.eyebrow}>VANTAGE FINE AUCTIONS</Text>
                     <Text style={styles.title}>{detail?.titulo ?? ''}</Text>
@@ -429,6 +454,7 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
 
             </ScrollView>
 
+            {/* ── Modal: Confirmar rechazo de precio ── */}
             <Modal
                 visible={showRejectModal}
                 transparent

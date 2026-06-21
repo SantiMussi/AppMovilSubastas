@@ -64,6 +64,7 @@ export default function LoginScreen({ onBack, onRegister, onForgotPassword, onLo
     } catch (error) {
       const errorMessage = error.message || 'No pudimos iniciar sesión.';
       setMessage(errorMessage);
+      // Alert.alert('Error de inicio de sesión', errorMessage);
     } finally {
       setLoading(false);
     }

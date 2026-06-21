@@ -5,7 +5,7 @@ export const layoutStyles = {
         flex: 1,
         backgroundColor: palette.paper,
     },
-    // Área fuera del scroll
+    // Área sticky (título + tabs) — fuera del scroll
     stickyHeader: {
         backgroundColor: palette.paper,
         paddingHorizontal: 22,
