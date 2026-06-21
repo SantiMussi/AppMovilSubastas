@@ -66,6 +66,14 @@ public class Propuesta {
     @JoinColumn(name = "revisor")
     private Empleado revisor;
 
+    /**
+    * Producto generado automáticamente cuando el usuario acepta los términos.
+    * null hasta que el usuario acepte.
+    */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "productoGenerado")
+    private Producto productoGenerado;
+
     @OneToMany(mappedBy = "propuesta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FotoPropuesta> fotos = new ArrayList<>();
 
