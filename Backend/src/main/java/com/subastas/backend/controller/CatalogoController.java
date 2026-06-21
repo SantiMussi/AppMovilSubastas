@@ -26,7 +26,7 @@ public class CatalogoController {
         return ResponseEntity.ok(catalogos);
     }
 
-    @GetMapping("/{idCatalogo}/items")
+    @GetMapping("/catalogs/{idCatalogo}/items")
     public ResponseEntity<List<ItemCatalogoResponse>> obtenerItemsDeCatalogo(@PathVariable Integer idCatalogo) {
         List<ItemCatalogoResponse> items = catalogoService.obtenerItemsPorCatalogo(idCatalogo);
         if (items.isEmpty()) {

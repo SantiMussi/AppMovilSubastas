@@ -223,7 +223,7 @@ export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
               key={`${auction.id}-${auction.computedStatus}`}
               auction={auction}
               now={now}
-              onJoin={() => onNavigate?.(`auctionItemDetail:${auction.auctionItemId}`)}
+              onJoin={() => onNavigate?.(`catalog:${auction.id}:${encodeURIComponent(auction.title || '')}`)}
             />
           ))
         )}

@@ -264,9 +264,22 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
           } else if (eventType === 'bid_rejected') {
             setBidPending(false);
             setError(payload.message || 'La puja fue rechazada.');
+          } else if (eventType === 'lot_closed') {
+            const nextId = payload?.nextItemId ? String(payload.nextItemId) : null;
+            if (nextId) {
+              // Hay un lote siguiente — mostrar aviso breve y navegar
+              setBidMessage('Lote adjudicado. Avanzando al siguiente…');
+              setTimeout(() => {
+                onNavigateToItem?.(nextId);
+              }, 2000);
+            } else {
+              // Era el último lote — tratar como subasta cerrada
+              applyAuctionClosedEvent(payload);
+              loadSnapshot().catch(() => {});
+            }
           } else if (isAuctionClosedPayload(payload, eventType)) {
-            applyAuctionClosedEvent(payload);
-            loadSnapshot().catch(() => {});
+              applyAuctionClosedEvent(payload);
+              loadSnapshot().catch(() => {});
           } else {
             applySnapshot(payload);
           }

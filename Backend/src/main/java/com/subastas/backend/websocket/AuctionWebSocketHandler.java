@@ -7,6 +7,7 @@ import com.subastas.backend.dto.response.puja.PujaAceptadaResponse;
 import com.subastas.backend.dto.response.puja.PujaRechazadaResponse;
 import com.subastas.backend.dto.response.puja.PujasEnVivoSnapshotResponse;
 import com.subastas.backend.entity.Pujo;
+import com.subastas.backend.event.LoteCerradoEvent;
 import com.subastas.backend.event.SubastaCerradaEvent;
 import com.subastas.backend.exception.PujaRechazadaException;
 import com.subastas.backend.service.ItemSubastaService;
@@ -98,6 +99,29 @@ public class AuctionWebSocketHandler extends TextWebSocketHandler {
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
         removeSession(session);
         if (session.isOpen()) session.close(CloseStatus.SERVER_ERROR);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onLoteCerrado(LoteCerradoEvent event) {
+        sessions.values().forEach(session -> {
+            try {
+                Integer sessionItemId = auctionItemId(session).orElse(null);
+                if (sessionItemId == null || !sessionItemId.equals(event.closedItemId())) return;
+
+                // Notificar al cliente que el lote cerró e indicar el siguiente
+                var payload = Map.of(
+                        "type", "lot_closed",
+                        "closedItemId", event.closedItemId(),
+                        "nextItemId", event.nextItemId() != null ? event.nextItemId() : "",
+                        "auctionId", event.auctionId(),
+                        "generatedAt", Instant.now().toString()
+                );
+                send(session, payload);
+
+            } catch (Exception exception) {
+                log.debug("Unable to send lot_closed to session {}", session.getId(), exception);
+            }
+        });
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

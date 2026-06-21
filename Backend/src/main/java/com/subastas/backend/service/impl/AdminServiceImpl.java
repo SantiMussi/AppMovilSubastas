@@ -10,6 +10,7 @@ import com.subastas.backend.dto.response.subasta.CrearSubastaResponse;
 import com.subastas.backend.entity.*;
 import com.subastas.backend.exception.ConflictException;
 import com.subastas.backend.exception.ResourceNotFoundException;
+import com.subastas.backend.event.LoteCerradoEvent;
 import com.subastas.backend.event.SubastaCerradaEvent;
 import com.subastas.backend.repository.*;
 import com.subastas.backend.service.AdminService;
@@ -177,15 +178,31 @@ public class AdminServiceImpl implements AdminService {
 
         Subasta subasta = item.getCatalogo().getSubasta();
 
+        AdjudicarItemResponse response;
         if ("empresa".equalsIgnoreCase(req.getAdjudicarA())) {
-            return adjudicarAEmpresa(item, subasta);
+            response = adjudicarAEmpresa(item, subasta);
+        } else if ("ganador".equalsIgnoreCase(req.getAdjudicarA())) {
+            response = adjudicarAGanador(item, subasta);
+        } else {
+            throw new IllegalArgumentException("'adjudicarA' debe ser 'ganador' o 'empresa'");
         }
 
-        if ("ganador".equalsIgnoreCase(req.getAdjudicarA())) {
-            return adjudicarAGanador(item, subasta);
-        }
+        // Buscar el siguiente ítem no adjudicado del mismo catálogo, en orden de identificador
+        Integer nextItemId = itemCatalogoRepository
+                .findByCatalogoIdentificador(item.getCatalogo().getIdentificador())
+                .stream()
+                .filter(i -> !"si".equalsIgnoreCase(i.getSubastado())
+                        && !i.getIdentificador().equals(itemId))
+                .map(ItemCatalogo::getIdentificador)
+                .min(Integer::compareTo)
+                .orElse(null);
 
-        throw new IllegalArgumentException("'adjudicarA' debe ser 'ganador' o 'empresa'");
+        response.setNextItemId(nextItemId);
+
+        // Publicar evento para que el WebSocket notifique a los conectados
+        eventPublisher.publishEvent(new LoteCerradoEvent(subasta.getIdentificador(), itemId, nextItemId));
+
+        return response;
     }
 
     private AdjudicarItemResponse adjudicarAEmpresa(ItemCatalogo item, Subasta subasta) {

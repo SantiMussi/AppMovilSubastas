@@ -17,4 +17,5 @@ public class AdjudicarItemResponse {
     private Integer clienteGanadorId;
     private BigDecimal montoGanador;
     private Integer registroId;
+    private Integer nextItemId;
 }

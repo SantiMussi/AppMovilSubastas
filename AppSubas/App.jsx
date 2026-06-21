@@ -40,6 +40,7 @@ import MyItemsScreen from './src/screens/MyItemsScreen';
 import ProposalDetailScreen from './src/screens/ProposalDetailScreen';
 import ProposalCheckoutScreen from './src/screens/ProposalCheckoutScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
+import CatalogScreen from './src/screens/CatalogScreen';
 
 import { Sidebar } from './src/components/Sidebar';
 import { DrawerLayout } from './src/components/DrawerLayout';
@@ -501,6 +502,22 @@ function RootNavigator() {
         );
 
       default:
+        if (screen.startsWith('catalog:')) {
+          const parts = screen.split(':');
+          const auctionId = parts[1];
+          const auctionTitle = parts[2] ? decodeURIComponent(parts[2]) : undefined;
+          return (
+            <CatalogScreen
+              auctionId={auctionId}
+              auctionTitle={auctionTitle}
+              session={session}
+              onMenuPress={openDrawer}
+              onBack={goBack}
+              onSelectItem={(route) => handleNavigate(route)}
+            />
+          );
+        }
+
         if (screen.startsWith('auctionItemDetail:')) {
           const auctionItemId = screen.split(':')[1];
           return (
@@ -520,6 +537,7 @@ function RootNavigator() {
               auctionItemId={auctionItemId}
               session={session}
               onMenuPress={openDrawer}
+              onNavigateToItem={(nextId) => handleNavigate(`auctionRoom:${nextId}`)}
             />
           );
         }
