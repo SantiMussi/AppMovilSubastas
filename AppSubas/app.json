@@ -17,6 +17,7 @@
       "bundleIdentifier": "com.vantage.app"
     },
     "android": {
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0B1528"
@@ -41,7 +42,7 @@
         {
           "photosPermission": "La app necesita guardar la foto del DNI para validar tu identidad.",
           "cameraPermission": "La app necesita usar la cámara para tomar fotos del frente y dorso del DNI."
-        }  
+        }
       ]
     ]
   }
