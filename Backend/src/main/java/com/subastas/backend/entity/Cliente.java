@@ -21,7 +21,7 @@ public class Cliente {
     private Pais pais;
 
     @Column(length = 2)
-    private String admitido; // Podría ser un Boolean en el futuro
+    private String admitido;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 10)

@@ -12,7 +12,7 @@ public class Empleado {
     private Integer identificador;
 
     @OneToOne
-    @MapsId // Le dice a JPA que la PK de Empleado es también la FK hacia Persona
+    @MapsId
     @JoinColumn(name = "identificador")
     private Persona persona;
 

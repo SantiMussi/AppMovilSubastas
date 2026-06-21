@@ -57,8 +57,6 @@ public class AdminServiceImpl implements AdminService {
     private String registrationVerificationCode;
 
 
-    //  SUBASTAS
-
     @Transactional
     public CrearSubastaResponse crearSubasta(Integer empleadoId, CrearSubastaRequest req) {
         if (!req.getFecha().isAfter(LocalDate.now().plusDays(10))) {
@@ -109,7 +107,6 @@ public class AdminServiceImpl implements AdminService {
 
         List<RegistroDeSubasta> registrosCreados = adjudicarGanadoresPendientes(subasta);
 
-        // "carrada" porque el profe puso en la BBDD original así en vez de "cerrada"
         subasta.setEstado("carrada");
         subastaRepository.save(subasta);
         eventPublisher.publishEvent(new SubastaCerradaEvent(subastaId, subasta.getEstado()));
@@ -250,8 +247,6 @@ public class AdminServiceImpl implements AdminService {
     }
 
 
-    //  USUARIOS
-
     @Transactional(readOnly = true)
     public List<AdminUserResponse> obtenerUsuarios() {
         Map<Integer, Cliente> clientesPorPersonaId = clienteRepository.findAll().stream()
@@ -382,9 +377,6 @@ public class AdminServiceImpl implements AdminService {
                         .flatMap(persona -> clienteRepository.findById(persona.getIdentificador())))
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
     }
-	
-
-    //  MEDIOS DE PAGO
 
     @Transactional
     public MessageResponse verificarPago(Integer empleadoId, Integer pagoId, VerificarPagoRequest req) {
@@ -405,9 +397,6 @@ public class AdminServiceImpl implements AdminService {
                 : "Medio de pago rechazado");
     }
 
-
-    //  PROPUESTAS
-    
     @Transactional
     public MessageResponse revisarPropuesta(Integer empleadoId, Integer propuestaId, RevisarPropuestaRequest req) {
         
@@ -455,9 +444,6 @@ public class AdminServiceImpl implements AdminService {
                 ? "Propuesta aprobada"
                 : "Propuesta rechazada");
     }
-
-
-    //  MULTAS
 
     @Transactional
     public CrearMultaResponse crearMulta(Integer empleadoId, CrearMultaRequest req) {

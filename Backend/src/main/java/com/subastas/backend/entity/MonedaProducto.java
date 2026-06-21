@@ -17,7 +17,6 @@ public class MonedaProducto {
     @JoinColumn(name = "producto")
     private Producto producto;
 
-    /** ISO 4217: ARS, USD, etc. */
     @Column(nullable = false, length = 3)
     private String moneda;
 }

@@ -7,7 +7,7 @@ import lombok.Data;
 public class SolicitarDevolucionRequest {
 
     @NotBlank
-    private String tipo; // "sucursal" | "envio"
+    private String tipo;
 
-    private String direccion; // requerido solo si tipo = "envio"
+    private String direccion;
 }

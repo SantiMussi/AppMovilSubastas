@@ -7,8 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-// la unica razon por la que existe esta clase es porque pujos no tiene fecha
-
 @Data
 @Entity
 @Table(name = "pujosMetadata")

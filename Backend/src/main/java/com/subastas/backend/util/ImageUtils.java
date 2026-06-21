@@ -15,7 +15,6 @@ import java.util.Iterator;
 
 public class ImageUtils {
 
-    // Tamaño máximo para un tipo BLOB estándar en MySQL es ~65KB (65535 bytes)
     private static final int MAX_BLOB_SIZE = 65000;
 
     public static byte[] procesarImagen(MultipartFile archivo) throws IOException {
@@ -33,7 +32,6 @@ public class ImageUtils {
             return originalBytes;
         }
 
-        // Si excede el tamaño, la redimensionamos y comprimimos
         BufferedImage originalImage = ImageIO.read(archivo.getInputStream());
         if (originalImage == null) {
             throw new IllegalArgumentException("No se pudo leer la imagen");
@@ -45,7 +43,6 @@ public class ImageUtils {
     private static byte[] compressImage(BufferedImage image, int maxSize) throws IOException {
         int targetWidth = 400;
 
-        // Intentar achicar las dimensiones de a poco si la calidad no alcanza
         while (targetWidth >= 100) {
             int targetHeight = (int) (image.getHeight() * ((double) targetWidth / image.getWidth()));
 
@@ -70,8 +67,6 @@ public class ImageUtils {
                 return imageBytes;
             }
 
-            // Si incluso en baja calidad supera los 65KB (raro, pero posible), achicamos la
-            // resolución a la mitad
             targetWidth /= 2;
         }
 
