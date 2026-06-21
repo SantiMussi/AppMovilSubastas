@@ -1,7 +1,7 @@
 import { palette } from '../../constants/palette';
 
 export const modalStyles = {
-    // ── Fondo del modal ───────────────────────────────────────────────
+    // Fondo del modal
     modalBackdrop: {
         flex: 1,
         backgroundColor: 'rgba(7, 13, 24, 0.62)',
@@ -20,7 +20,7 @@ export const modalStyles = {
         elevation: 10,
     },
 
-    // ── Icono central ─────────────────────────────────────────────────
+    // Icono central
     iconCircle: {
         width: 56,
         height: 56,
@@ -35,7 +35,7 @@ export const modalStyles = {
         fontSize: 24,
     },
 
-    // ── Textos ────────────────────────────────────────────────────────
+    // Textos
     modalTitle: {
         color: palette.ink,
         fontSize: 18,
@@ -52,7 +52,7 @@ export const modalStyles = {
         marginBottom: 28,
     },
 
-    // ── Detalle de ubicación (modal retiro) ───────────────────────────
+    // Detalle de ubicación (modal retiro)
     locationRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -82,7 +82,7 @@ export const modalStyles = {
         textAlign: 'center',
     },
 
-    // ── Botones ───────────────────────────────────────────────────────
+    // Botones
     modalBtnRow: {
         flexDirection: 'row',
         gap: 12,

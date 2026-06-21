@@ -107,13 +107,11 @@ export default function LinkBankAccountScreen({ session, onMenuPress, onBack, on
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* ── Title ── */}
           <Text style={styles.title}>Vincular Cuenta Bancaria</Text>
           <Text style={styles.subtitle}>
             Configure su medio de pago preferido para transacciones inmediatas.
           </Text>
 
-          {/* ── BANCO ── */}
           <Text style={styles.label}>BANCO</Text>
           <View style={styles.inputContainer}>
             <TextInput
@@ -127,7 +125,6 @@ export default function LinkBankAccountScreen({ session, onMenuPress, onBack, on
             />
           </View>
 
-          {/* ── TIPO DE CUENTA ── */}
           <Text style={styles.label}>TIPO DE CUENTA</Text>
           <Pressable
             style={styles.inputContainer}
@@ -147,7 +144,6 @@ export default function LinkBankAccountScreen({ session, onMenuPress, onBack, on
             </View>
           </Pressable>
 
-          {/* ── NÚMERO DE CBU/CVU ── */}
           <Text style={styles.label}>NÚMERO DE CBU/CVU</Text>
           <View style={styles.inputContainer}>
             <TextInput
@@ -162,7 +158,6 @@ export default function LinkBankAccountScreen({ session, onMenuPress, onBack, on
             />
           </View>
 
-          {/* ── ALIAS ── */}
           <Text style={styles.label}>ALIAS</Text>
           <View style={styles.inputContainer}>
             <TextInput
@@ -176,7 +171,6 @@ export default function LinkBankAccountScreen({ session, onMenuPress, onBack, on
             />
           </View>
 
-          {/* ── Cuenta Principal toggle ── */}
           <View style={styles.toggleRow}>
             <View style={styles.toggleTextWrap}>
               <Text style={styles.toggleTitle}>Cuenta Principal</Text>
@@ -194,7 +188,6 @@ export default function LinkBankAccountScreen({ session, onMenuPress, onBack, on
             />
           </View>
 
-          {/* ── Moneda toggle ── */}
           <View style={styles.toggleRow}>
             <View style={styles.toggleTextWrap}>
               <Text style={styles.toggleTitle}>Moneda de la Cuenta</Text>
@@ -212,7 +205,6 @@ export default function LinkBankAccountScreen({ session, onMenuPress, onBack, on
             />
           </View>
 
-          {/* ── Submit Button ── */}
           <Pressable
             style={({ pressed }) => [
               styles.submitBtn,
@@ -229,7 +221,6 @@ export default function LinkBankAccountScreen({ session, onMenuPress, onBack, on
             )}
           </Pressable>
 
-          {/* ── Cancel link ── */}
           <Pressable style={styles.cancelBtn} onPress={onBack} disabled={submitting}>
             <Text style={styles.cancelBtnText}>CANCELAR Y VOLVER</Text>
           </Pressable>
@@ -239,7 +230,6 @@ export default function LinkBankAccountScreen({ session, onMenuPress, onBack, on
   );
 }
 
-/* ─────────────────────── styles ─────────────────────── */
 
 const styles = StyleSheet.create({
   container: {
@@ -252,7 +242,6 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
 
-  /* ── Title / Subtitle ── */
   title: {
     fontFamily: 'serif',
     fontSize: 28,
@@ -267,7 +256,6 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
 
-  /* ── Labels ── */
   label: {
     fontSize: 11,
     fontWeight: '800',
@@ -276,7 +264,6 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
-  /* ── Input container ── */
   inputContainer: {
     backgroundColor: '#F5F5F7',
     borderRadius: 8,
@@ -284,7 +271,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  /* ── Text input ── */
   input: {
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
@@ -297,7 +283,6 @@ const styles = StyleSheet.create({
     color: '#BBB',
   },
 
-  /* ── Picker row ── */
   pickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -305,7 +290,6 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E0E0E0',
   },
 
-  /* ── Toggle row ── */
   toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -329,7 +313,6 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 
-  /* ── Submit button ── */
   submitBtn: {
     backgroundColor: Colors.primary,
     height: 50,
@@ -362,7 +345,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
 
-  /* ── Cancel link ── */
   cancelBtn: {
     alignItems: 'center',
     paddingVertical: 8,

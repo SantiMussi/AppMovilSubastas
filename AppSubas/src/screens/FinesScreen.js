@@ -27,7 +27,6 @@ export default function FinesScreen({ session, onBack, onNavigate }) {
       if (response.ok) {
         const data = await response.json();
         const allFines = data.multas || [];
-        // Filter out paid fines so they don't show up in the pending list
         const pendingFines = allFines.filter(m => (m.estado || '').toLowerCase() !== 'paga');
         setFines(pendingFines);
       } else {
@@ -244,7 +243,6 @@ const styles = StyleSheet.create({
     color: '#555',
     lineHeight: 18,
   },
-  // Empty State Styles
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
@@ -274,7 +272,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     lineHeight: 20,
   },
-  // Populated State Styles
+
   fineCard: {
     width: width - 40,
     backgroundColor: '#FFF',

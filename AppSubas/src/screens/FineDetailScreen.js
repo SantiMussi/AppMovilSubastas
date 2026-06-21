@@ -125,12 +125,6 @@ export default function FineDetailScreen({ session, fineId, onBack, onNavigate }
             <Text style={styles.breakdownValue}>{formatGlobalMoney(amount)}</Text>
           </View>
 
-          {/* Commented out operation fee to keep the total perfectly aligned with the backend's 'monto' */}
-          {/* <View style={styles.breakdownRow}>
-            <Text style={styles.breakdownLabel}>Gastos de Operación Notarial</Text>
-            <Text style={styles.breakdownValue}>{formatGlobalMoney(1250)}</Text>
-          </View> */}
-
           <View style={styles.divider} />
 
           <View style={styles.totalRow}>

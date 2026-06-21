@@ -41,7 +41,6 @@ export default function RegistrationStatusScreen({ onBack, onContinueRegistratio
     if (status === 'RECHAZADO' || status === 'REJECTED') return 'Rechazado';
     if (status === 'EN_PROCESO' || status === 'PENDIENTE' || status === 'PENDING' || status === 'PENDIENTE_VERIFICACION') return 'En proceso de validación';
     
-    // Fallback for snake_case or messy formats
     if (rawStatus) {
       return String(rawStatus)
         .replace(/_/g, ' ')
@@ -59,7 +58,6 @@ export default function RegistrationStatusScreen({ onBack, onContinueRegistratio
     if (status === 'RECHAZADO' || status === 'REJECTED') {
       return { bg: '#ffebee', border: '#f44336', text: '#c62828', icon: 'close-circle' };
     }
-    // Default / Pending
     return { bg: '#fff3e0', border: '#ff9800', text: '#ef6c00', icon: 'time' };
   };
 
@@ -110,8 +108,6 @@ export default function RegistrationStatusScreen({ onBack, onContinueRegistratio
                 <Text style={[styles.resultDetails, { color: visuals.text, opacity: 0.8 }]}>Categoría: {statusResult.categoria}</Text>
               )}
               {(() => {
-                // Mostramos el botón SOLO si el backend indica que puede completar etapa 2
-                // (está aprobado Y no tiene contraseña aún)
                 if (!statusResult.puedeCompletarEtapa2) return null;
 
                 return (

@@ -1,7 +1,7 @@
 import { palette } from '../../constants/palette';
 
 export const actionStyles = {
-    // ── Botones principales ───────────────────────────────────────────
+    // Botones principales
     actionsRow: {
         flexDirection: 'row',
         marginHorizontal: 20,
@@ -50,7 +50,7 @@ export const actionStyles = {
         letterSpacing: 1.2,
     },
 
-    // ── Feedback / Notas de curación ──────────────────────────────────
+    // Feedback / Notas de curación
     notasSection: {
         marginHorizontal: 20,
         marginTop: 24,
@@ -71,7 +71,7 @@ export const actionStyles = {
         lineHeight: 21,
     },
 
-    // ── Nota de devolución (empresa rechazó) ──────────────────────────
+    // Nota de devolución (empresa rechazó)
     notaDevolucionBox: {
         marginHorizontal: 20,
         marginTop: 24,
@@ -104,7 +104,7 @@ export const actionStyles = {
         letterSpacing: 1.2,
     },
 
-    // ── Banner "Precio rechazado" (rechazado_usuario en vista retiro) ──
+    // Banner "Precio rechazado"
     rejectedBanner: {
         marginHorizontal: 20,
         marginTop: 16,

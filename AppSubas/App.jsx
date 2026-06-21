@@ -15,7 +15,6 @@ import LoginScreen from './src/screens/LoginScreen';
 import PasswordRecoveryScreen from './src/screens/PasswordRecoveryScreen';
 import UserDataScreen from './src/screens/UserDataScreen';
 import OfferItemScreen from './src/screens/OfferItemScreen';
-import PlaceholderScreen from './src/screens/PlaceholderScreen';
 import MembershipCategoriesScreen from './src/screens/MembershipCategoriesScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import FinesScreen from './src/screens/FinesScreen';
@@ -555,7 +554,7 @@ function RootNavigator() {
               session={session}
               productId={proposalId}
               onBack={goBack}
-              onSuccess={goBack}  // ← agregás esto
+              onSuccess={goBack}
             />
           );
         }
@@ -568,10 +567,8 @@ function RootNavigator() {
               fineId={fineId}
               onBack={goBack}
               onPaymentSuccess={(id) => {
-                // Clear the fine-related history and navigate back to fines
                 setScreenHistory(prev => {
                   const copy = [...prev];
-                  // Pop until we find the screen that led to 'fines'
                   const idx = copy.lastIndexOf('fines');
                   return idx >= 0 ? copy.slice(0, idx) : [];
                 });
