@@ -17,5 +17,6 @@ public interface PujoRepository extends JpaRepository<Pujo, Integer> {
     @org.springframework.data.jpa.repository.Query("SELECT AVG(p.importe) FROM Pujo p WHERE p.asistente.cliente.identificador = :clienteId")
     Double getAveragePujaByClienteId(@org.springframework.data.repository.query.Param("clienteId") Integer clienteId);
 
+    @EntityGraph(attributePaths = {"asistente", "asistente.cliente", "asistente.cliente.persona", "item", "item.producto", "item.catalogo", "item.catalogo.subasta", "metadata"})
     java.util.List<Pujo> findByAsistenteClienteIdentificador(Integer clienteId);
 }

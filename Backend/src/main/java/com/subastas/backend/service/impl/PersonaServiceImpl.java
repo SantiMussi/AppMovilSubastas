@@ -293,7 +293,9 @@ public class PersonaServiceImpl implements PersonaService {
         Integer clienteId = usuario.getPersona().getIdentificador();
         
         java.util.List<com.subastas.backend.entity.Pujo> userPujos = pujoRepository.findByAsistenteClienteIdentificador(clienteId);
-        
+        java.util.Map<Integer, java.util.List<com.subastas.backend.entity.Pujo>> pujosPerItem = userPujos.stream()
+            .filter(p -> p.getItem() != null && p.getItem().getIdentificador() != null)
+            .collect(java.util.stream.Collectors.groupingBy(p -> p.getItem().getIdentificador()));
         // Group by item id and find max bid per item. Avoid using JPA entities as map keys because
         // Lombok-generated hashCode() walks entity relationships and can recurse indefinitely through
         // bidirectional links such as Sector <-> Empleado.
@@ -316,12 +318,10 @@ public class PersonaServiceImpl implements PersonaService {
             com.subastas.backend.dto.response.metrics.BidItemDto dto = new com.subastas.backend.dto.response.metrics.BidItemDto();
             dto.setId(maxBid.getIdentificador());
             
-            // Status
-            String status = "ACTIVA";
-            if (subasta != null && "cerrada".equalsIgnoreCase(subasta.getEstado())) {
-                status = "si".equalsIgnoreCase(maxBid.getGanador()) ? "GANADA" : "PERDIDA";
-            }
-            dto.setStatus(status);
+            String auctionStatus = subasta != null ? subasta.getEstado() : null;
+            boolean auctionClosed = auctionStatus != null && !"abierta".equalsIgnoreCase(auctionStatus);
+            dto.setStatus(auctionClosed ? "CERRADA" : "ACTIVA");
+            dto.setAuctionStatus(auctionStatus);
             
             dto.setLotNumber(String.valueOf(item.getIdentificador()));
             dto.setCategory(subasta != null && subasta.getCategoria() != null ? subasta.getCategoria().toString().replace("_", " ") : "GENERAL");
@@ -343,6 +343,32 @@ public class PersonaServiceImpl implements PersonaService {
             }
             
             dto.setImage(obtenerPrimeraFotoUrl(producto));
+            java.util.List<com.subastas.backend.dto.response.puja.ItemHistorialPujaResponse> bidHistory = pujosPerItem
+                .getOrDefault(item.getIdentificador(), java.util.Collections.emptyList())
+                .stream()
+                .sorted((a, b) -> {
+                    java.time.LocalDateTime fechaA = a.getMetadata() != null ? a.getMetadata().getFecha() : null;
+                    java.time.LocalDateTime fechaB = b.getMetadata() != null ? b.getMetadata().getFecha() : null;
+                    if (fechaA != null && fechaB != null) {
+                        return fechaB.compareTo(fechaA);
+                    }
+                    return b.getIdentificador().compareTo(a.getIdentificador());
+                })
+                .map(pujo -> {
+                    com.subastas.backend.dto.response.puja.ItemHistorialPujaResponse bidDto = new com.subastas.backend.dto.response.puja.ItemHistorialPujaResponse();
+                    bidDto.setBidId(pujo.getIdentificador());
+                    bidDto.setImporte(pujo.getImporte());
+                    bidDto.setFecha(pujo.getMetadata() != null ? pujo.getMetadata().getFecha() : null);
+                    if (pujo.getAsistente() != null) {
+                        bidDto.setBidderNumber(pujo.getAsistente().getIdentificador());
+                        if (pujo.getAsistente().getCliente() != null && pujo.getAsistente().getCliente().getPersona() != null) {
+                            bidDto.setBidderName(pujo.getAsistente().getCliente().getPersona().getNombre());
+                        }
+                    }
+                    return bidDto;
+                })
+                .toList();
+            dto.setBidHistory(bidHistory);
             
             items.add(dto);
         }

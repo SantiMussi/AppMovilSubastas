@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Image, Dimensions, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TopBar } from '../components/TopBar';
 import { useCurrency } from '../context/CurrencyContext';
@@ -14,6 +14,7 @@ export default function BiddingHistoryScreen({ session, onMenuPress, onNavigate,
   const [bids, setBids] = useState([]);
   const [error, setError] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [selectedBid, setSelectedBid] = useState(null);
   const { formatGlobalMoney } = useCurrency();
 
   useEffect(() => {
@@ -25,8 +26,6 @@ export default function BiddingHistoryScreen({ session, onMenuPress, onNavigate,
       const response = await fetch(`${API_BASE}/api/v1/users/me/bids/history`, {
         headers: { Authorization: `Bearer ${session?.accessToken}` },
       });
-      console.log(response)
-      console.log(session.accessToken)
       if (response.ok) {
         const data = await response.json();
         if (data.items && data.items.length > 0) {
@@ -43,6 +42,76 @@ export default function BiddingHistoryScreen({ session, onMenuPress, onNavigate,
       setLoading(false);
     }
   };
+
+
+  const formatBidDate = (value) => {
+    if (!value) return 'Sin fecha registrada';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return date.toLocaleString('es-ES', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const getStatusStyle = (status) => {
+    return String(status).toUpperCase() === 'CERRADA' ? styles.closedBadge : styles.activeBadge;
+  };
+
+  const renderBidDetailModal = () => (
+    <Modal
+      visible={Boolean(selectedBid)}
+      animationType="slide"
+      transparent
+      onRequestClose={() => setSelectedBid(null)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <View>
+              <Text style={styles.modalEyebrow}>LOTE #{selectedBid?.lotNumber}</Text>
+              <Text style={styles.modalTitle}>{selectedBid?.title}</Text>
+            </View>
+            <Pressable onPress={() => setSelectedBid(null)} hitSlop={10}>
+              <Ionicons name="close" size={24} color="#111" />
+            </Pressable>
+          </View>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <Text style={styles.modalSubtitle}>Todas tus pujas en esta subasta</Text>
+            {(selectedBid?.bidHistory || []).map((historyItem, index) => (
+              <View key={historyItem.bidId || index} style={styles.historyRow}>
+                <View style={styles.historyRowHeader}>
+                  <Text style={styles.historyIndex}>PUJA #{(selectedBid.bidHistory || []).length - index}</Text>
+                  <Text style={styles.historyAmount}>{formatGlobalMoney(historyItem.importe)}</Text>
+                </View>
+                <View style={styles.historyMetaGrid}>
+                  <View style={styles.historyMetaItem}>
+                    <Text style={styles.historyLabel}>ID PUJA</Text>
+                    <Text style={styles.historyValue}>{historyItem.bidId || '—'}</Text>
+                  </View>
+                  <View style={styles.historyMetaItem}>
+                    <Text style={styles.historyLabel}>FECHA</Text>
+                    <Text style={styles.historyValue}>{formatBidDate(historyItem.fecha)}</Text>
+                  </View>
+                  <View style={styles.historyMetaItem}>
+                    <Text style={styles.historyLabel}>N° POSTOR</Text>
+                    <Text style={styles.historyValue}>{historyItem.bidderNumber || '—'}</Text>
+                  </View>
+                  <View style={styles.historyMetaItem}>
+                    <Text style={styles.historyLabel}>POSTOR</Text>
+                    <Text style={styles.historyValue}>{historyItem.bidderName || '—'}</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
@@ -81,10 +150,10 @@ export default function BiddingHistoryScreen({ session, onMenuPress, onNavigate,
         scrollEventThrottle={16}
       >
         {bids.map((bid, index) => (
-          <View key={bid.id || index} style={[styles.bidCard, index === bids.length - 1 && { marginRight: 0 }]}>
+          <Pressable key={bid.id || index} onPress={() => setSelectedBid(bid)} style={[styles.bidCard, index === bids.length - 1 && { marginRight: 0 }]}>
             <View style={styles.imageContainer}>
                <Image source={{ uri: bid.image }} style={styles.bidImage} resizeMode="cover" />
-               <View style={styles.badgeContainer}>
+               <View style={[styles.badgeContainer, getStatusStyle(bid.status)]}>
                  <Text style={styles.badgeText}>{bid.status}</Text>
                </View>
             </View>
@@ -95,7 +164,7 @@ export default function BiddingHistoryScreen({ session, onMenuPress, onNavigate,
               <Text style={styles.bidDescription}>{bid.description}</Text>
               
               <View style={styles.priceContainer}>
-                <Text style={styles.priceLabel}>PRECIO FINAL DE ADJUDICACIÓN</Text>
+                <Text style={styles.priceLabel}>{String(bid.status).toUpperCase() === 'CERRADA' ? 'PRECIO FINAL DE ADJUDICACIÓN' : 'TU PUJA MÁS ALTA'}</Text>
                 <Text style={styles.priceValue}>{formatGlobalMoney(bid.price)}</Text>
               </View>
               
@@ -110,9 +179,10 @@ export default function BiddingHistoryScreen({ session, onMenuPress, onNavigate,
                 </View>
               </View>
             </View>
-          </View>
+          </Pressable>
         ))}
       </ScrollView>
+      {renderBidDetailModal()}
       <View style={styles.paginationDots}>
          {bids.map((_, i) => (
            <View key={i} style={[styles.dot, i === activeIndex && styles.activeDot]} />
@@ -286,10 +356,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 16,
     left: 16,
-    backgroundColor: '#1E8449',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 4,
+  },
+  activeBadge: {
+    backgroundColor: '#1E8449',
+  },
+  closedBadge: {
+    backgroundColor: '#777',
   },
   badgeText: {
     color: '#FFF',
@@ -370,5 +445,92 @@ const styles = StyleSheet.create({
   },
   activeDot: {
     backgroundColor: '#8B6A32',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+  },
+  modalContent: {
+    maxHeight: '82%',
+    backgroundColor: '#FFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 28,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 16,
+  },
+  modalEyebrow: {
+    fontSize: 10,
+    color: '#8B6A32',
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    marginBottom: 6,
+  },
+  modalTitle: {
+    fontFamily: 'serif',
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#111',
+    maxWidth: width - 92,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 14,
+  },
+  historyRow: {
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    backgroundColor: '#FAFAFA',
+  },
+  historyRowHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  historyIndex: {
+    fontSize: 10,
+    color: '#8B6A32',
+    fontWeight: '800',
+    letterSpacing: 1.2,
+  },
+  historyAmount: {
+    fontFamily: 'serif',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111',
+  },
+  historyMetaGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    rowGap: 10,
+  },
+  historyMetaItem: {
+    width: '50%',
+    paddingRight: 8,
+  },
+  historyLabel: {
+    fontSize: 9,
+    color: '#888',
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    marginBottom: 3,
+  },
+  historyValue: {
+    fontSize: 12,
+    color: '#111',
+    fontWeight: '600',
   },
 });
