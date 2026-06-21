@@ -1,0 +1,24 @@
+name: Deploy Backend Automatic
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Backend/**' # El deploy solo se activa si modificás algo dentro de la carpeta Backend
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Ejecutar script de despliegue en el VPS vía SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        port: 22
+        script: |
+          cd ~/appmovilsubastas/Backend
+          ./deploy.sh
