@@ -140,8 +140,9 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
         setLocationLoading(true);
         setLocationData(null);
         try {
+            const productId = detail?.productoId ?? proposalId;
             const res = await fetch(
-                `${API}/api/v1/users/me/consigned-items/${proposalId}/location`,
+                `${API}/api/v1/users/me/consigned-items/${productId}/location`,
                 { headers: authHeader(session) }
             );
             const json = await safeJson(res);
@@ -266,14 +267,52 @@ export default function ProposalDetailScreen({ proposalId, session, onBack, onMe
                     <>
                         {renderPriceBlock()}
                         {renderFeedback()}
-                        <TouchableOpacity
-                            style={styles.btnPoliza}
-                            onPress={() => onNavigate?.(`insurancePolicy:${proposalId}`)}
-                        >
-                            <Text style={styles.btnPolizaText}>CONSULTAR PÓLIZA</Text>
-                        </TouchableOpacity>
-                    </>
-                );
+
+                        {detail?.assignedAuction ? (
+                            <View style={styles.infoBox}>
+                                <Text style={styles.infoBoxLabel}>SUBASTA ASIGNADA</Text>
+                                <Text style={styles.infoBoxTitle}>{detail.assignedAuction.nombreSubasta}</Text>
+                                {detail.assignedAuction.fecha ? (
+                                    <Text style={styles.infoBoxSub}>
+                                        {detail.assignedAuction.fecha}
+                                        {detail.assignedAuction.hora ? `  ·  ${detail.assignedAuction.hora}` : ''}
+                                    </Text>
+                    ) : null}
+                </View>
+            ) : (
+                <View style={styles.infoBox}>
+                    <Text style={styles.infoBoxLabel}>ESTADO</Text>
+                    <Text style={styles.infoBoxSub}>
+                        Tu artículo fue aceptado. Pronto será asignado a una subasta.
+                    </Text>
+                </View>
+            )}
+
+            {detail?.saleResult ? (
+                <View style={[styles.infoBox, { marginTop: 12 }]}>
+                    <Text style={styles.infoBoxLabel}>RESULTADO DE VENTA</Text>
+                    {detail.saleResult.esEmpresa ? (
+                        <Text style={styles.infoBoxSub}>
+                            Adquirido por la empresa al precio base.
+                        </Text>
+                    ) : (
+                        <Text style={styles.infoBoxSub}>
+                            Vendido a {detail.saleResult.nombreGanador} por{' '}
+                            {Number(detail.saleResult.montoFinal).toLocaleString('es-AR')}{' '}
+                            {detail.saleResult.moneda}.
+                        </Text>
+                    )}
+                </View>
+            ) : null}
+
+            <TouchableOpacity
+                style={styles.btnPoliza}
+                onPress={() => onNavigate?.(`insurancePolicy:${proposalId}`)}
+            >
+                <Text style={styles.btnPolizaText}>CONSULTAR PÓLIZA</Text>
+            </TouchableOpacity>
+        </>
+    );
 
             case PS.RECHAZADO_EMPRESA:
                 return (

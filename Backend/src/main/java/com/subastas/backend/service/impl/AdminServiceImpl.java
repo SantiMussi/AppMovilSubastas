@@ -4,6 +4,7 @@ import com.subastas.backend.dto.request.*;
 import com.subastas.backend.dto.response.MessageResponse;
 import com.subastas.backend.dto.response.admin.AdminUserResponse;
 import com.subastas.backend.dto.response.multa.CrearMultaResponse;
+import com.subastas.backend.dto.response.propuesta.AsignarPropuestaResponse;
 import com.subastas.backend.dto.response.subasta.AdjudicarItemResponse;
 import com.subastas.backend.dto.response.subasta.CerrarSubastaResponse;
 import com.subastas.backend.dto.response.subasta.CrearSubastaResponse;
@@ -408,6 +409,60 @@ public class AdminServiceImpl implements AdminService {
         return new MessageResponse(Boolean.TRUE.equals(req.getAprobar())
                 ? "Medio de pago verificado correctamente"
                 : "Medio de pago rechazado");
+    }
+
+    @Transactional
+    public AsignarPropuestaResponse asignarPropuesta(Integer empleadoId, Integer propuestaId, AsignarPropuestaRequest req) {
+        Propuesta propuesta = propuestaRepository.findById(propuestaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Propuesta no encontrada"));
+
+        if (!"condiciones_aceptadas".equals(propuesta.getEstado())) {
+            throw new ConflictException("La propuesta debe estar en estado 'condiciones_aceptadas'");
+        }
+
+        if (propuesta.getProductoGenerado() == null) {
+            throw new ConflictException("La propuesta no tiene un producto generado. El usuario aún no aceptó los términos.");
+        }
+
+        Catalogo catalogo = catalogoRepository.findById(req.getCatalogoId())
+                .orElseThrow(() -> new ResourceNotFoundException("Catálogo no encontrado"));
+
+        Subasta subasta = catalogo.getSubasta();
+        if (subasta == null) {
+            throw new ConflictException("El catálogo no tiene una subasta asignada");
+        }
+
+        // Verificar que no esté ya asignado
+        boolean yaAsignado = itemCatalogoRepository
+                .findByCatalogoIdentificador(catalogo.getIdentificador())
+                .stream()
+                .anyMatch(i -> i.getProducto().getIdentificador()
+                        .equals(propuesta.getProductoGenerado().getIdentificador()));
+        if (yaAsignado) {
+            throw new ConflictException("Este producto ya está asignado a ese catálogo");
+        }
+
+        // Crear el ítem de catálogo
+        ItemCatalogo item = new ItemCatalogo();
+        item.setCatalogo(catalogo);
+        item.setProducto(propuesta.getProductoGenerado());
+        item.setPrecioBase(propuesta.getPrecioBase());
+        item.setComision(propuesta.getComision());
+        item.setSubastado("no");
+        itemCatalogoRepository.save(item);
+
+        // Actualizar la propuesta con la subasta asignada (para que el usuario la vea)
+        propuesta.setSubastaAsignada(subasta);
+        propuestaRepository.save(propuesta);
+
+        return AsignarPropuestaResponse.builder()
+                .mensaje("Producto asignado al catálogo correctamente")
+                .propuestaId(propuestaId)
+                .productoId(propuesta.getProductoGenerado().getIdentificador())
+                .itemCatalogoId(item.getIdentificador())
+                .subastaId(subasta.getIdentificador())
+                .nombreSubasta(subasta.getUbicacion())
+                .build();
     }
 
     @Transactional

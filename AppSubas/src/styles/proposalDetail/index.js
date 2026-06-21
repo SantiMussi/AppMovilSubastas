@@ -4,6 +4,7 @@ import { headerStyles }  from './headerStyles';
 import { priceStyles }   from './priceStyles';
 import { actionStyles }  from './actionStyles';
 import { modalStyles }   from './modalStyles';
+import { infoStyles }    from './infoStyles';
 
 export const styles = StyleSheet.create({
     ...layoutStyles,
@@ -11,4 +12,5 @@ export const styles = StyleSheet.create({
     ...priceStyles,
     ...actionStyles,
     ...modalStyles,
+    ...infoStyles,
 });

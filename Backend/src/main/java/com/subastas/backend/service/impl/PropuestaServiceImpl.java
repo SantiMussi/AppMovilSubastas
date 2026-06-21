@@ -12,12 +12,17 @@ import com.subastas.backend.entity.*;
 import com.subastas.backend.exception.ConflictException;
 import com.subastas.backend.exception.ResourceNotFoundException;
 import com.subastas.backend.repository.ClienteRepository;
+import com.subastas.backend.repository.DuenioRepository;
 import com.subastas.backend.repository.FotoPropuestaRepository;
+import com.subastas.backend.repository.FotoRepository;
+import com.subastas.backend.repository.ProductoRepository;
 import com.subastas.backend.repository.PropuestaRepository;
+import com.subastas.backend.repository.RegistroDeSubastaRepository;
 import com.subastas.backend.repository.UsuarioRepository;
 import com.subastas.backend.service.PropuestaService;
 import lombok.RequiredArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
 
@@ -31,6 +36,10 @@ public class PropuestaServiceImpl implements PropuestaService {
     private final UsuarioRepository usuarioRepository;
     private final ClienteRepository clienteRepository;
     private final FotoPropuestaRepository fotoPropuestaRepository;
+    private final ProductoRepository productoRepository;
+    private final FotoRepository fotoRepository;
+    private final DuenioRepository duenioRepository;
+    private final RegistroDeSubastaRepository registroDeSubastaRepository;
 
     @Override
     @Transactional
@@ -87,7 +96,8 @@ public class PropuestaServiceImpl implements PropuestaService {
     @Transactional
     public TerminosPropuestaResponse respondTerms(Integer proposalId, TerminosPropuestaRequest request, String email) {
         Cliente cliente = resolveCliente(email);
-        Propuesta p = propuestaRepository.findByIdentificadorAndClienteIdentificador(proposalId, cliente.getIdentificador())
+        Propuesta p = propuestaRepository
+                .findByIdentificadorAndClienteIdentificador(proposalId, cliente.getIdentificador())
                 .orElseThrow(() -> new ResourceNotFoundException("Propuesta no encontrada"));
 
         if (!"aceptada".equals(p.getEstado())) {
@@ -96,9 +106,47 @@ public class PropuestaServiceImpl implements PropuestaService {
 
         boolean acepta = Boolean.TRUE.equals(request.getAcceptBasePriceAndCommission());
         p.setAceptadoPorUsuario(acepta);
-        p.setEstado(acepta ? "condiciones_aceptadas" : "condiciones_rechazadas"); // ← antes era "rechazada"
+        p.setEstado(acepta ? "condiciones_aceptadas" : "condiciones_rechazadas");
+
+        if (acepta) {
+            Producto producto = crearProductoDesdePropuesta(p);
+            p.setProductoGenerado(producto);
+        }
+
         propuestaRepository.save(p);
         return new TerminosPropuestaResponse("Condiciones respondidas correctamente", p.getEstado());
+    }   
+
+    private Producto crearProductoDesdePropuesta(Propuesta p) {
+        // El dueño del producto es la misma persona que es cliente
+        Duenio duenio = duenioRepository.findById(p.getCliente().getIdentificador())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "El usuario no tiene perfil de dueño. Contacte al administrador."));
+
+        // El revisor es quien aprobó la propuesta
+        Empleado revisor = p.getRevisor();
+        if (revisor == null) {
+            throw new IllegalStateException("La propuesta no tiene revisor asignado.");
+        }   
+
+        Producto producto = new Producto();
+        producto.setFecha(LocalDate.now());
+        producto.setDisponible("si");
+        producto.setDescripcionCatalogo(p.getTitulo());
+        producto.setDescripcionCompleta(p.getDescripcion() + "\n\n" + p.getHistoria());
+        producto.setDuenio(duenio);
+        producto.setRevisor(revisor);
+        productoRepository.save(producto);
+
+        // Migrar fotos de FotoPropuesta → Foto
+        fotoPropuestaRepository.findByPropuesta(p).forEach(fp -> {
+            Foto foto = new Foto();
+            foto.setProducto(producto);
+            foto.setFoto(fp.getFoto());
+            fotoRepository.save(foto);
+        });
+
+        return producto;
     }
 
     @Override
@@ -128,13 +176,43 @@ public class PropuestaServiceImpl implements PropuestaService {
         r.setCommission(p.getComision());
         r.setTipoDevolucion(p.getTipoDevolucion());
         r.setDireccionDevolucion(p.getDireccionDevolucion());
+
+        if (p.getProductoGenerado() != null) {
+            r.setProductoId(p.getProductoGenerado().getIdentificador());
+        }
+
         if (p.getSubastaAsignada() != null) {
             DetallePropuestaResponse.AssignedAuctionResponse a = new DetallePropuestaResponse.AssignedAuctionResponse();
             a.setAuctionId(p.getSubastaAsignada().getIdentificador());
+            a.setNombreSubasta(p.getSubastaAsignada().getUbicacion()); // nombre descriptivo de la subasta
             if (p.getSubastaAsignada().getFecha() != null) a.setFecha(p.getSubastaAsignada().getFecha().toString());
             if (p.getSubastaAsignada().getHora() != null) a.setHora(p.getSubastaAsignada().getHora().toString());
             r.setAssignedAuction(a);
         }
+
+        // Resultado de venta: buscar en registroDeSubasta por el producto generado
+        if (p.getProductoGenerado() != null) {
+            registroDeSubastaRepository
+                    .findByProductoIdentificador(p.getProductoGenerado().getIdentificador())
+                    .stream()
+                    .findFirst()
+                    .ifPresent(registro -> {
+                        DetallePropuestaResponse.SaleResult sale = new DetallePropuestaResponse.SaleResult();
+                        sale.setMontoFinal(registro.getImporte());
+                        sale.setMoneda(p.getMoneda() != null ? p.getMoneda() : "ARS");
+                        boolean esEmpresa = registro.getCliente() != null
+                                && registro.getCliente().getPersona() != null
+                                && "Vantage Fine Auctions".equals(
+                                        registro.getCliente().getPersona().getNombre());
+                        sale.setEsEmpresa(esEmpresa);
+                        if (!esEmpresa && registro.getCliente() != null
+                                && registro.getCliente().getPersona() != null) {
+                            sale.setNombreGanador(registro.getCliente().getPersona().getNombre());
+                        }
+                        r.setSaleResult(sale);
+                    });
+        }
+
         return r;
     }
 
