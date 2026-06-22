@@ -32,9 +32,10 @@ function normalizeItem(raw) {
     const precioBase = raw?.precioBase ?? raw?.precio_base ?? raw?.basePrice;
     const subastado = raw?.subastado === 'si' || raw?.subastado === true || raw?.sold === true;
     const fotos = raw?.fotos || raw?.imagenes || raw?.images || producto?.fotos || [];
-    const primeraFoto = Array.isArray(fotos) && fotos.length > 0
-        ? (typeof fotos[0] === 'string' ? fotos[0] : fotos[0]?.url || fotos[0]?.uri)
-        : null;
+    const primeraFoto = producto?.imageUrl
+        || (Array.isArray(fotos) && fotos.length > 0
+            ? (typeof fotos[0] === 'string' ? fotos[0] : fotos[0]?.url || fotos[0]?.uri)
+            : null);
 
     return {
         id,
@@ -185,28 +186,9 @@ export default function CatalogScreen({
 
             const allItems = itemArrays.flat();
 
-            const itemsConFoto = await Promise.all(
-            allItems.map(async (item) => {
-                if (!item.productId) return item;
-                try {
-                    const fotosRes = await fetch(
-                        `${API_BASE}/api/v1/products/${item.productId}/photos`,
-                        { headers },
-                    );
-                    if (!fotosRes.ok) return item;
-                    const fotosJson = await fotosRes.json();
-                    // La respuesta tiene { photos: [{ photoId, url }] } o [{ photoId, url }]
-                    const lista = Array.isArray(fotosJson) ? fotosJson : (fotosJson?.photos ?? []);
-                    const primeraUrl = lista[0]?.url ?? null;
-                    return primeraUrl ? { ...item, imageUri: primeraUrl } : item;
-                } catch {
-                    return item;
-                }
-            })
-        );
 
             if (mounted.current) {
-                setItems(itemsConFoto);
+                setItems(allItems);
             }
         } catch (err) {
             if (mounted.current) {
