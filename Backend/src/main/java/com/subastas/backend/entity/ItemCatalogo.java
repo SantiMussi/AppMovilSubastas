@@ -29,4 +29,7 @@ public class ItemCatalogo {
 
     @Column(length = 2)
     private String subastado;
+
+    @Column
+    private java.time.LocalDateTime fechaCierre;
 }

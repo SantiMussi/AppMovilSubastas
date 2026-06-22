@@ -16,6 +16,7 @@ public interface AdminService {
     CrearSubastaResponse crearSubasta(Integer empleadoId, CrearSubastaRequest req);
     CerrarSubastaResponse cerrarSubasta(Integer empleadoId, Integer subastaId);
     AdjudicarItemResponse adjudicarItem(Integer empleadoId, Integer itemId, AdjudicarItemRequest req);
+    void adjudicarItemAutomaticamente(Integer itemId);
 
     List<AdminUserResponse> obtenerUsuarios();
     MessageResponse cambiarCategoria(Integer empleadoId, Integer usuarioId, CambiarCategoriaRequest req);

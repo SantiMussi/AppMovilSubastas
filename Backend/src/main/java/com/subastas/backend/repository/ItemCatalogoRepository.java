@@ -16,4 +16,6 @@ public interface ItemCatalogoRepository extends JpaRepository<ItemCatalogo, Inte
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select i from ItemCatalogo i where i.identificador = :id")
     Optional<ItemCatalogo> findByIdForBid(@Param("id") Integer id);
+
+    List<ItemCatalogo> findBySubastadoAndFechaCierreBefore(String subastado, java.time.LocalDateTime fechaCierre);
 }

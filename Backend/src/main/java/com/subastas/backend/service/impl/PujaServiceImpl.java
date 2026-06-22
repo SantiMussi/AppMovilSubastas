@@ -91,6 +91,9 @@ public class PujaServiceImpl implements PujaService {
         pujoMetadataRepository.save(metadata);
         paymentMethod.setUsadoEnOperacion(true);
         medioPagoRepository.save(paymentMethod);
+        context.item().setFechaCierre(java.time.LocalDateTime.now().plusSeconds(60));
+        itemCatalogoRepository.save(context.item());
+
         return bid;
     }
 
@@ -129,7 +132,8 @@ public class PujaServiceImpl implements PujaService {
                 .orElseThrow(() -> rejected("PAYMENT_METHOD_NOT_FOUND", "El medio de pago seleccionado no existe."));
         Integer ownerId = paymentMethod.getPersona() == null ? null : paymentMethod.getPersona().getIdentificador();
         if (!context.client().getIdentificador().equals(ownerId)) {
-            throw rejected("PAYMENT_METHOD_NOT_OWNED", "El medio de pago seleccionado no pertenece al usuario autenticado.");
+            throw rejected("PAYMENT_METHOD_NOT_OWNED",
+                    "El medio de pago seleccionado no pertenece al usuario autenticado.");
         }
         if (!Boolean.TRUE.equals(paymentMethod.getActivo()) || !Boolean.TRUE.equals(paymentMethod.getVerificado())) {
             throw rejected("PAYMENT_METHOD_NOT_VERIFIED", "El medio de pago seleccionado no está activo y verificado.");
@@ -139,17 +143,20 @@ public class PujaServiceImpl implements PujaService {
                 .orElse(null);
         if (auctionCurrency != null && (paymentMethod.getMoneda() == null
                 || !auctionCurrency.equalsIgnoreCase(paymentMethod.getMoneda()))) {
-            throw rejected("PAYMENT_CURRENCY_MISMATCH", "La moneda del medio de pago no coincide con la moneda de la subasta.");
+            throw rejected("PAYMENT_CURRENCY_MISMATCH",
+                    "La moneda del medio de pago no coincide con la moneda de la subasta.");
         }
         if (paymentMethod.getMontoGarantia() != null && paymentMethod.getMontoGarantia().compareTo(amount) < 0) {
-            throw rejected("INSUFFICIENT_GUARANTEE", "El medio de pago no tiene garantía suficiente para cubrir la puja.");
+            throw rejected("INSUFFICIENT_GUARANTEE",
+                    "El medio de pago no tiene garantía suficiente para cubrir la puja.");
         }
         return paymentMethod;
     }
-    
+
     private Asistente findOrCreateAttendee(Cliente client, Subasta auction) {
         return asistenteRepository
-                .findByClienteIdentificadorAndSubastaIdentificador(client.getIdentificador(), auction.getIdentificador())
+                .findByClienteIdentificadorAndSubastaIdentificador(client.getIdentificador(),
+                        auction.getIdentificador())
                 .orElseGet(() -> {
                     validateNoOtherOpenAuctionAttendance(client, auction);
                     return createAttendee(client, auction);
@@ -158,8 +165,8 @@ public class PujaServiceImpl implements PujaService {
 
     private void validateNoOtherOpenAuctionAttendance(Cliente client, Subasta auction) {
         asistenteRepository.findActiveAttendancesInOtherAuction(
-                        client.getIdentificador(),
-                        auction.getIdentificador())
+                client.getIdentificador(),
+                auction.getIdentificador())
                 .stream()
                 .findFirst()
                 .ifPresent(activeAttendance -> {
@@ -177,10 +184,10 @@ public class PujaServiceImpl implements PujaService {
         Asistente attendee = new Asistente();
         attendee.setCliente(client);
         attendee.setSubasta(auction);
-        attendee.setNumeroPostor(asistenteRepository.findMaxNumeroPostorBySubastaIdentificador(auction.getIdentificador()) + 1);
+        attendee.setNumeroPostor(
+                asistenteRepository.findMaxNumeroPostorBySubastaIdentificador(auction.getIdentificador()) + 1);
         return asistenteRepository.save(attendee);
     }
-    
 
     private void validateAmount(BigDecimal amount) {
         if (amount == null || amount.signum() <= 0) {
