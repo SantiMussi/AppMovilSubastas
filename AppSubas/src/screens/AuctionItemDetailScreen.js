@@ -16,7 +16,16 @@ import { useCurrency } from '../context/CurrencyContext';
 const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=1200&auto=format&fit=crop';
 
-export default function AuctionDetailScreen({ auctionItemId, session, onMenuPress, onPlaceBid }) {
+const AUCTION_STATUS_ALIASES = {
+  live: ['abierta', 'en_vivo', 'en vivo', 'in_progress', 'in progress', 'activa'],
+  scheduled: ['programada', 'proxima', 'próxima', 'scheduled', 'pendiente'],
+  ended: ['cerrada', 'carrada', 'finalizada', 'ended', 'vendida', 'terminada'],
+};
+
+export default function AuctionDetailScreen({ auctionId, auctionItemId, session, onMenuPress, onPlaceBid }) {
+  const [isLive, setIsLive] = useState(false);
+  const [auctionStatus, setAuctionStatus] = useState('');
+  const [roomAccessError, setRoomAccessError] = useState('');
   const [detail, setDetail] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -59,9 +68,67 @@ export default function AuctionDetailScreen({ auctionItemId, session, onMenuPres
     }
   }, [auctionItemId, headers]);
 
+  const getAuctionStatus = useCallback((auction, nowDate) => {
+    if (!auction) return 'unknown';
+
+    const parseDate = (value) => {
+      if (!value) return null;
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    };
+
+    const start = parseDate(auction.startsAt || auction.startDate || auction.fechaInicio || auction.date || auction.startDateTime);
+    const end = parseDate(auction.endsAt || auction.endDate || auction.fechaFin || auction.endDateTime);
+
+    if (end && end <= nowDate) return 'ended';
+    if (start && start > nowDate) return 'scheduled';
+    if (start && start <= nowDate) return 'live';
+    return 'scheduled';
+  }, []);
+
+  const loadAuctionStatus = useCallback(async ({ refresh = false } = {}) => {
+    if (!auctionId) return;
+    if (refresh) setRefreshing(true);
+    else setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(`${API_BASE}/api/v1/auctions/${auctionId}`, { headers });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.message || payload?.error || 'No se pudo cargar el estado de la subasta.');
+      }
+      console.log(payload)
+      const auction = payload?.data || payload;
+      const status = getAuctionStatus(auction, now);
+      console.log(status)
+      setAuctionStatus(status);
+      setIsLive(status === 'live');
+      setRoomAccessError(status === 'live' ? '' : 'La subasta no está en vivo. No puedes ingresar a la sala.');
+    } catch (loadError) {
+      setError(loadError.message || 'Error al conseguir el estado de la subasta.');
+      setAuctionStatus('');
+      setIsLive(false);
+      setRoomAccessError('');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [auctionId, headers, getAuctionStatus]);
+
+  const handlePlaceBid = () => {
+    if (!isLive) {
+      setRoomAccessError('La subasta no está en vivo. No puedes ingresar a la sala.');
+      return;
+    }
+    setRoomAccessError('');
+    onPlaceBid?.();
+  };
+
   useEffect(() => {
     loadDetail();
-  }, [loadDetail]);
+    loadAuctionStatus();
+  }, [loadDetail, loadAuctionStatus]);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -71,7 +138,7 @@ export default function AuctionDetailScreen({ auctionItemId, session, onMenuPres
   return (
     <View style={styles.screen}>
       <TopBar onMenuPress={onMenuPress} />
-      {loading ? (
+      {loading || (!detail && !error) ? (
         <StatePanel icon="radio-outline" label="Cargando lote en vivo..." loading />
       ) : error ? (
         <StatePanel icon="alert-circle-outline" label={error} onRetry={loadDetail} />
@@ -79,12 +146,26 @@ export default function AuctionDetailScreen({ auctionItemId, session, onMenuPres
         <>
           <ScrollView
             contentContainerStyle={styles.content}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadDetail({ refresh: true })} />}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={async () => {
+                  try {
+                    await Promise.all([loadDetail({ refresh: true }), loadAuctionStatus({ refresh: true })]);
+                  } catch {
+                    // Ignore refresh errors here; loadDetail/loadAuctionStatus already set error states.
+                  }
+                }}
+              />
+            }
           >
-            <Hero detail={detail} activeImage={activeImage} setActiveImage={setActiveImage} />
+            <Hero detail={detail} activeImage={activeImage} setActiveImage={setActiveImage} isLive={isLive} />
 
             <View style={styles.body}>
               <Text style={styles.title}>{detail.title}</Text>
+              {auctionStatus ? (
+                <Text style={styles.auctionStatus}>{auctionStatus === 'live' ? 'EN VIVO' : auctionStatus === 'scheduled' ? 'PRÓXIMAMENTE' : 'FINALIZADA'}</Text>
+              ) : null}
               {detail.subtitle ? <Text style={styles.subtitle}>{detail.subtitle}</Text> : null}
 
               <View style={styles.bidSummary}>
@@ -138,10 +219,13 @@ export default function AuctionDetailScreen({ auctionItemId, session, onMenuPres
           </ScrollView>
 
           <View style={styles.actionBar}>
-            <Pressable style={styles.bidButton} onPress={onPlaceBid}>
-              <Text style={styles.bidButtonText}>Pujar Ahora</Text>
+            <Pressable style={[styles.bidButton, !isLive && styles.bidButtonDisabled]} onPress={handlePlaceBid} disabled={!isLive}>
+              <Text style={styles.bidButtonText}>
+                {isLive ? 'Pujar Ahora' : 'Proximamente...'}
+              </Text>
               <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />
             </Pressable>
+            {roomAccessError ? <Text style={styles.roomAccessError}>{roomAccessError}</Text> : null}
           </View>
         </>
       )}
@@ -190,6 +274,49 @@ function StatePanel({ icon, label, loading, onRetry }) {
     </View>
   );
 }
+
+// function getAuctionDate(auction) {
+//   if (auction.startDate) return safeDate(auction.startDate);
+//   if (auction.date && auction.time) return safeDate(`${auction.date}T${auction.time}`);
+//   if (auction.date) return safeDate(auction.date);
+//   return null;
+// }
+
+// function inferEndDate(date, time) {
+//   const start = date && time ? safeDate(`${date}T${time}`) : safeDate(date);
+//   if (!start) return null;
+//   return new Date(start.getTime() + 3 * 60 * 60 * 1000).toISOString();
+// }
+
+// function getAuctionStatus(auction, now) {
+//   const normalizedStatus = `${auction.status || ''}`.trim().toLowerCase();
+
+//   if (STATUS_ALIASES.ended.includes(normalizedStatus)) return 'ended';
+//   if (STATUS_ALIASES.scheduled.includes(normalizedStatus)) {
+//     const start = getAuctionDate(auction);
+//     return start && start <= now ? 'live' : 'scheduled';
+//   }
+//   if (STATUS_ALIASES.live.includes(normalizedStatus)) {
+//     const end = safeDate(auction.endDate);
+//     if (end && end <= now) return 'ended';
+//     const start = getAuctionDate(auction);
+//     if (start && start > now) return 'scheduled';
+//     return 'live';
+//   }
+
+//   const start = getAuctionDate(auction);
+//   const end = safeDate(auction.endDate);
+
+//   if (end && end <= now) return 'ended';
+//   if (start && start > now) return 'scheduled';
+//   return 'live';
+// }
+
+// function safeDate(value) {
+//   if (!value) return null;
+//   const parsed = new Date(value);
+//   return Number.isNaN(parsed.getTime()) ? null : parsed;
+// }
 
 function normalizeDetail(payload, topBidPayload) {
   const data = payload?.data || payload?.item || payload;
@@ -274,7 +401,10 @@ const styles = StyleSheet.create({
   verified: { color: '#9A7720', fontSize: 7 },
   actionBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 20, backgroundColor: 'rgba(248,248,247,0.97)' },
   bidButton: { height: 54, backgroundColor: '#091A2E', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 22, shadowColor: '#000000', shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },
+  bidButtonDisabled: { backgroundColor: '#A9A9A9' },
   bidButtonText: { color: '#FFFFFF', fontFamily: 'serif', fontSize: 15 },
+  roomAccessError: { marginTop: 10, color: '#A12222', fontSize: 10, textAlign: 'center' },
+  auctionStatus: { marginTop: 8, color: '#A12222', fontSize: 11, fontWeight: '700' },
   statePanel: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 36, gap: 16 },
   stateLabel: { color: '#555555', textAlign: 'center', lineHeight: 20 },
   retryButton: { backgroundColor: '#091A2E', paddingHorizontal: 22, paddingVertical: 13 },

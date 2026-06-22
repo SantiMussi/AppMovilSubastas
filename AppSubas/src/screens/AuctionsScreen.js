@@ -307,12 +307,12 @@ function AuctionCard({ auction, now, onJoin }) {
     setActiveImageIndex((index) => (index + 1) % images.length);
   };
 
-  const CardContainer = isLive ? Pressable : View;
+  const CardContainer = Pressable;
 
   return (
     <CardContainer
       style={[styles.card, isEnded && styles.endedCard]}
-      onPress={isLive ? onJoin : undefined}
+      onPress={onJoin}
       disabled={isLive && !auction.auctionItemId}
     >
       
@@ -350,6 +350,14 @@ function AuctionCard({ auction, now, onJoin }) {
             <Text style={styles.offerValue}>{formatGlobalMoney(auction.currentOffer)}</Text>
             <Pressable style={styles.joinButton} onPress={onJoin}>
               <Text style={styles.joinButtonText}>PARTICIPAR AHORA</Text>
+            </Pressable>
+          </View>
+        ) || (
+          <View style={styles.offerBox}>
+            <Text style={styles.offerLabel}>Precio base</Text>
+            <Text style={styles.offerValue}>{formatGlobalMoney(auction.currentOffer)}</Text>
+            <Pressable style={styles.joinButton} onPress={onJoin}>
+              <Text style={styles.joinButtonText}>Ver Detalles</Text>
             </Pressable>
           </View>
         )}

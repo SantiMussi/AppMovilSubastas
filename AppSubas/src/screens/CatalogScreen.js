@@ -276,7 +276,7 @@ export default function CatalogScreen({
                                         <CatalogItemCard
                                             item={item}
                                             onPress={(selected) =>
-                                                onSelectItem?.(`auctionItemDetail:${selected.id}`)
+                                                onSelectItem?.(`auctionItemDetail:${auctionId}:${selected.id}`)
                                             }
                                             formatGlobalMoney={formatGlobalMoney}
                                         />

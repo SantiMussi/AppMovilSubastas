@@ -521,9 +521,11 @@ function RootNavigator() {
         }
 
         if (screen.startsWith('auctionItemDetail:')) {
-          const auctionItemId = screen.split(':')[1];
+          const auctionId = screen.split(':')[1];
+          const auctionItemId = screen.split(':')[2];
           return (
             <AuctionItemDetailScreen
+              auctionId={auctionId}
               auctionItemId={auctionItemId}
               session={session}
               onMenuPress={openDrawer}
