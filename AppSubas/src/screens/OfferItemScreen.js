@@ -163,6 +163,7 @@ const pickFromGallery = async (remaining) => {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
         body: JSON.stringify(payload),
       });
+      console.log(response)
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData?.message ?? errorData?.error ?? `Error ${response.status}`);

@@ -18,7 +18,7 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=900&auto=format&fit=crop';
 const CLOSED_AUCTION_STATUSES = ['cerrada', 'carrada', 'cerrado', 'closed', 'finalizada', 'finalizado', 'finished'];
 
-export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress }) {
+export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress, onNavigateToItem, onBackToPrevious, onGoToColletion}) {
   const [snapshot, setSnapshot] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,6 +38,7 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
   const [invoice, setInvoice] = useState(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutMessage, setCheckoutMessage] = useState('');
+  const [checkoutCompleted, setCheckoutCompleted] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState('envio');
   const [shippingAddress, setShippingAddress] = useState('');
   const [closedEventReceived, setClosedEventReceived] = useState(false);
@@ -155,7 +156,6 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
       const response = await fetch(`${API_BASE}/api/v1/users/me/wins`, { headers });
       const payload = await response.json().catch(() => null);
       if (!response.ok) return null;
-      console.log(payload)
       const sale = normalizeCollection(payload).find((item) => saleMatchesAuctionItem(item, validAuctionItemId));
       setWinningSale(sale || null);
       return sale || null;
@@ -330,6 +330,8 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
     setResultModalVisible(false);
     setWinningSale(null);
     setInvoice(null);
+    setCheckoutCompleted(false);
+    setCheckoutMessage('');
   }, [validAuctionItemId]);
 
   const serverNow = now + (snapshot?.serverOffsetMs || 0);
@@ -423,6 +425,7 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
     setResultModalVisible(false);
     setCheckoutModalVisible(true);
     setCheckoutMessage('');
+    setCheckoutCompleted(false);
     const sale = winningSale || await loadWinningSale();
     if (sale && !invoice) await loadInvoice(sale);
   };
@@ -459,6 +462,7 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
       if (!response.ok) {
         throw new Error(payload?.message || payload?.error || 'No se pudo finalizar la compra.');
       }
+      setCheckoutCompleted(true);
       setCheckoutMessage(`${payload?.message || 'Compra finalizada correctamente'}${payload?.invoiceNumber ? ` · ${payload.invoiceNumber}` : ''}`);
     } catch (checkoutError) {
       setCheckoutMessage(checkoutError.message || 'No se pudo finalizar la compra.');
@@ -555,8 +559,8 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress 
 
       <BidHistoryModal visible={historyModalVisible} onClose={() => setHistoryModalVisible(false)} detail={detail} bids={bids} now={now} formatGlobalMoney={formatGlobalMoney} />
       <PaymentMethodModal visible={paymentModalVisible} onClose={() => setPaymentModalVisible(false)} payments={payments} selectedPaymentId={selectedPaymentId} onSelect={setSelectedPaymentId} loading={paymentsLoading} onReload={loadPayments} />
-      <AuctionResultModal visible={resultModalVisible} onClose={() => setResultModalVisible(false)} winner={winner} hasWinner={hasWinner} detail={detail} topBid={topBid} invoice={currentInvoice} onCheckout={openCheckout} formatGlobalMoney={formatGlobalMoney} />
-      <CheckoutModal visible={checkoutModalVisible} onClose={() => setCheckoutModalVisible(false)} detail={detail} invoice={currentInvoice} payment={selectedPayment} deliveryMethod={deliveryMethod} setDeliveryMethod={setDeliveryMethod} shippingAddress={shippingAddress} setShippingAddress={setShippingAddress} message={checkoutMessage} loading={checkoutLoading} onFinalize={finalizeCheckout} onPickPayment={() => setPaymentModalVisible(true)} formatGlobalMoney={formatGlobalMoney} />
+      <AuctionResultModal visible={resultModalVisible} onClose={onBackToPrevious} winner={winner} hasWinner={hasWinner} detail={detail} topBid={topBid} invoice={currentInvoice} onCheckout={openCheckout} formatGlobalMoney={formatGlobalMoney} />
+      <CheckoutModal visible={checkoutModalVisible} onClose={onGoToColletion} detail={detail} invoice={currentInvoice} payment={selectedPayment} deliveryMethod={deliveryMethod} setDeliveryMethod={setDeliveryMethod} shippingAddress={shippingAddress} setShippingAddress={setShippingAddress} message={checkoutMessage} loading={checkoutLoading} completed={checkoutCompleted} detail={detail} invoice={currentInvoice} payment={selectedPayment} deliveryMethod={deliveryMethod} setDeliveryMethod={setDeliveryMethod} shippingAddress={shippingAddress} setShippingAddress={setShippingAddress} message={checkoutMessage} loading={checkoutLoading} onFinalize={finalizeCheckout} onPickPayment={() => setPaymentModalVisible(true)} formatGlobalMoney={formatGlobalMoney} />
     </View>
   );
 }
@@ -662,7 +666,7 @@ function AuctionResultModal({ visible, onClose, winner, hasWinner, detail, topBi
   );
 }
 
-function CheckoutModal({ visible, onClose, detail, invoice, payment, deliveryMethod, setDeliveryMethod, shippingAddress, setShippingAddress, message, loading, onFinalize, onPickPayment, formatGlobalMoney }) {
+function CheckoutModal({ visible, onClose, detail, invoice, payment, deliveryMethod, setDeliveryMethod, shippingAddress, setShippingAddress, message, loading, completed, onFinalize, onPickPayment, formatGlobalMoney }) {
   const amount = Number(invoice?.montoPujado || invoice?.amount || 0);
   const commission = Number(invoice?.comision || 0);
   const total = Number(invoice?.total || amount + commission + Number(invoice?.costoEnvio || 0));
@@ -713,10 +717,12 @@ function CheckoutModal({ visible, onClose, detail, invoice, payment, deliveryMet
 
             <View style={styles.warningBox}><Text style={styles.warningText}>⚠ Aviso: La pieza pierde la cobertura del seguro una vez retirada de nuestras instalaciones.</Text></View>
             {message ? <Text style={message.includes('correctamente') ? styles.bidSuccess : styles.bidError}>{message}</Text> : null}
-            <Pressable style={[styles.modalPrimaryButton, loading && styles.bidButtonDisabled]} onPress={onFinalize} disabled={loading}>
-              <Text style={styles.modalPrimaryButtonText}>{loading ? 'FINALIZANDO…' : 'FINALIZAR COMPRA'}</Text>
-            </Pressable>
-            <Pressable style={styles.checkoutCloseButton} onPress={onClose}><Text style={styles.modalPrimaryButtonText}>CERRAR</Text></Pressable>
+            {!completed ? (
+              <Pressable style={[styles.modalPrimaryButton, loading && styles.bidButtonDisabled]} onPress={onFinalize} disabled={loading}>
+                <Text style={styles.modalPrimaryButtonText}>{loading ? 'FINALIZANDO…' : 'FINALIZAR COMPRA'}</Text>
+              </Pressable>
+            ) : null}
+            <Pressable style={styles.checkoutCloseButton} onPress={onClose}><Text style={styles.modalPrimaryButtonText}>{completed ? 'VER MI COLECCIÓN' : 'CERRAR'}</Text></Pressable>
           </ScrollView>
         </View>
       </View>

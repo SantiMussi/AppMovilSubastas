@@ -250,7 +250,6 @@ export default function RegisterScreen({ onBack, onRegisterSuccess, initialEmail
       const payload = await safeJson(response);
 
       if (!response.ok) {
-        console.log(payload);
         throw new Error(buildApiErrorMessage(payload, response.status, 'Registro inicial rechazado'));
       }
 
@@ -326,7 +325,6 @@ export default function RegisterScreen({ onBack, onRegisterSuccess, initialEmail
       const payload = await safeJson(response);
 
       if (!response.ok) {
-        console.log(payload);
         throw new Error(payload?.message || `Registro rechazado (${response.status})`);
       }
 

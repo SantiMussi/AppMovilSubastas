@@ -158,7 +158,6 @@ export default function AuctionsScreen({ session, onMenuPress, onNavigate }) {
     [auctionsWithStatus]
   );
 
-
   return (
     <View style={styles.container}>
       <TopBar onMenuPress={onMenuPress} />

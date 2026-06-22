@@ -403,6 +403,8 @@ function RootNavigator() {
             auctionItemId={auctionItemId}
             session={session}
             onMenuPress={openDrawer}
+            onBackToPrevious={goBack}
+            onGoToCollection={() => setScreen('coleccion')}
           />
         );
 
@@ -538,6 +540,8 @@ function RootNavigator() {
               session={session}
               onMenuPress={openDrawer}
               onNavigateToItem={(nextId) => handleNavigate(`auctionRoom:${nextId}`)}
+              onBackToPrevious={goBack}
+              onGoToCollection={() => setScreen('coleccion')}
             />
           );
         }
