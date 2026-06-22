@@ -294,7 +294,7 @@ export default function AuctionRoomScreen({ auctionItemId, session, onMenuPress,
 			  setBidPending(false);
         if (event.code === 1000 || auctionClosedRef.current) return;
         if (event.code === 1008) {
-          setError('Esta sesión se cerró porque ingresaste a otra sala de subasta.');
+          setError(prev => prev || 'Esta sesión se cerró porque ingresaste a otra sala de subasta.');
           return;
         }
 			  reconnectRef.current = setTimeout(connect, 3000);

@@ -166,7 +166,7 @@ public class AdminServiceImpl implements AdminService {
 
         @Transactional
         public AdjudicarItemResponse adjudicarItem(Integer empleadoId, Integer itemId, AdjudicarItemRequest req) {
-                ItemCatalogo item = itemCatalogoRepository.findById(itemId)
+                ItemCatalogo item = itemCatalogoRepository.findByIdForBid(itemId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Ítem de catálogo no encontrado"));
 
                 if ("si".equalsIgnoreCase(item.getSubastado())) {
@@ -205,7 +205,7 @@ public class AdminServiceImpl implements AdminService {
 
         @Transactional
         public void adjudicarItemAutomaticamente(Integer itemId) {
-                ItemCatalogo item = itemCatalogoRepository.findById(itemId)
+                ItemCatalogo item = itemCatalogoRepository.findByIdForBid(itemId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Item de catalogo no encontrado."));
                 if ("si".equalsIgnoreCase(item.getSubastado())) {
                         return;
