@@ -373,12 +373,17 @@ public class AdminServiceImpl implements AdminService {
                 .orElse(null);
         if (usuario != null) {
             String code = authenticationService.generateAndStoreRegistrationCode(usuario.getEmail());
-            String subject = "Tu registro ha sido aprobado - VANTAGE";
-            String body = "Hola " + (usuario.getPersona() != null ? usuario.getPersona().getNombre() : "") + ",\n\n" +
-                    "Te informamos que tu registro en VANTAGE ha sido aprobado por nuestro equipo.\n" +
-                    "Para completar tu registro y establecer tu contraseña, ingresa en la app con tu email y el siguiente código de verificación: " + code + "\n\n" +
-                    "Saludos,\nEl equipo de VANTAGE.";
-            emailService.sendEmail(usuario.getEmail(), subject, body);
+            String nombre = usuario.getPersona() != null ? usuario.getPersona().getNombre() : "";
+            
+            String htmlBody = "<p style=\"font-size:16px;color:#ccc;\">Hola " + nombre + ",</p>" +
+                              "<p style=\"font-size:16px;color:#ccc;\">Nos complace informarte que tu solicitud de registro ha sido evaluada y <strong>aprobada</strong>.</p>" +
+                              "<p style=\"font-size:16px;color:#ccc;\">Para completar tu registro y establecer tu contraseña, utiliza el siguiente código en la aplicación:</p>" +
+                              "<div style=\"background:#1a1a1a;padding:20px;border-radius:8px;text-align:center;margin:30px 0;\">" +
+                              "<span style=\"font-size:32px;letter-spacing:8px;color:#e5b95c;font-weight:bold;\">" + code + "</span>" +
+                              "</div>" +
+                              "<p style=\"font-size:14px;color:#888;\">Te esperamos en la próxima subasta exclusiva.</p>";
+            
+            emailService.sendPremiumEmail(usuario.getEmail(), "Registro Aprobado", "Bienvenido a VANTAGE", htmlBody);
         }
 
         return new MessageResponse("Usuario admitido correctamente");

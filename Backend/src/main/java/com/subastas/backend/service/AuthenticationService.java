@@ -225,7 +225,14 @@ public class AuthenticationService {
         String code = generateResetCode();
         passwordResetCodes.put(email, new PasswordResetCode(code, Instant.now().plus(RESET_CODE_TTL)));
         sendRecoveryPushNotification(email, code);
-        emailService.sendEmail(email, "Código de recuperación de contraseña - VANTAGE", "Tu código de recuperación es: " + code);
+        
+        String htmlBody = "<p style=\"font-size:16px;color:#ccc;\">Has solicitado la recuperación de tu contraseña.</p>" +
+                          "<div style=\"background:#1a1a1a;padding:20px;border-radius:8px;text-align:center;margin:30px 0;\">" +
+                          "<span style=\"font-size:32px;letter-spacing:8px;color:#e5b95c;font-weight:bold;\">" + code + "</span>" +
+                          "</div>" +
+                          "<p style=\"font-size:14px;color:#888;\">Si no solicitaste este cambio, puedes ignorar este correo.</p>";
+                          
+        emailService.sendPremiumEmail(email, "Recuperación de Contraseña", "Restablece tu acceso", htmlBody);
 
         return ReseteoContraseñaResponse.builder()
                 .message("Se envió un código de recuperación al email")
