@@ -150,7 +150,27 @@ public class PujaServiceImpl implements PujaService {
     private Asistente findOrCreateAttendee(Cliente client, Subasta auction) {
         return asistenteRepository
                 .findByClienteIdentificadorAndSubastaIdentificador(client.getIdentificador(), auction.getIdentificador())
-                .orElseGet(() -> createAttendee(client, auction));
+                .orElseGet(() -> {
+                    validateNoOtherOpenAuctionAttendance(client, auction);
+                    return createAttendee(client, auction);
+                });
+    }
+
+    private void validateNoOtherOpenAuctionAttendance(Cliente client, Subasta auction) {
+        asistenteRepository.findActiveAttendancesInOtherAuction(
+                        client.getIdentificador(),
+                        auction.getIdentificador())
+                .stream()
+                .findFirst()
+                .ifPresent(activeAttendance -> {
+                    Integer activeAuctionId = activeAttendance.getSubasta() == null
+                            ? null
+                            : activeAttendance.getSubasta().getIdentificador();
+                    throw rejected(
+                            "ALREADY_IN_OPEN_AUCTION",
+                            "Ya estás participando en la subasta " + activeAuctionId
+                                    + ". No puedes ingresar a otra subasta hasta que la sala inicial esté cerrada.");
+                });
     }
 
     private Asistente createAttendee(Cliente client, Subasta auction) {

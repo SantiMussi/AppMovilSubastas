@@ -50,12 +50,14 @@ public class AuctionWebSocketHandler extends TextWebSocketHandler {
             closeInvalidAuctionSession(session);
             return;
         }
+        if (!registerAttendeeIfAllowed(session, itemId.get(), email)) {
+            return;
+        }
         WebSocketSession previous = userSessions.put(email, session);
         if (previous != null && previous.isOpen() && !previous.getId().equals(session.getId())) {
             previous.close(CloseStatus.POLICY_VIOLATION.withReason("A user can only join one auction room at a time"));
         }
         sessions.put(session.getId(), session);
-        registerAttendeeIfAllowed(itemId.get(), email);
         sendSnapshot(session);
     }
 
@@ -164,14 +166,27 @@ public class AuctionWebSocketHandler extends TextWebSocketHandler {
         });
     }
 
-    private void registerAttendeeIfAllowed(Integer itemId, String email) {
+    private boolean registerAttendeeIfAllowed(WebSocketSession session, Integer itemId, String email) throws IOException {
         try {
             pujaService.registrarAsistenteSiPuedePujar(itemId, email);
+            return true;
         } catch (PujaRechazadaException exception) {
-            log.debug("User {} joined auction room for item {} but is not eligible to bid: {}",
+            log.debug("User {} could not join auction room for item {}: {}",
                     email, itemId, exception.getCode());
+            sendRejection(session, exception.getCode(), exception.getMessage());
+            removeSession(session);
+            if (session.isOpen()) {
+                session.close(CloseStatus.POLICY_VIOLATION.withReason(exception.getCode()));
+            }
+            return false;
         } catch (RuntimeException exception) {
             log.error("Unexpected error while registering attendee {} for auction item {}", email, itemId, exception);
+            sendRejection(session, "AUCTION_ROOM_JOIN_ERROR", "No se pudo ingresar a la sala de subasta. Intenta nuevamente.");
+            removeSession(session);
+            if (session.isOpen()) {
+                session.close(CloseStatus.SERVER_ERROR.withReason("Auction room join error"));
+            }
+            return false;
         }
     }
 
