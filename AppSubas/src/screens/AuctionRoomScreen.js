@@ -786,7 +786,7 @@ function normalizeSnapshot(payload, receivedAt) {
       lotNumber: detailData?.lotNumber || detailData?.numeroLote || detailData?.auctionItemId || '—',
       basePrice: detailData?.basePrice || detailData?.precioBase,
       startsAt: detailData?.startsAt || detailData?.fechaInicio,
-      endsAt: detailData?.endsAt || detailData?.fechaFin,
+      endsAt: detailData?.endsAt || detailData?.fechaFin || detailData?.fechaCierre,
       auctionClosed: detailData?.auctionClosed === true || isClosedStatus || detailData?.subastado === true,
       biddingOpen: detailData?.biddingOpen !== false,
       images: images.map((image) => resolveImageUri(typeof image === 'string' ? image : image?.url || image?.uri)).filter(Boolean),

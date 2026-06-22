@@ -52,6 +52,7 @@ public class ItemSubastaServiceImpl implements ItemSubastaService {
         response.setPrecioBase(item.getPrecioBase());
         response.setComision(item.getComision());
         response.setSubastado(esSi(item.getSubastado()));
+        response.setFechaCierre(item.getFechaCierre());
         
         Subasta auction = item.getCatalogo() == null ? null : item.getCatalogo().getSubasta();
         if (auction != null) {

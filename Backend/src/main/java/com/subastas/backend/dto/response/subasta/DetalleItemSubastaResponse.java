@@ -18,6 +18,7 @@ public class DetalleItemSubastaResponse {
     private BigDecimal precioBase;
     private BigDecimal comision;
     private Boolean subastado;
+    private java.time.LocalDateTime fechaCierre;
     private List<String> imagenes;
     private ResumenDueñoResponse ownerSummary;
 }
